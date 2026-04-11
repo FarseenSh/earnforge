@@ -1,0 +1,409 @@
+---
+title: SDK Reference
+description: Complete API reference for @earnforge/sdk -- the foundation of EarnForge.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+`@earnforge/sdk` is the foundation package. Every other EarnForge surface (CLI, React, MCP, bot, skill, studio) is built on top of it.
+
+## Installation
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm i @earnforge/sdk
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @earnforge/sdk
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @earnforge/sdk
+    ```
+  </TabItem>
+</Tabs>
+
+## createEarnForge()
+
+The main entry point. Returns an `EarnForge` instance with namespaced methods.
+
+```ts
+import { createEarnForge } from '@earnforge/sdk';
+
+const forge = createEarnForge({
+  composerApiKey: process.env.LIFI_API_KEY,  // Optional -- only needed for deposit quotes
+  cache: { ttl: 60_000, maxSize: 200 },      // Optional -- LRU cache config
+});
+```
+
+### Options
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `composerApiKey` | `string` | `undefined` | LI.FI API key. Required only for `buildDepositQuote()` and `optimizeGasRoutes()`. |
+| `earnData` | `EarnDataClientOptions` | `{}` | Override the Earn Data API client options (base URL, headers). |
+| `composerBaseUrl` | `string` | `"https://li.quest"` | Override the Composer API base URL. |
+| `cache.ttl` | `number` | `60000` | Cache time-to-live in milliseconds. |
+| `cache.maxSize` | `number` | `200` | Maximum number of cached entries. |
+
+<Aside type="caution">
+The Earn Data API (`earn.li.fi`) requires **no auth headers** -- sending one returns 401.
+The Composer API (`li.quest`) **requires** an `x-lifi-api-key` header. The SDK handles this
+split automatically.
+</Aside>
+
+---
+
+## Vault Methods
+
+### vaults.list()
+
+Fetch a single page of vaults (max 50 per page, cursor-based pagination).
+
+```ts
+const page = await forge.vaults.list({
+  chainId: 8453,          // Filter by chain (number, NOT chain name)
+  asset: 'USDC',          // Filter by underlying token symbol
+  minTvl: 1_000_000,      // Minimum TVL in USD
+  sortBy: 'apy',          // Sort field
+  strategy: 'conservative', // Apply strategy preset filters
+  cursor: undefined,       // Pagination cursor from previous response
+});
+
+console.log(page.data);       // Vault[]
+console.log(page.nextCursor); // string | null
+```
+
+### vaults.listAll()
+
+Async iterator that auto-paginates through all vaults. Follows `nextCursor` until exhausted.
+
+```ts
+const vaults: Vault[] = [];
+for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
+  vaults.push(vault);
+}
+console.log(`Found ${vaults.length} vaults on Base`);
+```
+
+<Aside>
+This is the correct way to see all 623+ vaults. A single `list()` call returns at most 50.
+See [Pitfall #6](/pitfalls/) for why this matters.
+</Aside>
+
+### vaults.get()
+
+Fetch a single vault by its slug. The slug format is `<chainId>-<vaultAddress>`.
+
+```ts
+const vault = await forge.vaults.get('8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9');
+console.log(vault.name, vault.analytics.apy.total);
+```
+
+### vaults.top()
+
+Fetch the highest-APY vaults with optional filters and strategy presets.
+
+```ts
+const top = await forge.vaults.top({
+  asset: 'USDC',
+  chainId: 8453,
+  limit: 10,
+  strategy: 'risk-adjusted',
+  minTvl: 5_000_000,
+});
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `asset` | `string` | all | Underlying token symbol filter |
+| `chainId` | `number` | all | EVM chain ID filter |
+| `limit` | `number` | `10` | Maximum vaults to return |
+| `strategy` | `StrategyPreset` | none | Apply strategy preset filters |
+| `minTvl` | `number` | none | Minimum TVL in USD |
+
+---
+
+## Reference Data
+
+### chains.list()
+
+Returns all 16 supported chains.
+
+```ts
+const chains = await forge.chains.list();
+// [{ id: 1, name: 'Ethereum', ... }, { id: 8453, name: 'Base', ... }, ...]
+```
+
+### protocols.list()
+
+Returns all 11 supported protocols.
+
+```ts
+const protocols = await forge.protocols.list();
+// [{ name: 'aave-v3', url: '...' }, { name: 'morpho-v1', url: '...' }, ...]
+```
+
+### portfolio.get()
+
+Fetch all Earn positions for a wallet address.
+
+```ts
+const portfolio = await forge.portfolio.get('0xYourWalletAddress');
+for (const position of portfolio.positions) {
+  console.log(position.vault.name, position.balanceUsd);
+}
+```
+
+---
+
+## Deposit Flow
+
+### buildDepositQuote()
+
+Build an unsigned deposit transaction via the LI.FI Composer API. Requires a `composerApiKey`.
+
+```ts
+const result = await forge.buildDepositQuote(vault, {
+  fromAmount: '100',       // Human-readable amount (e.g. "100" for 100 USDC)
+  wallet: '0xYourWallet',
+  fromToken: undefined,    // Optional: override source token address
+  fromChain: undefined,    // Optional: override source chain ID for cross-chain
+  slippage: 0.03,          // Optional: slippage tolerance (3%)
+});
+
+console.log(result.humanAmount);   // "100"
+console.log(result.rawAmount);     // "100000000" (for 6-decimal USDC)
+console.log(result.decimals);      // 6
+console.log(result.quote);         // Full LI.FI quote with transactionRequest
+```
+
+<Aside type="tip">
+The SDK automatically handles decimal conversion ([Pitfall #9](/pitfalls/)) and sets
+`toToken` to the vault address ([Pitfall #5](/pitfalls/)). You never need to do this manually.
+</Aside>
+
+### preflight()
+
+Run pre-deposit checks against a vault. Returns a `PreflightReport` with pass/fail status
+and any issues found.
+
+```ts
+const report = forge.preflight(vault, '0xYourWallet', {
+  walletChainId: 1,         // Optional: detect chain mismatch
+  depositAmount: '100',     // Optional: check balance sufficiency
+});
+
+if (!report.ok) {
+  for (const issue of report.issues) {
+    console.warn(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+  }
+}
+```
+
+**Checks performed:**
+
+| Code | Description |
+|------|-------------|
+| `NOT_TRANSACTIONAL` | Vault cannot accept deposits |
+| `CHAIN_MISMATCH` | Wallet on wrong chain |
+| `NO_GAS` | Insufficient native token for gas |
+| `EMPTY_UNDERLYING_TOKENS` | Vault has no underlying tokens listed |
+| `NOT_REDEEMABLE` | Vault may not support withdrawals |
+
+---
+
+## Risk Scoring
+
+### riskScore()
+
+Compute a composite 0-10 risk score for a vault. Higher score = safer.
+
+```ts
+const risk = forge.riskScore(vault);
+console.log(risk.score);     // 7.8
+console.log(risk.label);     // "low"
+console.log(risk.breakdown); // { tvl: 9, apyStability: 8, protocol: 9, redeemability: 10, assetType: 9 }
+```
+
+See the full [Risk Scoring Guide](/risk/) for dimension details, weights, and thresholds.
+
+---
+
+## Portfolio Suggestions
+
+### suggest()
+
+Get a risk-adjusted portfolio allocation across multiple vaults.
+
+```ts
+const result = await forge.suggest({
+  amount: 10_000,             // Total USD to allocate
+  asset: 'USDC',             // Filter by asset
+  maxChains: 3,              // Max chains to spread across
+  maxVaults: 5,              // Max vaults in the allocation
+  strategy: 'diversified',   // Optional strategy preset
+});
+
+console.log(result.expectedApy);   // Weighted-average APY
+for (const alloc of result.allocations) {
+  console.log(`${alloc.vault.name}: $${alloc.amount} (${alloc.percentage}%) APY ${alloc.apy}%`);
+}
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `amount` | `number` | required | Total USD amount to allocate |
+| `asset` | `string` | all | Filter by underlying token symbol |
+| `maxChains` | `number` | `5` | Maximum chains in the allocation |
+| `maxVaults` | `number` | `5` | Maximum vaults in the allocation |
+| `strategy` | `StrategyPreset` | none | Apply strategy preset |
+
+The allocation engine scores each vault using `apy * (riskScore / 10)` and distributes
+funds proportionally by that score, enforcing the `maxChains` diversification constraint.
+
+---
+
+## Strategy Presets
+
+Four built-in presets for common yield strategies:
+
+| Preset | Description | TVL Floor | Protocols | Tags |
+|--------|-------------|-----------|-----------|------|
+| `conservative` | Stablecoin, blue-chip, high TVL | $50M | aave-v3, morpho-v1, euler-v2, pendle, maple | `stablecoin` |
+| `max-apy` | Highest APY, no restrictions | none | all | all |
+| `diversified` | Multi-chain, multi-protocol spread | $1M | all | all |
+| `risk-adjusted` | Risk score >= 7, then sort by APY | none | all | all |
+
+```ts
+import { STRATEGIES, getStrategy } from '@earnforge/sdk';
+
+const config = getStrategy('conservative');
+console.log(config.description); // "Stablecoin-tagged, TVL > $50M, APY 3-7%, blue-chip protocols only"
+console.log(config.filters);     // { tags: ['stablecoin'], minTvlUsd: 50_000_000, protocols: [...] }
+```
+
+---
+
+## Gas Route Optimization
+
+### optimizeGasRoutes()
+
+Compare deposit costs from multiple source chains to find the cheapest route.
+
+```ts
+const routes = await forge.optimizeGasRoutes(vault, {
+  fromAmount: '100',
+  wallet: '0xYourWallet',
+  fromChains: [1, 10, 8453],  // Compare Ethereum, Optimism, Base
+});
+
+for (const route of routes) {
+  console.log(`${route.fromChainName}: gas=$${route.gasCostUsd} fee=$${route.feeCostUsd} total=$${route.totalCostUsd}`);
+}
+// Routes are sorted by totalCostUsd ascending -- cheapest first
+```
+
+---
+
+## Watch / Monitoring
+
+### watch()
+
+Watch a vault for APY and TVL changes. Returns an async generator of events.
+
+```ts
+const watcher = forge.watch('8453-0xbeef...', {
+  apyDropPercent: 20,   // Alert when APY drops 20%+
+  tvlDropPercent: 30,   // Alert when TVL drops 30%+
+});
+
+for await (const event of watcher) {
+  console.log(`[${event.type}] APY: ${event.current.apy}% (was ${event.previous.apy}%)`);
+}
+```
+
+---
+
+## APY History
+
+### getApyHistory()
+
+Fetch 30-day APY history from DeFiLlama yields API.
+
+```ts
+const history = await forge.getApyHistory('0xVaultAddress', 8453);
+for (const point of history) {
+  console.log(`${point.date}: ${point.apy}%`);
+}
+```
+
+---
+
+## Utility Functions
+
+### parseTvl()
+
+Parse the string-typed TVL value from the API into usable formats.
+
+```ts
+import { parseTvl } from '@earnforge/sdk';
+
+const tvl = parseTvl(vault.analytics.tvl);
+console.log(tvl.raw);    // "12345678.90" (original string)
+console.log(tvl.parsed); // 12345678.9   (number)
+console.log(tvl.bigint); // 12345678n    (bigint, truncated)
+```
+
+### getBestApy()
+
+Get the best available APY using the fallback chain: `apy.total` -> `apy30d` -> `apy7d` -> `apy1d` -> `0`.
+
+```ts
+import { getBestApy } from '@earnforge/sdk';
+
+const apy = getBestApy(vault.analytics);
+```
+
+### toSmallestUnit() / fromSmallestUnit()
+
+Convert between human-readable amounts and on-chain smallest-unit amounts.
+
+```ts
+import { toSmallestUnit, fromSmallestUnit } from '@earnforge/sdk';
+
+toSmallestUnit('100', 6);   // "100000000"  (100 USDC)
+fromSmallestUnit('100000000', 6); // "100"
+```
+
+---
+
+## Error Types
+
+The SDK exports typed error classes for precise error handling:
+
+| Error Class | Code | When |
+|-------------|------|------|
+| `EarnForgeError` | varies | Base class for all SDK errors |
+| `EarnApiError` | `EARN_API_ERROR` | HTTP error from `earn.li.fi` |
+| `ComposerError` | `COMPOSER_ERROR` | HTTP error from `li.quest` (Composer) |
+| `PreflightError` | `PREFLIGHT_ERROR` | Preflight checks found blocking issues |
+| `RateLimitError` | `RATE_LIMIT` | Rate limit exceeded (429) |
+
+```ts
+import { EarnApiError, ComposerError, RateLimitError } from '@earnforge/sdk';
+
+try {
+  await forge.vaults.get('invalid-slug');
+} catch (err) {
+  if (err instanceof EarnApiError) {
+    console.error(`API error ${err.status}: ${err.message} (${err.url})`);
+  } else if (err instanceof RateLimitError) {
+    console.error(`Rate limited. Retry after ${err.retryAfter}ms`);
+  }
+}
+```

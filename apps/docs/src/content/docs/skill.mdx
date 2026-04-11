@@ -1,0 +1,39 @@
+---
+title: Agent Skill
+description: The first Earn-native Agent Skill — vault discovery, risk scoring, and deposits via CLI.
+---
+
+# Agent Skill
+
+EarnForge publishes an Agent Skill following the Anthropic Skills spec. It's the first Earn-native skill — LI.FI's own skills only cover swap/bridge.
+
+## Installation
+
+```bash
+npm i @earnforge/skill
+```
+
+The skill includes:
+
+- `SKILL.md` — front door, always loaded by the agent (~500 tokens)
+- `references/pitfalls.md` — 18 pitfalls with fixes
+- `references/protocols.md` — 11 protocols with risk tiers
+- `references/chains.md` — 16 chains with IDs
+- `references/examples.md` — 8 worked examples
+- `references/strategies.md` — 4 yield strategy presets
+
+## How it works
+
+The agent reads `SKILL.md` and shells out to the `earnforge` CLI with `--json` for every operation. This is the CLI-first architecture — the skill is a thin wrapper for discoverability.
+
+## Key rules from SKILL.md
+
+1. Never sign transactions — return unsigned `transactionRequest`
+2. APY can be null — prefer `apy30d` for stable yield comparisons
+3. Always check `isTransactional === true` before quoting
+4. Stablecoin vaults have the `"stablecoin"` tag
+5. Cross-chain: pass `--from-chain` for the source chain
+6. Check `isRedeemable === true` before withdraw
+7. Use `earnforge risk` and filter score >= 7 for "safe" requests
+8. Use `earnforge suggest` for portfolio allocation
+9. Pass `--optimize-gas` for gas-sensitive users

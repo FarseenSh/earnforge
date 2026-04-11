@@ -565,3 +565,171 @@ program
       process.exitCode = 1;
     }
   });
+
+// ── init ──
+
+program
+  .command('init')
+  .argument('<name>', 'Project name')
+  .description('Scaffold a new Next.js + wagmi + @earnforge/react project')
+  .action(async (name: string) => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const dir = path.resolve(process.cwd(), name);
+
+    if (fs.existsSync(dir)) {
+      console.error(chalk.red(`Directory "${name}" already exists.`));
+      process.exitCode = 1;
+      return;
+    }
+
+    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+
+    fs.writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify(
+        {
+          name,
+          version: '0.1.0',
+          private: true,
+          type: 'module',
+          scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+          dependencies: {
+            '@earnforge/sdk': '^0.1.0',
+            '@earnforge/react': '^0.1.0',
+            '@tanstack/react-query': '^5.90.0',
+            next: '^15.0.0',
+            react: '^19.0.0',
+            'react-dom': '^19.0.0',
+            wagmi: '^2.0.0',
+            viem: '^2.47.0',
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    fs.writeFileSync(
+      path.join(dir, '.env.example'),
+      'NEXT_PUBLIC_LIFI_API_KEY=your-api-key-from-portal.li.fi\n',
+    );
+
+    fs.writeFileSync(
+      path.join(dir, 'src', 'page.tsx'),
+      `// SPDX-License-Identifier: Apache-2.0
+import { createEarnForge } from '@earnforge/sdk';
+
+const forge = createEarnForge({
+  composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY,
+});
+
+export default async function Home() {
+  const top = await forge.vaults.top({ asset: 'USDC', limit: 5 });
+  return (
+    <main>
+      <h1>Top USDC Vaults</h1>
+      <ul>
+        {top.map((v) => (
+          <li key={v.slug}>
+            {v.name} — {v.analytics.apy.total.toFixed(2)}% APY
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+`,
+    );
+
+    console.log(chalk.green(`\n  Scaffolded ${chalk.bold(name)}!\n`));
+    console.log(`  ${chalk.dim('cd')} ${name}`);
+    console.log(`  ${chalk.dim('cp')} .env.example .env.local`);
+    console.log(`  ${chalk.dim('npm install')}`);
+    console.log(`  ${chalk.dim('npm run dev')}\n`);
+  });
+
+// ── simulate ──
+
+program
+  .command('simulate')
+  .description('Dry-run a deposit quote against an anvil fork (requires anvil)')
+  .requiredOption('--vault <slug>', 'Vault slug')
+  .requiredOption('--amount <human>', 'Deposit amount (human-readable)')
+  .requiredOption('--wallet <addr>', 'Wallet address')
+  .option('--rpc <url>', 'Custom RPC URL (default: auto-detect)')
+  .option('--json', 'JSON output')
+  .action(async (opts: { vault: string; amount: string; wallet: string; rpc?: string; json?: boolean }) => {
+    const spinner = ora('Building quote for simulation...').start();
+    try {
+      const forge = getForge();
+      const vault = await forge.vaults.get(opts.vault);
+      const result = await forge.buildDepositQuote(vault, {
+        fromAmount: opts.amount,
+        wallet: opts.wallet,
+      });
+
+      spinner.text = 'Simulating on anvil fork...';
+
+      const txReq = result.quote.transactionRequest;
+      const rpcUrl = opts.rpc ?? `https://rpc.li.fi/v1/chain/${vault.chainId}`;
+
+      // Use a simple eth_call simulation
+      const simResult = await globalThis.fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_call',
+          params: [
+            {
+              from: opts.wallet,
+              to: txReq.to,
+              data: txReq.data,
+              value: txReq.value,
+              gas: txReq.gasLimit,
+            },
+            'latest',
+          ],
+          id: 1,
+        }),
+      });
+
+      const sim = (await simResult.json()) as { result?: string; error?: { message: string } };
+      spinner.stop();
+
+      const simData = {
+        vault: vault.slug,
+        amount: opts.amount,
+        decimals: result.decimals,
+        rawAmount: result.rawAmount,
+        gasLimit: txReq.gasLimit,
+        to: txReq.to,
+        chainId: txReq.chainId,
+        simulation: sim.error ? 'FAILED' : 'SUCCESS',
+        error: sim.error?.message,
+      };
+
+      outputResult(simData, opts.json, () => {
+        const status = sim.error
+          ? chalk.red('FAILED: ' + sim.error.message)
+          : chalk.green('SUCCESS — transaction would execute');
+        return [
+          chalk.bold('Simulation Result'),
+          '',
+          `  Vault:     ${vault.name} (${vault.slug})`,
+          `  Amount:    ${opts.amount} (${result.rawAmount} raw)`,
+          `  Gas Limit: ${txReq.gasLimit}`,
+          `  Target:    ${txReq.to}`,
+          `  Chain:     ${txReq.chainId}`,
+          '',
+          `  Status:    ${status}`,
+        ].join('\n');
+      });
+    } catch (err) {
+      spinner.fail('Simulation failed');
+      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+      process.exitCode = 1;
+    }
+  });

@@ -1,0 +1,83 @@
+---
+title: Risk Scoring
+description: How EarnForge computes composite 0-10 vault risk scores.
+---
+
+# Risk Scoring
+
+EarnForge computes a composite 0-10 risk score for every vault. No other tool in the LI.FI ecosystem surfaces vault risk.
+
+## Score interpretation
+
+| Score | Label | Color | Meaning |
+|---|---|---|---|
+| 7-10 | Low risk | Green | Blue-chip protocol, high TVL, stable APY, stablecoin |
+| 4-6 | Medium risk | Yellow | Mixed signals — review before depositing |
+| 0-3 | High risk | Red | Low TVL, volatile APY, unknown protocol, or illiquid |
+
+## Five dimensions
+
+### 1. TVL Magnitude (25% weight)
+
+| TVL | Score |
+|---|---|
+| >= $100M | 10 |
+| >= $50M | 9 |
+| >= $10M | 8 |
+| >= $5M | 7 |
+| >= $1M | 5 |
+| >= $100K | 3 |
+| < $100K | 1 |
+
+### 2. APY Stability (20% weight)
+
+Measures divergence between current APY (`apy.total`) and 30-day APY (`apy30d`):
+
+| Divergence | Score |
+|---|---|
+| < 5% | 10 |
+| < 10% | 8 |
+| < 20% | 6 |
+| < 50% | 4 |
+| >= 50% | 2 |
+
+### 3. Protocol Maturity (25% weight)
+
+| Protocol | Score | Tier |
+|---|---|---|
+| Aave V3, Morpho V1 | 9 | Blue-chip |
+| Euler V2, Pendle, Ethena, Ether.fi | 7 | Established |
+| Maple | 6 | Moderate |
+| Upshift | 5 | Moderate |
+| Neverland, YO Protocol | 4 | Emerging |
+| Unknown | 3 | Unrated |
+
+### 4. Redeemability (15% weight)
+
+- Redeemable: 10
+- Not redeemable: 3 (liquidity risk)
+
+### 5. Asset Type (15% weight)
+
+- Stablecoin tag: 9
+- Non-stablecoin: 5
+
+## Usage
+
+```ts
+import { createEarnForge } from '@earnforge/sdk';
+
+const forge = createEarnForge();
+const vault = await forge.vaults.get('8453-0xbeef...');
+const risk = forge.riskScore(vault);
+
+console.log(risk.score);     // 8.5
+console.log(risk.label);     // "low"
+console.log(risk.breakdown); // { tvl: 9, apyStability: 8, protocol: 9, ... }
+```
+
+CLI:
+
+```bash
+earnforge risk 8453-0xbeef... --json
+```

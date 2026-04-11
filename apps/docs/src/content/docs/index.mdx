@@ -1,0 +1,110 @@
+---
+title: EarnForge
+description: One SDK, seven surfaces for the LI.FI Earn API.
+template: splash
+hero:
+  tagline: The complete developer toolkit for LI.FI Earn -- 1 SDK powering a CLI, React hooks, MCP server, Telegram bot, agent skill, and a web studio.
+  actions:
+    - text: Get Started
+      link: /sdk/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/nicktmro/earnforge
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is EarnForge?
+
+EarnForge is a 7-package monorepo that wraps the [LI.FI Earn API](https://earn.li.fi) into
+production-grade developer surfaces. It covers **623+ vaults across 16 chains and 11 protocols**
+with full pagination, Zod-validated schemas, risk scoring, strategy presets, gas optimization,
+and guards for all 18 known API pitfalls.
+
+```bash
+npm i @earnforge/sdk
+```
+
+```ts
+import { createEarnForge } from '@earnforge/sdk';
+
+const forge = createEarnForge();
+const top = await forge.vaults.top({ asset: 'USDC', limit: 5 });
+for (const vault of top) {
+  const risk = forge.riskScore(vault);
+  console.log(`${vault.name}  APY ${vault.analytics.apy.total}%  Risk ${risk.score}/10 (${risk.label})`);
+}
+```
+
+## Packages
+
+<CardGrid>
+  <Card title="@earnforge/sdk" icon="setting">
+    Zod-typed client for Earn Data API + Composer. Risk scoring, strategy presets,
+    portfolio suggestions, gas optimization. 18 pitfall guards built in.
+    [Read the SDK docs](/sdk/)
+  </Card>
+
+  <Card title="@earnforge/cli" icon="laptop">
+    Commander CLI wrapping the SDK. 11 commands, all with `--json` output.
+    `earnforge doctor` runs 18-pitfall diagnostics.
+    [Read the CLI docs](/cli/)
+  </Card>
+
+  <Card title="@earnforge/react" icon="puzzle">
+    9 React hooks built on wagmi + TanStack Query. Includes `useEarnDeposit`
+    state machine for full deposit flows.
+    [Read the React docs](/react/)
+  </Card>
+
+  <Card title="@earnforge/mcp" icon="rocket">
+    9 MCP tools for Claude Desktop, Cursor, and Windsurf. Drop-in
+    Earn intelligence for any LLM that speaks MCP.
+    [Read the MCP docs](/mcp/)
+  </Card>
+
+  <Card title="@earnforge/skill" icon="document">
+    SKILL.md + 5 reference files following the Agent Skill standard.
+    Give any coding agent Earn API superpowers.
+    [Read the Skill docs](/skill/)
+  </Card>
+
+  <Card title="@earnforge/bot" icon="star">
+    Telegram bot via Grammy. `/yield`, `/top`, `/risk`, `/suggest`, `/doctor`
+    commands with Markdown-formatted responses.
+    [Read the Bot overview](/skill/)
+  </Card>
+
+  <Card title="EarnForge Studio" icon="open-book">
+    Next.js + Tailwind web app. Vault explorer, DeFiLlama sparklines,
+    risk badges, strategy picker, and code generator.
+  </Card>
+</CardGrid>
+
+## Guides
+
+<CardGrid>
+  <Card title="Risk Scoring" icon="warning">
+    How the 0-10 composite score works: 5 dimensions, weighted formula,
+    color coding.
+    [Read the guide](/risk/)
+  </Card>
+
+  <Card title="18 Pitfalls" icon="error">
+    Every production pitfall in the LI.FI Earn API, how the SDK defeats each one,
+    and which test verifies it.
+    [Read the guide](/pitfalls/)
+  </Card>
+</CardGrid>
+
+## Quick Links
+
+- [SDK Reference](/sdk/) -- Full API documentation for `@earnforge/sdk`
+- [CLI Reference](/cli/) -- All 11 CLI commands with examples
+- [React Hooks](/react/) -- 9 hooks with code samples
+- [MCP Server](/mcp/) -- Setup for Claude Desktop, Cursor, Windsurf
+- [Agent Skill](/skill/) -- SKILL.md for AI agent integration
+- [Risk Scoring Guide](/risk/) -- The scoring algorithm explained
+- [18 Pitfalls Guide](/pitfalls/) -- Comprehensive pitfall reference

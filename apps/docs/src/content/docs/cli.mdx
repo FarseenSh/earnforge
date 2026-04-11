@@ -1,0 +1,386 @@
+---
+title: CLI Reference
+description: Complete reference for @earnforge/cli -- 11 commands for the LI.FI Earn API.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+`@earnforge/cli` is a full-featured command-line interface wrapping `@earnforge/sdk`. Every
+command supports `--json` for machine-readable output.
+
+## Installation
+
+<Tabs>
+  <TabItem label="npm (global)">
+    ```bash
+    npm i -g @earnforge/cli
+    ```
+  </TabItem>
+  <TabItem label="npx (one-shot)">
+    ```bash
+    npx @earnforge/cli list --asset USDC
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add -g @earnforge/cli
+    ```
+  </TabItem>
+</Tabs>
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `LIFI_API_KEY` | For `quote` only | LI.FI Composer API key for deposit quotes |
+
+---
+
+## Commands
+
+### earnforge list
+
+List vaults with optional filters.
+
+```bash
+earnforge list --asset USDC --chain 8453 --min-tvl 1000000 --sort apy --limit 10
+earnforge list --strategy conservative --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--chain <id>` | number | all | Filter by chain ID |
+| `--asset <sym>` | string | all | Filter by asset symbol |
+| `--min-apy <n>` | float | none | Minimum APY (as fraction, e.g. 0.05 = 5%) |
+| `--min-tvl <n>` | float | none | Minimum TVL in USD |
+| `--sort <field>` | string | `apy` | Sort by `apy` or `tvl` |
+| `--limit <n>` | number | `20` | Max results |
+| `--strategy <preset>` | string | none | Strategy preset filter |
+| `--json` | boolean | `false` | Output as JSON |
+
+**Example output:**
+
+```
+  Slug                    Name                APY      TVL         Protocol   Chain
+  ----                    ----                ---      ---         --------   -----
+  8453-0xbeef...          USDC Base Vault     5.23%    $120.5M     aave-v3    8453
+  1-0xdead...             USDC Morpho         4.87%    $89.2M      morpho-v1  1
+  42161-0xcafe...         USDC Arbitrum       4.12%    $45.0M      euler-v2   42161
+
+  Showing 3 vaults
+```
+
+---
+
+### earnforge top
+
+Show top vaults by APY for a given asset.
+
+```bash
+earnforge top --asset USDC --limit 5
+earnforge top --asset WETH --chain 1 --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--asset <sym>` | string | **required** | Asset symbol (e.g. USDC, WETH) |
+| `--chain <id>` | number | all | Filter by chain ID |
+| `--limit <n>` | number | `10` | Max results |
+| `--json` | boolean | `false` | Output as JSON |
+
+---
+
+### earnforge vault
+
+Get detailed vault info by slug.
+
+```bash
+earnforge vault 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
+earnforge vault 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
+```
+
+Displays: name, protocol, chain, APY breakdown (total/base/reward), TVL, underlying tokens,
+tags, isTransactional, isRedeemable, deposit/redeem packs, and description (if available).
+
+---
+
+### earnforge portfolio
+
+View portfolio positions for a wallet.
+
+```bash
+earnforge portfolio 0xYourWalletAddress
+earnforge portfolio 0xYourWalletAddress --json
+```
+
+Shows all active Earn positions with chain, protocol, asset, USD balance, and native balance.
+
+---
+
+### earnforge quote
+
+Build a deposit quote for a vault.
+
+```bash
+earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour...
+earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour... --optimize-gas
+earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour... --from-chain 1 --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--vault <slug>` | string | **required** | Vault slug |
+| `--amount <human>` | string | **required** | Human-readable deposit amount |
+| `--wallet <addr>` | string | **required** | Wallet address |
+| `--from-token <addr>` | string | auto | Override source token address |
+| `--from-chain <id>` | number | vault chain | Override source chain for cross-chain |
+| `--optimize-gas` | boolean | `false` | Compare routes from multiple chains |
+| `--json` | boolean | `false` | Output as JSON |
+
+**Example output:**
+
+```
+Deposit Quote -- USDC Base Vault
+
+  Amount:      100 (100000000 raw, 6 decimals)
+  From:        USDC on chain 8453
+  To:          USDC Base Vault on chain 8453
+  Est. Output: 99850000
+  Duration:    15s
+  Gas Cost:    $0.02
+  Fee Cost:    $0.10
+
+Transaction ready to sign via quote.transactionRequest
+```
+
+With `--optimize-gas`:
+
+```
+Gas-optimized routes for USDC Base Vault
+
+  Base (8453): gas=$0.02 fee=$0.10 total=$0.12 time=15s << cheapest
+  Optimism (10): gas=$0.03 fee=$0.15 total=$0.18 time=30s
+  Ethereum (1): gas=$2.50 fee=$0.10 total=$2.60 time=45s
+```
+
+<Aside type="caution">
+The `quote` command requires the `LIFI_API_KEY` environment variable.
+Without it, you will get a `ComposerError`.
+</Aside>
+
+---
+
+### earnforge doctor
+
+Run 18-pitfall diagnostics on a vault or environment.
+
+```bash
+earnforge doctor --vault 8453-0xbeef...
+earnforge doctor --env
+earnforge doctor --vault 8453-0xbeef... --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--vault <slug>` | string | none | Vault slug to check |
+| `--env` | boolean | `false` | Run environment checks only |
+| `--json` | boolean | `false` | Output as JSON |
+
+**Example doctor output:**
+
+```
+Doctor Report -- USDC Base Vault
+
+  Check                           Status
+  -----                           ------
+  Base URL (earn.li.fi)           PASS
+  No auth on Earn Data            PASS
+  Composer API key present        PASS
+  Vault is transactional          PASS
+  Vault is redeemable             PASS
+  Underlying tokens exist         PASS
+  APY total is a number           PASS
+  APY reward normalized           PASS
+  TVL is parseable string         PASS
+  apy1d null handled              PASS
+  apy7d null handled              PASS
+  Description optional handled    PASS
+  Pagination works                PASS
+  Rate limiter active             PASS
+  Decimal conversion available    PASS
+  Quote uses GET not POST         PASS
+  toToken = vault.address         PASS
+  Cache TTL configured            PASS
+
+  18/18 checks passed
+```
+
+---
+
+### earnforge risk
+
+Calculate risk score for a vault.
+
+```bash
+earnforge risk 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
+earnforge risk 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
+```
+
+**Example output:**
+
+```
+Risk Score -- USDC Base Vault
+
+  Dimension            Score    Weight
+  ---------            -----    ------
+  TVL Magnitude        9/10     25%
+  APY Stability        8/10     20%
+  Protocol Maturity    9/10     25%
+  Redeemability       10/10     15%
+  Asset Type           9/10     15%
+
+  Overall: 8.9/10 (low risk)
+```
+
+See the full [Risk Scoring Guide](/risk/) for how each dimension is computed.
+
+---
+
+### earnforge suggest
+
+Get portfolio allocation suggestions.
+
+```bash
+earnforge suggest --amount 10000 --asset USDC
+earnforge suggest --amount 50000 --asset USDC --strategy diversified --max-chains 3
+earnforge suggest --amount 10000 --asset WETH --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--amount <human>` | float | **required** | Total USD amount to allocate |
+| `--asset <sym>` | string | **required** | Asset symbol |
+| `--max-chains <n>` | number | `5` | Max chains to spread across |
+| `--strategy <preset>` | string | none | Strategy preset |
+| `--json` | boolean | `false` | Output as JSON |
+
+**Example output:**
+
+```
+Allocation Suggestion -- $10,000.00 in USDC
+  Expected APY: 4.92%
+
+  Vault                  Chain    Protocol   APY     Risk     %       Amount
+  -----                  -----    --------   ---     ----     -       ------
+  USDC Base Vault        8453     aave-v3    5.23%   8.9/10   35.2%   $3,520.00
+  USDC Morpho ETH        1        morpho-v1  4.87%   8.5/10   28.1%   $2,810.00
+  USDC Euler ARB         42161    euler-v2   4.12%   7.2/10   20.3%   $2,030.00
+  USDC Pendle OP         10       pendle     4.65%   7.0/10   16.4%   $1,640.00
+```
+
+---
+
+### earnforge watch
+
+Watch a vault for APY/TVL changes in real time.
+
+```bash
+earnforge watch --vault 8453-0xbeef... --apy-drop 20 --tvl-drop 30
+earnforge watch --vault 8453-0xbeef... --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--vault <slug>` | string | **required** | Vault slug to watch |
+| `--apy-drop <pct>` | float | none | APY drop threshold (%) |
+| `--tvl-drop <pct>` | float | none | TVL drop threshold (%) |
+| `--json` | boolean | `false` | Output events as JSON |
+
+Press `Ctrl+C` to stop watching.
+
+**Example output:**
+
+```
+Watching 8453-0xbeef... (Ctrl+C to stop)...
+[2026-04-11T14:30:00.000Z] TICK APY: 5.23% (prev: 5.23%) TVL: $120.5M (prev: $120.5M)
+[2026-04-11T14:31:00.000Z] APY-DROP APY: 4.10% (prev: 5.23%) TVL: $120.5M (prev: $120.5M)
+```
+
+---
+
+### earnforge chains
+
+List all supported chains.
+
+```bash
+earnforge chains
+earnforge chains --json
+```
+
+**Example output:**
+
+```
+Supported Chains
+
+  Chain ID   Name         Network
+  --------   ----         -------
+  1          Ethereum     ethereum
+  10         Optimism     optimism
+  56         BSC          bsc
+  100        Gnosis       gnosis
+  130        Unichain     unichain
+  137        Polygon      polygon
+  143        Monad        monad
+  146        Sonic        sonic
+  5000       Mantle       mantle
+  8453       Base         base
+  42161      Arbitrum     arbitrum
+  42220      Celo         celo
+  43114      Avalanche    avalanche
+  59144      Linea        linea
+  80094      Berachain    berachain
+  747474     Katana       katana
+```
+
+---
+
+### earnforge protocols
+
+List all supported protocols.
+
+```bash
+earnforge protocols
+earnforge protocols --json
+```
+
+**Example output:**
+
+```
+Supported Protocols
+
+  Protocol            URL
+  --------            ---
+  aave-v3             https://aave.com
+  morpho-v1           https://morpho.org
+  euler-v2            https://euler.finance
+  pendle              https://pendle.finance
+  maple               https://maple.finance
+  ethena-usde         https://ethena.fi
+  ether.fi-liquid     https://ether.fi
+  ether.fi-stake      https://ether.fi
+  upshift             https://upshift.finance
+  neverland           https://neverland.finance
+  yo-protocol         https://yo.finance
+```
+
+---
+
+## JSON Output
+
+Every command supports `--json` to output structured JSON instead of formatted tables.
+This is designed for piping into other tools, scripts, or CI pipelines.
+
+```bash
+earnforge top --asset USDC --limit 3 --json | jq '.[0].apy'
+earnforge doctor --vault 8453-0xbeef... --json | jq '.checks | map(select(.status == "FAIL"))'
+```

@@ -1,0 +1,31 @@
+---
+title: 18 Pitfalls
+description: Every Earn API pitfall and how EarnForge defeats it.
+---
+
+# 18 Pitfalls Defeated
+
+14 documented by LI.FI + 4 discovered via live API probing. Every pitfall has a named regression test.
+
+| # | Pitfall | Root Cause | SDK Fix | Test |
+|---|---|---|---|---|
+| 1 | Wrong base URL | `earn.li.fi` vs `li.quest` | Two typed clients | `pitfall-01-wrong-base-url.test.ts` |
+| 2 | Auth on Earn Data | Unnecessary header | No auth on EarnDataClient | `pitfall-02-auth-on-earn-data.test.ts` |
+| 3 | Missing Composer key | Quotes rejected | Env validation + clear error | `pitfall-03-missing-composer-key.test.ts` |
+| 4 | POST on /quote | Should be GET | Forces GET | `pitfall-04-post-instead-of-get.test.ts` |
+| 5 | Wrong toToken | Quote wrong result | `toToken = vault.address` | `pitfall-05-wrong-totoken.test.ts` |
+| 6 | No pagination | Only 50 of 623+ vaults | Async iterator via nextCursor | `pitfall-06-ignoring-pagination.test.ts` |
+| 7 | Null APY | App crash | Fallback chain + null-safe | `pitfall-07-null-apy.test.ts` |
+| 8 | String TVL | Type error | `parseTvl()` at boundary | `pitfall-08-tvl-string.test.ts` |
+| 9 | Decimal mismatch | 1 USDC as 1e18 | `toSmallestUnit()` | `pitfall-09-decimal-mismatch.test.ts` |
+| 10 | Stale quote | Tx reverts | Cache TTL + refresh | `pitfall-10-stale-quote.test.ts` |
+| 11 | No gas token | Tx fails | `preflight()` balance check | `pitfall-11-no-gas-token.test.ts` |
+| 12 | Chain mismatch | Wrong network | `preflight()` chain check | `pitfall-12-chain-mismatch.test.ts` |
+| 13 | Non-transactional | No quote | `isTransactional` guard | `pitfall-13-non-transactional.test.ts` |
+| 14 | Rate limit | 429 errors | Token bucket 100/min | `pitfall-14-rate-limit.test.ts` |
+| **15** | **Empty underlyingTokens** | Some vaults have `[]` | Null-safe array access | `pitfall-15-empty-underlying-tokens.test.ts` |
+| **16** | **Optional description** | ~86% of vaults omit it | Zod `.optional()` | `pitfall-16-optional-description.test.ts` |
+| **17** | **apy.reward null vs 0** | Protocol-specific | Normalize to 0 | `pitfall-17-apy-reward-null-vs-zero.test.ts` |
+| **18** | **apy1d null** | Exists with valid apy7d | Extended fallback chain | `pitfall-18-apy1d-null.test.ts` |
+
+Pitfalls 15-18 (bold) were discovered via live API probing and are not in LI.FI's official documentation.

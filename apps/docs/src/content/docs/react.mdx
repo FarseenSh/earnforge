@@ -1,0 +1,112 @@
+---
+title: React Hooks
+description: 9 React hooks for the LI.FI Earn API — drop-in vault discovery, risk scoring, and deposits.
+---
+
+# React Hooks
+
+```bash
+npm i @earnforge/react @earnforge/sdk @tanstack/react-query
+```
+
+## Setup
+
+Wrap your app with `EarnForgeProvider`:
+
+```tsx
+import { EarnForgeProvider } from '@earnforge/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createEarnForge } from '@earnforge/sdk';
+
+const queryClient = new QueryClient();
+const forge = createEarnForge({ composerApiKey: process.env.LIFI_API_KEY });
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <EarnForgeProvider sdk={forge}>
+        <YourApp />
+      </EarnForgeProvider>
+    </QueryClientProvider>
+  );
+}
+```
+
+## Hooks
+
+### useVaults
+
+```tsx
+const { data, isLoading, error, fetchMore, hasMore } = useVaults({
+  chainId: 8453,
+  asset: 'USDC',
+  limit: 10,
+  strategy: 'conservative',
+});
+```
+
+### useVault
+
+```tsx
+const { data: vault, isLoading } = useVault('8453-0xbeef...');
+```
+
+### useEarnTopYield
+
+```tsx
+const { data: topVaults } = useEarnTopYield({ asset: 'USDC', limit: 5 });
+```
+
+### usePortfolio
+
+```tsx
+const { data: portfolio } = usePortfolio('0xYourWallet');
+```
+
+### useRiskScore
+
+```tsx
+const riskScore = useRiskScore(vault);
+// { score: 8.5, label: 'low', breakdown: { tvl: 9, ... } }
+```
+
+### useStrategy
+
+```tsx
+const strategy = useStrategy('conservative');
+// { name, description, filters, sort, sortDirection }
+```
+
+### useSuggest
+
+```tsx
+const { data: suggestion } = useSuggest({
+  amount: 10000,
+  asset: 'USDC',
+  maxChains: 3,
+  strategy: 'risk-adjusted',
+});
+```
+
+### useApyHistory
+
+```tsx
+const { data: history } = useApyHistory(vault.address, vault.chainId);
+// [{ timestamp, apy, tvlUsd }, ...]
+```
+
+### useEarnDeposit
+
+Full deposit state machine:
+
+```tsx
+const { status, prepare, execute, reset, preflight, quote, txHash } = useEarnDeposit();
+
+// Step 1: Prepare (runs preflight + builds quote)
+await prepare({ vault, amount: '500' });
+
+// Step 2: Execute (sends transaction via wagmi)
+await execute({ sendTransactionAsync });
+
+// status: 'idle' → 'preflight' → 'quoting' → 'ready' → 'sending' → 'success'
+```

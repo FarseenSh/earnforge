@@ -1,0 +1,51 @@
+---
+title: MCP Server
+description: 9 Earn-native MCP tools for Claude Desktop, Cursor, and Windsurf.
+---
+
+# MCP Server
+
+LI.FI's official MCP server has 19 tools — all swap/bridge, zero Earn. EarnForge adds 9 Earn-native tools.
+
+## Installation
+
+```bash
+npm i -g @earnforge/mcp
+```
+
+### Claude Desktop
+
+Add to `~/.config/claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "earnforge": {
+      "command": "earnforge-mcp",
+      "env": {
+        "LIFI_API_KEY": "your-key"
+      }
+    }
+  }
+}
+```
+
+### Cursor / Windsurf
+
+Add to your MCP config with the same command and env.
+
+## Tools
+
+| Tool | Description |
+|---|---|
+| `get-earn-vaults` | List vaults with filters (chainId, asset, minTvl, strategy) |
+| `get-earn-vault` | Get single vault by slug |
+| `get-earn-chains` | List supported chains |
+| `get-earn-protocols` | List supported protocols |
+| `get-earn-portfolio` | Get portfolio positions for a wallet |
+| `get-vault-risk` | Compute 0-10 risk score for a vault |
+| `quote-vault-deposit` | Build an unsigned deposit quote |
+| `suggest-allocation` | Portfolio allocation suggestion |
+| `run-doctor` | Run 18 pitfall checks on a vault |
+
+All tools return JSON. Error responses include `isError: true` with a message.
