@@ -1,0 +1,35 @@
+{
+  "name": "earnforge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "check": "biome check .",
+    "check:fix": "biome check --fix .",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:live": "turbo run test:live",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "circular": "turbo run circular",
+    "clean": "turbo run clean",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
+    "@changesets/cli": "^2.29.4",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7",
+    "knip": "^6.3.1",
+    "turbo": "^2.5.4",
+    "typescript": "^5.9.3"
+  }
+}

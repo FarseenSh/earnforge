@@ -1,0 +1,39 @@
+{
+  "name": "@earnforge/sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Typed SDK for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposit quoting with all 18 pitfalls handled by default",
+  "keywords": ["lifi", "earn", "defi", "yield", "vaults", "sdk"],
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.cjs",
+      "types": "./dist/esm/index.d.ts"
+    }
+  },
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsdown src/index.ts --format esm,cjs --dts --out-dir dist/esm && tsdown src/index.ts --format cjs --out-dir dist/cjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.live.test.ts'",
+    "test:live": "vitest run --include '**/*.live.test.ts'",
+    "circular": "madge --circular --extensions ts src/",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.4",
+    "madge": "^8.0.0",
+    "msw": "^2.13.2",
+    "tsdown": "^0.21.7",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.4"
+  }
+}

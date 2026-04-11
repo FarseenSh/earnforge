@@ -1,0 +1,31 @@
+{
+  "name": "@earnforge/bot",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Telegram bot for the LI.FI Earn API — yield queries, risk scoring, and portfolio suggestions",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/esm/index.d.ts"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsdown src/index.ts --format esm --dts --out-dir dist/esm",
+    "start": "node dist/esm/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@earnforge/sdk": "workspace:*",
+    "grammy": "^1.35.0"
+  },
+  "devDependencies": {
+    "tsdown": "^0.21.7",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.4"
+  }
+}
