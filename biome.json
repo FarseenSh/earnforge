@@ -1,8 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -31,13 +29,14 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      ".turbo",
-      ".next",
-      "coverage",
-      "packages/fixtures/src/*.json"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/.next",
+      "!**/coverage",
+      "!**/packages/fixtures/src/**/*.json"
     ]
   }
 }

@@ -4,18 +4,29 @@
   "type": "module",
   "license": "Apache-2.0",
   "description": "Typed SDK for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposit quoting with all 18 pitfalls handled by default",
-  "keywords": ["lifi", "earn", "defi", "yield", "vaults", "sdk"],
+  "keywords": [
+    "lifi",
+    "earn",
+    "defi",
+    "yield",
+    "vaults",
+    "sdk"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "require": "./dist/cjs/index.cjs",
-      "types": "./dist/esm/index.d.ts"
+      "types": "./dist/esm/index.d.mts"
     }
   },
   "main": "./dist/cjs/index.cjs",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/esm/index.d.mts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsdown src/index.ts --format esm,cjs --dts --out-dir dist/esm && tsdown src/index.ts --format cjs --out-dir dist/cjs",
     "typecheck": "tsc --noEmit",
@@ -29,6 +40,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "@vitest/coverage-v8": "^4.1.4",
     "madge": "^8.0.0",
     "msw": "^2.13.2",

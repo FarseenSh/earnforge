@@ -1,0 +1,190 @@
+# EarnForge
+
+> Developer toolkit for the LI.FI Earn API. Handles 18 integration pitfalls
+> so you can focus on building yield products.
+
+## Earn Data API (earn.li.fi)
+
+Base URL: https://earn.li.fi
+Auth: NONE. Do not send Authorization or x-lifi-api-key headers.
+
+### GET /v1/earn/vaults
+
+List vaults with optional filters. Returns paginated results (max 50 per page).
+
+Query params:
+- chainId (number) -- numeric chain ID, not chain name. e.g. 8453 for Base.
+- asset (string) -- token symbol filter, e.g. "USDC"
+- minTvl (number) -- minimum TVL in USD
+- sortBy (string) -- sort field
+- cursor (string) -- pagination cursor from previous response's nextCursor
+
+Response shape:
+```json
+{
+  "data": [ ...vaults ],
+  "nextCursor": "abc123" | null,
+  "total": 623
+}
+```
+
+### GET /v1/earn/vaults/{chainId}/{address}
+
+Get a single vault. chainId MUST be a number (e.g. 8453), not a chain name
+(e.g. "Base"). Using a chain name returns 400.
+
+### GET /v1/earn/chains
+
+List all supported chains. Returns an array of objects with chainId (number),
+name (string), networkCaip (string). Currently 16 chains.
+
+### GET /v1/earn/protocols
+
+List all supported protocols. Returns an array with name and url.
+
+### GET /v1/earn/portfolio/{walletAddress}/positions
+
+Get earn positions for a wallet address. Returns:
+```json
+{
+  "positions": [
+    {
+      "chainId": 8453,
+      "protocolName": "aave-v3",
+      "asset": { "address": "0x...", "name": "...", "symbol": "...", "decimals": 6 },
+      "balanceUsd": "1234.56",
+      "balanceNative": "1234560000"
+    }
+  ]
+}
+```
+
+## Composer API (li.quest)
+
+Base URL: https://li.quest
+Auth: REQUIRED. Send x-lifi-api-key header. Get a key from https://li.fi.
+
+### GET /v1/quote
+
+Get a deposit/swap/bridge quote. This is GET, not POST. POST returns 405.
+
+Query params:
+- fromChain (number) -- source chain ID
+- toChain (number) -- destination chain ID (must match vault.chainId)
+- fromToken (string) -- source token address
+- toToken (string) -- MUST be vault.address (the vault share token), NOT the underlying token address
+- fromAddress (string) -- wallet address
+- toAddress (string) -- wallet address (same as fromAddress for deposits)
+- fromAmount (string) -- amount in smallest unit (wei). Use toSmallestUnit() to convert.
+- slippage (number) -- optional, e.g. 0.03 for 3%
+- fromAmountForGas (string) -- optional, amount to reserve for gas
+
+Response includes transactionRequest (ready to sign), estimate (gas/fee
+costs, execution duration), and action details.
+
+## Vault object -- key field semantics
+
+- address: the vault's share token address. This is what you pass as toToken to Composer.
+- chainId: numeric chain ID (number, not string, not chain name)
+- slug: "{chainId}-{address}" -- used as a unique identifier
+- isTransactional: boolean. If false, deposits via Composer will fail. Check before quoting.
+- isRedeemable: boolean. If false, withdrawals may not be supported.
+- underlyingTokens: array of { symbol, address, decimals }. Can be empty on some vaults.
+- analytics.apy.total: number, always present. The annualized yield.
+- analytics.apy.reward: number OR null. Normalized to 0 by EarnForge SDK.
+- analytics.apy1d / apy7d / apy30d: number OR null. Use getBestApy() for safe fallback.
+- analytics.tvl.usd: STRING, not number. Use parseTvl() to convert.
+- description: OPTIONAL. ~14% of vaults omit this field.
+- tags: array of strings (e.g. "stablecoin", "lst")
+- depositPacks / redeemPacks: available deposit/redeem methods
+
+## 18 Integration Pitfalls
+
+1. Wrong base URL -- Earn Data is earn.li.fi, Composer is li.quest
+2. Auth on Earn Data -- do not send auth headers to earn.li.fi
+3. Missing Composer key -- li.quest requires x-lifi-api-key
+4. POST instead of GET -- /v1/quote is GET with query params
+5. Wrong toToken -- must be vault.address, not underlying token
+6. Ignoring pagination -- max 50 per page, follow nextCursor
+7. Null APY values -- apy1d/apy7d/apy30d can be null
+8. TVL is a string -- analytics.tvl.usd is "12345.67" not 12345.67
+9. Decimal mismatch -- USDC=6, WETH=18, must convert human amounts
+10. Stale quote -- quotes expire quickly, do not cache
+11. No gas token -- 0 native balance causes opaque revert
+12. Chain mismatch -- wallet chain must match vault chain
+13. Non-transactional vault -- ~30% of vaults have isTransactional:false
+14. Rate limit -- undocumented limits, use token bucket
+15. Empty underlyingTokens -- some vaults return []
+16. Optional description -- ~14% omit description field
+17. apy.reward null vs 0 -- protocols disagree, normalize to 0
+18. apy1d null -- fresh vaults lack historical data, use fallback chain
+
+## EarnForge SDK
+
+Install: npm i @earnforge/sdk
+
+```typescript
+import { createEarnForge, riskScore, parseTvl, getBestApy } from "@earnforge/sdk";
+
+const forge = createEarnForge({ composerApiKey: "your-key" });
+
+// List all vaults with auto-pagination
+for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
+  console.log(vault.name, vault.analytics.apy.total);
+}
+
+// Risk score
+const risk = forge.riskScore(vault); // { score: 7.2, label: "low", breakdown: {...} }
+
+// Parse TVL safely
+const tvl = parseTvl(vault.analytics.tvl); // { raw: "12345.67", parsed: 12345.67, bigint: 12345n }
+
+// Best APY with fallback
+const apy = getBestApy(vault.analytics); // handles null apy1d/apy7d/apy30d
+
+// Build deposit quote (handles pitfalls 3,4,5,9,13,15)
+const quote = await forge.buildDepositQuote(vault, {
+  fromAmount: "100",
+  wallet: "0x...",
+});
+
+// Preflight checks (handles pitfalls 11,12,13,15)
+const report = forge.preflight(vault, "0x...", {
+  walletChainId: 8453,
+  nativeBalance: 1000000000000000n,
+});
+
+// Portfolio suggestions
+const suggestion = await forge.suggest({
+  amount: 10000,
+  asset: "USDC",
+  strategy: "conservative",
+});
+```
+
+## EarnForge CLI
+
+Install: npm i -g @earnforge/cli
+
+All commands support --json for machine-readable output.
+
+```
+earnforge list --chain 8453 --asset USDC --min-apy 0.05 --json
+earnforge top --asset USDC --limit 5 --json
+earnforge vault 8453-0xbeef... --json
+earnforge portfolio 0xwallet... --json
+earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0x... --json
+earnforge risk 8453-0xbeef... --json
+earnforge suggest --amount 10000 --asset USDC --strategy conservative --json
+earnforge watch --vault 8453-0xbeef... --json
+earnforge chains --json
+earnforge protocols --json
+earnforge doctor --vault 8453-0xbeef... --json
+earnforge doctor --env --json
+```
+
+## Optional: API key
+
+Set the LIFI_API_KEY environment variable for Composer API access
+(required for deposit quoting and gas optimization). Earn Data API
+endpoints (vaults, chains, protocols, portfolio) work without any key.

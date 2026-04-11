@@ -73,11 +73,12 @@ export const AnalyticsSchema = z.object({
  * Order: apy.total → apy30d → apy7d → apy1d
  */
 export function getBestApy(analytics: z.infer<typeof AnalyticsSchema>): number {
+  // Use || (not ??) so 0 falls through to next option
   return (
-    analytics.apy.total ??
-    analytics.apy30d ??
-    analytics.apy7d ??
-    analytics.apy1d ??
+    analytics.apy.total ||
+    analytics.apy30d ||
+    analytics.apy7d ||
+    analytics.apy1d ||
     0
   );
 }

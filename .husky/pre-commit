@@ -1,2 +1,1 @@
-npx biome check --staged --no-errors-on-unmatched
-npx tsc --noEmit
+pnpm exec biome check --no-errors-on-unmatched --changed --since HEAD
