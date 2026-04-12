@@ -18,6 +18,7 @@ export { optimizeGasRoutes, type GasRoute, type GasOptimizeOptions } from './gas
 export { watch, type WatchOptions, type WatchEvent, type WatchEventType } from './watch.js';
 export { getApyHistory, type ApyDataPoint } from './apy-history.js';
 export { parseTvl, getBestApy, type TvlParsed } from './schemas/vault.js';
+export { checkAllowance, buildApprovalTx, MAX_UINT256, type AllowanceResult, type ApprovalTx } from './allowance.js';
 
 // ── Factory ──
 import { EarnDataClient, type EarnDataClientOptions } from './clients/index.js';

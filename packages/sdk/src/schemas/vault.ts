@@ -117,7 +117,7 @@ export type Vault = z.infer<typeof VaultSchema>;
 /** Paginated vault list response */
 export const VaultListResponseSchema = z.object({
   data: z.array(VaultSchema),
-  nextCursor: z.string().nullable(),
+  nextCursor: z.string().nullable().optional(),
   total: z.number(),
 });
 
