@@ -6,9 +6,6 @@ export default defineConfig({
     starlight({
       title: 'EarnForge',
       customCss: ['./src/styles/custom.css'],
-      components: {
-        ThemeSelect: './src/components/ThemeSelect.astro',
-      },
       social: [
         {
           icon: 'github',
