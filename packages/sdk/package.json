@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsdown src/index.ts --format esm,cjs --dts --out-dir dist/esm && tsdown src/index.ts --format cjs --out-dir dist/cjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --exclude '**/*.live.test.ts'",
     "test:unit": "vitest run --exclude '**/*.live.test.ts'",
     "test:live": "vitest run --include '**/*.live.test.ts'",
     "circular": "madge --circular --extensions ts src/",
