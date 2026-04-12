@@ -4,6 +4,8 @@ Developer toolkit for the LI.FI Earn API. One SDK eliminates 18 integration
 pitfalls; seven surfaces put it in your terminal, your React app, your
 AI agent, and your Telegram group.
 
+**[Studio](https://earnforge-studio.vercel.app)** | **[Docs](https://earnforge-docs.vercel.app)** | **[npm](https://www.npmjs.com/org/earnforge)**
+
 ```
 npm i @earnforge/sdk
 ```
