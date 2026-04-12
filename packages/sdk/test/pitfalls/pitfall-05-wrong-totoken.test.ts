@@ -12,7 +12,7 @@ describe('Pitfall #5: Wrong toToken for deposits', () => {
     const mockGetQuote = vi.fn().mockResolvedValue(quoteComposer);
     const composer = { getQuote: mockGetQuote } as unknown as ComposerClient;
 
-    await buildDepositQuote(vault, { fromAmount: '100', wallet: '0x1' }, composer);
+    await buildDepositQuote(vault, { fromAmount: '100', wallet: '0x1234567890abcdef1234567890abcdef12345678' }, composer);
 
     expect(mockGetQuote).toHaveBeenCalledWith(
       expect.objectContaining({

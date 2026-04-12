@@ -20,7 +20,8 @@ function formatTvl(tvlUsd: number): string {
 }
 
 function formatApy(apy: number): string {
-  return `${(apy * 100).toFixed(2)}%`;
+  // API returns APY as percentage already (3.84 = 3.84%)
+  return `${apy.toFixed(2)}%`;
 }
 
 export function VaultCard({ vault, risk, isSelected, onClick }: VaultCardProps) {

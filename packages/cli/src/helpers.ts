@@ -8,7 +8,8 @@ import { parseTvl } from '@earnforge/sdk';
 // ── Formatting helpers ──
 
 export function fmtPct(n: number): string {
-  return `${(n * 100).toFixed(2)}%`;
+  // API returns APY as percentage (3.84 = 3.84%), NOT as decimal fraction
+  return `${n.toFixed(2)}%`;
 }
 
 export function fmtUsd(n: number): string {

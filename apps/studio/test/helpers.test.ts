@@ -9,7 +9,7 @@ describe('test helpers', () => {
     expect(vault.chainId).toBe(8453);
     expect(vault.name).toBe('Test Vault USDC');
     expect(vault.tags).toContain('stablecoin');
-    expect(vault.analytics.apy.total).toBe(0.045);
+    expect(vault.analytics.apy.total).toBe(4.5);
     expect(vault.analytics.tvl.usd).toBe('50000000');
   });
 

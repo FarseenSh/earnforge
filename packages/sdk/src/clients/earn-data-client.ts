@@ -114,7 +114,10 @@ export class EarnDataClient {
    * chainId MUST be a number, not chain name (Pitfall — /vaults/Base/0x... returns 400).
    */
   async getVault(chainId: number, address: string): Promise<Vault> {
-    const path = `/v1/earn/vaults/${chainId}/${address}`;
+    if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+      throw new EarnApiError(`Invalid vault address format: "${address}"`, 400, address);
+    }
+    const path = `/v1/earn/vaults/${chainId}/${encodeURIComponent(address)}`;
     return this.fetch(path, `vault:${chainId}:${address}`, (data) => VaultSchema.parse(data));
   }
 
@@ -125,6 +128,9 @@ export class EarnDataClient {
     const chainId = Number(slug.slice(0, dashIdx));
     const address = slug.slice(dashIdx + 1);
     if (Number.isNaN(chainId)) throw new EarnApiError('Invalid chainId in slug', 400, slug);
+    if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+      throw new EarnApiError(`Invalid address in slug: "${address}"`, 400, slug);
+    }
     return this.getVault(chainId, address);
   }
 

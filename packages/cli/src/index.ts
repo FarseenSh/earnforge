@@ -613,7 +613,7 @@ program
 
     fs.writeFileSync(
       path.join(dir, '.env.example'),
-      'NEXT_PUBLIC_LIFI_API_KEY=your-api-key-from-portal.li.fi\n',
+      'LIFI_API_KEY=your-api-key-from-portal.li.fi\n',
     );
 
     fs.writeFileSync(
@@ -622,7 +622,7 @@ program
 import { createEarnForge } from '@earnforge/sdk';
 
 const forge = createEarnForge({
-  composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY,
+  composerApiKey: process.env.LIFI_API_KEY,
 });
 
 export default async function Home() {

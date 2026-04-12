@@ -29,7 +29,9 @@ const CHAIN_NAMES: Record<number, string> = {
   10: 'Optimism',
   56: 'BSC',
   100: 'Gnosis',
+  130: 'Unichain',
   137: 'Polygon',
+  143: 'Monad',
   146: 'Sonic',
   5000: 'Mantle',
   8453: 'Base',
@@ -37,6 +39,8 @@ const CHAIN_NAMES: Record<number, string> = {
   42220: 'Celo',
   43114: 'Avalanche',
   59144: 'Linea',
+  80094: 'Berachain',
+  747474: 'Katana',
 };
 
 /**

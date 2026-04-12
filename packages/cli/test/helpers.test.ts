@@ -4,11 +4,11 @@ import { describe, it, expect } from 'vitest';
 import { fmtPct, fmtUsd, riskLabelPlain } from '../src/helpers.js';
 
 describe('fmtPct', () => {
-  it('formats a fraction as a percentage string', () => {
-    expect(fmtPct(0.05)).toBe('5.00%');
-    expect(fmtPct(0.1234)).toBe('12.34%');
+  it('formats a percentage value as a string (API returns percentages, not fractions)', () => {
+    expect(fmtPct(3.84)).toBe('3.84%');
+    expect(fmtPct(12.34)).toBe('12.34%');
     expect(fmtPct(0)).toBe('0.00%');
-    expect(fmtPct(1)).toBe('100.00%');
+    expect(fmtPct(100)).toBe('100.00%');
   });
 });
 

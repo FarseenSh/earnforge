@@ -47,10 +47,12 @@ export type TvlParsed = {
 };
 
 export function parseTvl(tvl: z.infer<typeof TvlSchema>): TvlParsed {
+  // Parse bigint directly from string to avoid Number() precision loss for large values
+  const integerPart = tvl.usd.split('.')[0] ?? '0';
   return {
     raw: tvl.usd,
     parsed: Number(tvl.usd),
-    bigint: BigInt(Math.floor(Number(tvl.usd))),
+    bigint: BigInt(integerPart),
   };
 }
 

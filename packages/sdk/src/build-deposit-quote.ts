@@ -35,6 +35,14 @@ export async function buildDepositQuote(
   options: DepositQuoteOptions,
   composer: ComposerClient,
 ): Promise<DepositQuoteResult> {
+  // Validate wallet address format
+  if (!/^0x[0-9a-fA-F]{40}$/.test(options.wallet)) {
+    throw new EarnForgeError(
+      `Invalid wallet address: "${options.wallet}". Must be a 0x-prefixed 40-hex-char address.`,
+      'INVALID_WALLET',
+    );
+  }
+
   // Pitfall #13: non-transactional vault
   if (!vault.isTransactional) {
     throw new EarnForgeError(
@@ -108,6 +116,13 @@ export async function buildDepositQuote(
  * e.g., "1" with 6 decimals → "1000000" (Pitfall #9)
  */
 export function toSmallestUnit(amount: string, decimals: number): string {
+  if (!amount || !/^\d+(\.\d+)?$/.test(amount)) {
+    throw new EarnForgeError(
+      `Invalid amount "${amount}". Must be a positive numeric string (e.g., "100" or "1.5").`,
+      'INVALID_AMOUNT',
+    );
+  }
+
   const parts = amount.split('.');
   const whole = parts[0] ?? '0';
   let fractional = parts[1] ?? '';

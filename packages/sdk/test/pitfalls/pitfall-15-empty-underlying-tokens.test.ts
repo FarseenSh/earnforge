@@ -14,7 +14,7 @@ describe('Pitfall #15: Empty underlyingTokens array', () => {
   it('buildDepositQuote throws clear error when no underlyingTokens and no fromToken', async () => {
     const composer = {} as ComposerClient;
     await expect(
-      buildDepositQuote(emptyUtVault, { fromAmount: '100', wallet: '0x1' }, composer),
+      buildDepositQuote(emptyUtVault, { fromAmount: '100', wallet: '0x1234567890abcdef1234567890abcdef12345678' }, composer),
     ).rejects.toThrowError(EarnForgeError);
   });
 
@@ -26,7 +26,7 @@ describe('Pitfall #15: Empty underlyingTokens array', () => {
     // Should not throw — fromToken is explicitly provided
     const result = await buildDepositQuote(
       emptyUtVault,
-      { fromAmount: '100', wallet: '0x1', fromToken: '0xusdc' },
+      { fromAmount: '100', wallet: '0x1234567890abcdef1234567890abcdef12345678', fromToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' },
       mockComposer,
     );
     expect(result).toBeDefined();

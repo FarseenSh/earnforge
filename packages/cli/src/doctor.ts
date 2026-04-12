@@ -88,13 +88,13 @@ export function runDoctorChecks(vault: Vault, opts: { hasApiKey: boolean }): Doc
 
   // Pitfall #7: APY is a fraction, not a percentage
   const apyTotal = vault.analytics.apy.total;
-  const apyLooksLikeFraction = apyTotal >= 0 && apyTotal < 5;
+  const apyIsReasonable = apyTotal >= 0 && apyTotal < 500;
   checks.push({
     id: 7,
-    pitfall: 'APY is fraction not %',
-    description: 'apy.total is 0.05 = 5%, not 5 = 500%',
-    passed: apyLooksLikeFraction,
-    detail: `apy.total = ${apyTotal} (${(apyTotal * 100).toFixed(2)}%)`,
+    pitfall: 'APY value is reasonable',
+    description: 'apy.total is already a percentage (3.84 = 3.84%), not a fraction',
+    passed: apyIsReasonable,
+    detail: `apy.total = ${apyTotal.toFixed(2)}%`,
   });
 
   // Pitfall #8: TVL.usd is a string

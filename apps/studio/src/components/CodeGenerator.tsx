@@ -42,7 +42,8 @@ import { createEarnForge } from '@earnforge/sdk';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
-const forge = createEarnForge({ composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY });
+// SECURITY: Use LIFI_API_KEY (server-only), never NEXT_PUBLIC_ prefix
+const forge = createEarnForge({ composerApiKey: process.env.LIFI_API_KEY });
 
 // Wrap your app:
 // <QueryClientProvider client={queryClient}>
@@ -54,7 +55,11 @@ const forge = createEarnForge({ composerApiKey: process.env.NEXT_PUBLIC_LIFI_API
 function VaultDetail() {
   const { data: vault, isLoading } = useVault('${vault.slug}');
   const risk = useRiskScore(vault);
-  const { prepare, execute, status } = useEarnDeposit();
+  const { state, prepare, execute, reset } = useEarnDeposit({
+    vault,
+    amount: '100',
+    wallet: '0xYourWallet',
+  });
 
   if (isLoading) return <div>Loading...</div>;
   if (!vault) return <div>Not found</div>;
@@ -64,8 +69,8 @@ function VaultDetail() {
       <h2>{vault.name}</h2>
       <p>APY: {vault.analytics.apy.total.toFixed(2)}%</p>
       <p>Risk: {risk?.score}/10 ({risk?.label})</p>
-      <button onClick={() => prepare({ vault, amount: '100' })}>
-        Deposit ({status})
+      <button onClick={() => prepare()}>
+        Deposit ({state.phase})
       </button>
     </div>
   );
