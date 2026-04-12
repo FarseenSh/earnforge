@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createElement, type ReactNode } from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { EarnForge, Vault, VaultListResponse, PortfolioResponse, RiskScore, StrategyConfig, SuggestResult, ApyDataPoint, PreflightReport, DepositQuoteResult } from '@earnforge/sdk';
+import type { EarnForge, Vault, VaultListResponse, PortfolioResponse, RiskScore, StrategyConfig, SuggestResult, ApyDataPoint, PreflightReport, DepositQuoteResult, RedeemQuoteResult } from '@earnforge/sdk';
 import { EarnForgeProvider, useEarnForge } from '../src/context.js';
 import { useVaults } from '../src/hooks/useVaults.js';
 import { useVault } from '../src/hooks/useVault.js';
@@ -14,6 +14,7 @@ import { useStrategy } from '../src/hooks/useStrategy.js';
 import { useSuggest } from '../src/hooks/useSuggest.js';
 import { useApyHistory } from '../src/hooks/useApyHistory.js';
 import { useEarnDeposit } from '../src/hooks/useEarnDeposit.js';
+import { useEarnRedeem } from '../src/hooks/useEarnRedeem.js';
 
 // ── Test fixtures ──
 
@@ -101,6 +102,40 @@ function createMockSdk(overrides: Partial<EarnForge> = {}): EarnForge {
       rawAmount: '100000000',
       decimals: 6,
     } as unknown as DepositQuoteResult),
+    buildRedeemQuote: vi.fn<() => Promise<RedeemQuoteResult>>().mockResolvedValue({
+      quote: {
+        type: 'lifi',
+        id: 'rq1',
+        tool: 'aave',
+        action: {
+          fromToken: { address: '0xVAULT', chainId: 8453, symbol: 'aUSDC', decimals: 6, name: 'Aave USDC' },
+          fromAmount: '100000000',
+          toToken: { address: '0xUSDC', chainId: 8453, symbol: 'USDC', decimals: 6, name: 'USD Coin' },
+          fromChainId: 8453,
+          toChainId: 8453,
+          slippage: 0.005,
+          fromAddress: '0xWALLET',
+          toAddress: '0xWALLET',
+        },
+        estimate: {
+          tool: 'aave',
+          toAmountMin: '99500000',
+          toAmount: '100000000',
+          fromAmount: '100000000',
+          executionDuration: 30,
+        },
+        transactionRequest: {
+          to: '0xROUTER',
+          data: '0xDATA',
+          value: '0',
+          chainId: 8453,
+        },
+      },
+      vault: makeVault(),
+      humanAmount: '100',
+      rawAmount: '100000000',
+      decimals: 6,
+    } as unknown as RedeemQuoteResult),
     preflight: vi.fn<() => PreflightReport>().mockReturnValue({
       ok: true,
       issues: [],
@@ -730,5 +765,250 @@ describe('useEarnDeposit', () => {
 
     expect(result.current.state.phase).toBe('error');
     expect(result.current.state.error!.message).toContain('Missing vault');
+  });
+});
+
+describe('useEarnRedeem', () => {
+  let sdk: EarnForge;
+  let wrapper: ReturnType<typeof createWrapper>;
+
+  beforeEach(() => {
+    sdk = createMockSdk();
+    wrapper = createWrapper(sdk);
+  });
+
+  it('37. starts in idle phase', () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    expect(result.current.state.phase).toBe('idle');
+    expect(result.current.state.quote).toBeNull();
+    expect(result.current.state.preflightReport).toBeNull();
+    expect(result.current.state.txHash).toBeNull();
+    expect(result.current.state.error).toBeNull();
+  });
+
+  it('38. prepare() transitions through preflight -> quoting -> ready', async () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+
+    expect(result.current.state.phase).toBe('ready');
+    expect(result.current.state.preflightReport).not.toBeNull();
+    expect(result.current.state.preflightReport!.ok).toBe(true);
+    expect(result.current.state.quote).not.toBeNull();
+    expect(result.current.state.quote!.humanAmount).toBe('100');
+    expect(sdk.preflight).toHaveBeenCalled();
+    expect(sdk.buildRedeemQuote).toHaveBeenCalled();
+  });
+
+  it('39. prepare() errors when vault is undefined', async () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: undefined,
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+
+    expect(result.current.state.phase).toBe('error');
+    expect(result.current.state.error!.message).toContain('Missing vault');
+  });
+
+  it('40. prepare() errors when vault is not redeemable', async () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault({ isRedeemable: false }),
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+
+    expect(result.current.state.phase).toBe('error');
+    expect(result.current.state.error!.message).toContain('not redeemable');
+  });
+
+  it('41. prepare() goes to error when preflight fails', async () => {
+    (sdk.preflight as ReturnType<typeof vi.fn>).mockReturnValue({
+      ok: false,
+      issues: [{ code: 'NOT_TRANSACTIONAL', message: 'Not transactional', severity: 'error' }],
+      vault: makeVault(),
+      wallet: '0xWALLET',
+    });
+
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+
+    expect(result.current.state.phase).toBe('error');
+    expect(result.current.state.error!.message).toContain('Preflight failed');
+    expect(sdk.buildRedeemQuote).not.toHaveBeenCalled();
+  });
+
+  it('42. prepare() goes to error when redeem quote fails', async () => {
+    (sdk.buildRedeemQuote as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Composer error'),
+    );
+
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+
+    expect(result.current.state.phase).toBe('error');
+    expect(result.current.state.error!.message).toBe('Composer error');
+  });
+
+  it('43. execute() sends transaction and reaches success', async () => {
+    const mockSendTx = vi.fn().mockResolvedValue('0xTXHASH');
+
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+          sendTransactionAsync: mockSendTx,
+        }),
+      { wrapper },
+    );
+
+    // First prepare
+    await act(async () => {
+      await result.current.prepare();
+    });
+    expect(result.current.state.phase).toBe('ready');
+
+    // Then execute
+    await act(async () => {
+      await result.current.execute();
+    });
+    expect(result.current.state.phase).toBe('success');
+    expect(result.current.state.txHash).toBe('0xTXHASH');
+    expect(mockSendTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: '0xROUTER',
+        data: '0xDATA',
+        chainId: 8453,
+      }),
+    );
+  });
+
+  it('44. execute() errors without sendTransactionAsync', async () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+          // no sendTransactionAsync
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+
+    await act(async () => {
+      await result.current.execute();
+    });
+
+    expect(result.current.state.phase).toBe('error');
+    expect(result.current.state.error!.message).toContain('No sendTransactionAsync');
+  });
+
+  it('45. execute() errors when not in ready state', async () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+          sendTransactionAsync: vi.fn(),
+        }),
+      { wrapper },
+    );
+
+    // Try execute without prepare
+    await act(async () => {
+      await result.current.execute();
+    });
+
+    expect(result.current.state.phase).toBe('error');
+    expect(result.current.state.error!.message).toContain('not in ready state');
+  });
+
+  it('46. reset() returns to idle state', async () => {
+    const { result } = renderHook(
+      () =>
+        useEarnRedeem({
+          vault: makeVault(),
+          amount: '100',
+          wallet: '0xWALLET',
+        }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.prepare();
+    });
+    expect(result.current.state.phase).toBe('ready');
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.state.phase).toBe('idle');
+    expect(result.current.state.quote).toBeNull();
+    expect(result.current.state.preflightReport).toBeNull();
   });
 });

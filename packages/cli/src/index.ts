@@ -16,6 +16,7 @@ import {
 import {
   vaultTable,
   vaultDetail,
+  compareTable,
   chainTable,
   protocolTable,
   portfolioTable,
@@ -211,6 +212,55 @@ program
       outputResult(vault, opts.json, () => vaultDetail(vault));
     } catch (err) {
       spinner.fail('Failed to fetch vault');
+      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+      process.exitCode = 1;
+    }
+  });
+
+// ── compare ──
+
+program
+  .command('compare')
+  .description('Side-by-side comparison of 2 or more vaults')
+  .argument('<slugs...>', 'Vault slugs to compare (space-separated)')
+  .option('--json', 'Output as JSON', false)
+  .action(async (slugs: string[], opts) => {
+    if (slugs.length < 2) {
+      console.error(chalk.red('Provide at least 2 vault slugs to compare.'));
+      process.exitCode = 1;
+      return;
+    }
+    const spinner = ora(`Fetching ${slugs.length} vaults...`).start();
+    try {
+      const forge = getForge();
+      const vaults = await Promise.all(slugs.map((s) => forge.vaults.get(s)));
+      const risks = vaults.map((v) => forge.riskScore(v));
+      spinner.stop();
+
+      outputResult(
+        vaults.map((v, i) => ({
+          slug: v.slug,
+          name: v.name,
+          chainId: v.chainId,
+          network: v.network,
+          protocol: v.protocol.name,
+          apy: v.analytics.apy,
+          apy7d: v.analytics.apy7d,
+          apy30d: v.analytics.apy30d,
+          tvlUsd: parseTvl(v.analytics.tvl).parsed,
+          risk: risks[i],
+          tags: v.tags,
+          isTransactional: v.isTransactional,
+          isRedeemable: v.isRedeemable,
+          underlyingTokens: v.underlyingTokens.map((t) => t.symbol),
+        })),
+        opts.json,
+        () => {
+          return `${chalk.bold(`Vault Comparison (${vaults.length} vaults)`)}\n\n${compareTable(vaults, risks)}`;
+        },
+      );
+    } catch (err) {
+      spinner.fail('Failed to compare vaults');
       console.error(chalk.red(err instanceof Error ? err.message : String(err)));
       process.exitCode = 1;
     }

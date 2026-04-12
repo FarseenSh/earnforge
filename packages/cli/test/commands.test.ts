@@ -435,6 +435,68 @@ describe('CLI commands', () => {
     });
   });
 
+  // ── compare ──
+
+  describe('compare', () => {
+    it('outputs JSON array for two vaults', async () => {
+      const mockGet = vi.fn().mockImplementation(async (slug: string) => {
+        if (slug === '42161-0xbeef0002') return makeVault2();
+        return makeVault();
+      });
+      forge.vaults.get = mockGet;
+
+      const output = await runCommand([
+        'compare', '8453-0xbeef0001', '42161-0xbeef0002', '--json',
+      ]);
+      const parsed = JSON.parse(output);
+      expect(Array.isArray(parsed)).toBe(true);
+      expect(parsed).toHaveLength(2);
+      expect(parsed[0].slug).toBe('8453-0xbeef0001');
+      expect(parsed[1].slug).toBe('42161-0xbeef0002');
+    });
+
+    it('fetches each vault by slug', async () => {
+      const mockGet = vi.fn().mockImplementation(async (slug: string) => {
+        if (slug === '42161-0xbeef0002') return makeVault2();
+        return makeVault();
+      });
+      forge.vaults.get = mockGet;
+
+      await runCommand(['compare', '8453-0xbeef0001', '42161-0xbeef0002', '--json']);
+      expect(mockGet).toHaveBeenCalledTimes(2);
+      expect(mockGet).toHaveBeenCalledWith('8453-0xbeef0001');
+      expect(mockGet).toHaveBeenCalledWith('42161-0xbeef0002');
+    });
+
+    it('computes risk for each vault', async () => {
+      const mockGet = vi.fn().mockImplementation(async (slug: string) => {
+        if (slug === '42161-0xbeef0002') return makeVault2();
+        return makeVault();
+      });
+      forge.vaults.get = mockGet;
+
+      await runCommand(['compare', '8453-0xbeef0001', '42161-0xbeef0002', '--json']);
+      expect(forge.riskScore).toHaveBeenCalledTimes(2);
+    });
+
+    it('outputs comparison table in human format', async () => {
+      const mockGet = vi.fn().mockImplementation(async (slug: string) => {
+        if (slug === '42161-0xbeef0002') return makeVault2();
+        return makeVault();
+      });
+      forge.vaults.get = mockGet;
+
+      const output = await runCommand(['compare', '8453-0xbeef0001', '42161-0xbeef0002']);
+      expect(output).toContain('Test USDC Vault');
+      expect(output).toContain('Test WETH Vault');
+    });
+
+    it('errors when only one slug provided', async () => {
+      const output = await runCommand(['compare', '8453-0xbeef0001']);
+      expect(output).toContain('at least 2');
+    });
+  });
+
   // ── doctor (via command) ──
 
   describe('doctor', () => {

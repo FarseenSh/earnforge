@@ -214,6 +214,39 @@ export function preflightTable(report: PreflightReport): string {
   return lines.join('\n');
 }
 
+export function compareTable(vaults: Vault[], risks: RiskScore[]): string {
+  const fields: Array<{ label: string; value: (v: Vault, r: RiskScore) => string }> = [
+    { label: 'Slug', value: (v) => v.slug },
+    { label: 'Chain', value: (v) => `${v.network} (${v.chainId})` },
+    { label: 'Protocol', value: (v) => v.protocol.name },
+    { label: 'APY Total', value: (v) => chalk.green(fmtPct(v.analytics.apy.total)) },
+    { label: 'APY Base', value: (v) => fmtPct(v.analytics.apy.base) },
+    { label: 'APY Reward', value: (v) => fmtPct(v.analytics.apy.reward) },
+    { label: 'APY 7d', value: (v) => v.analytics.apy7d !== null ? fmtPct(v.analytics.apy7d) : 'N/A' },
+    { label: 'APY 30d', value: (v) => v.analytics.apy30d !== null ? fmtPct(v.analytics.apy30d) : 'N/A' },
+    { label: 'TVL', value: (v) => fmtUsd(parseTvl(v.analytics.tvl).parsed) },
+    { label: 'Risk', value: (_, r) => riskLabel(r.score) },
+    { label: 'Tags', value: (v) => v.tags.join(', ') || '(none)' },
+    { label: 'Transactional', value: (v) => v.isTransactional ? chalk.green('Yes') : chalk.red('No') },
+    { label: 'Redeemable', value: (v) => v.isRedeemable ? chalk.green('Yes') : chalk.red('No') },
+    { label: 'Underlying', value: (v) => v.underlyingTokens.map((t) => t.symbol).join(', ') || '(none)' },
+  ];
+
+  const table = new Table({
+    head: [chalk.bold(''), ...vaults.map((v) => chalk.bold(v.name))],
+    wordWrap: true,
+  });
+
+  for (const field of fields) {
+    table.push([
+      chalk.dim(field.label),
+      ...vaults.map((v, i) => field.value(v, risks[i])),
+    ]);
+  }
+
+  return table.toString();
+}
+
 // ── Output helper ──
 
 export function outputResult(data: unknown, json: boolean, humanFn: () => string): void {
