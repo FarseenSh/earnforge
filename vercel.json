@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm turbo build --filter=earnforge-studio",
-  "installCommand": "pnpm install",
-  "outputDirectory": "apps/studio/.next"
+  "framework": "nextjs",
+  "buildCommand": "cd apps/studio && pnpm build",
+  "installCommand": "pnpm install"
 }

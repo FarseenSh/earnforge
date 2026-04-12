@@ -29,6 +29,9 @@ importers:
       knip:
         specifier: ^6.3.1
         version: 6.4.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+      next:
+        specifier: ^15.5.15
+        version: 15.5.15(@babel/core@7.29.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       turbo:
         specifier: ^2.5.4
         version: 2.9.6
@@ -13713,7 +13716,7 @@ snapshots:
   ox@0.6.9(typescript@5.9.3)(zod@4.3.6):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
-      '@noble/curves': 1.9.1
+      '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
