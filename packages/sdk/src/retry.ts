@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { EarnApiError, ComposerError } from './errors.js';
 
 export interface RetryOptions {
   maxRetries?: number;
@@ -41,14 +42,17 @@ export async function withRetry<T>(
   throw lastError;
 }
 
-function isRetryable(error: unknown): boolean {
-  if (error instanceof Response) {
+export function isRetryable(error: unknown): boolean {
+  // Match our typed error classes directly
+  if (error instanceof EarnApiError) {
+    return error.status === 429 || error.status >= 500;
+  }
+  if (error instanceof ComposerError) {
     return error.status === 429 || error.status >= 500;
   }
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
     if (msg.includes('rate limit') || msg.includes('429')) return true;
-    if (msg.includes('500') || msg.includes('502') || msg.includes('503')) return true;
     if (msg.includes('network') || msg.includes('fetch') || msg.includes('econnreset')) {
       return true;
     }

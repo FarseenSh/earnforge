@@ -62,6 +62,15 @@ export async function buildDepositQuote(
     );
   }
 
+  // Cross-chain guard: vault's underlyingToken address is on vault's chain, not source chain
+  const fromChain = options.fromChain ?? vault.chainId;
+  if (fromChain !== vault.chainId && !options.fromToken) {
+    throw new EarnForgeError(
+      `Cross-chain deposits require an explicit fromToken. The vault's underlyingTokens are on chain ${vault.chainId}, not chain ${fromChain}.`,
+      'CROSS_CHAIN_FROM_TOKEN_REQUIRED',
+    );
+  }
+
   // Determine decimals for amount conversion (Pitfall #9)
   const decimals =
     vault.underlyingTokens.find(
@@ -70,8 +79,6 @@ export async function buildDepositQuote(
 
   // Convert human amount to smallest unit
   const rawAmount = toSmallestUnit(options.fromAmount, decimals);
-
-  const fromChain = options.fromChain ?? vault.chainId;
 
   const quoteParams: QuoteParams = {
     fromChain,

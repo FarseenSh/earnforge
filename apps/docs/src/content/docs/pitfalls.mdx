@@ -1,31 +1,214 @@
 ---
-title: 18 Pitfalls
-description: Every Earn API pitfall and how EarnForge defeats it.
+title: 18 Pitfalls Guide
+description: Every production pitfall in the LI.FI Earn API, how the SDK defeats each one, and which test verifies it.
 ---
 
-# 18 Pitfalls Defeated
+import { Aside } from '@astrojs/starlight/components';
 
-14 documented by LI.FI + 4 discovered via live API probing. Every pitfall has a named regression test.
+The LI.FI Earn API has 18 documented pitfalls that can cause failures, data corruption, or
+silent bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pitfalls 15-18
+were discovered via live API probing against the full vault set (April 2026).
 
-| # | Pitfall | Root Cause | SDK Fix | Test |
-|---|---|---|---|---|
-| 1 | Wrong base URL | `earn.li.fi` vs `li.quest` | Two typed clients | `pitfall-01-wrong-base-url.test.ts` |
-| 2 | Auth on Earn Data | Unnecessary header | No auth on EarnDataClient | `pitfall-02-auth-on-earn-data.test.ts` |
-| 3 | Missing Composer key | Quotes rejected | Env validation + clear error | `pitfall-03-missing-composer-key.test.ts` |
-| 4 | POST on /quote | Should be GET | Forces GET | `pitfall-04-post-instead-of-get.test.ts` |
-| 5 | Wrong toToken | Quote wrong result | `toToken = vault.address` | `pitfall-05-wrong-totoken.test.ts` |
-| 6 | No pagination | Only 50 of 623+ vaults | Async iterator via nextCursor | `pitfall-06-ignoring-pagination.test.ts` |
-| 7 | Null APY | App crash | Fallback chain + null-safe | `pitfall-07-null-apy.test.ts` |
-| 8 | String TVL | Type error | `parseTvl()` at boundary | `pitfall-08-tvl-string.test.ts` |
-| 9 | Decimal mismatch | 1 USDC as 1e18 | `toSmallestUnit()` | `pitfall-09-decimal-mismatch.test.ts` |
-| 10 | Stale quote | Tx reverts | Cache TTL + refresh | `pitfall-10-stale-quote.test.ts` |
-| 11 | No gas token | Tx fails | `preflight()` balance check | `pitfall-11-no-gas-token.test.ts` |
-| 12 | Chain mismatch | Wrong network | `preflight()` chain check | `pitfall-12-chain-mismatch.test.ts` |
-| 13 | Non-transactional | No quote | `isTransactional` guard | `pitfall-13-non-transactional.test.ts` |
-| 14 | Rate limit | 429 errors | Token bucket 100/min | `pitfall-14-rate-limit.test.ts` |
-| **15** | **Empty underlyingTokens** | Some vaults have `[]` | Null-safe array access | `pitfall-15-empty-underlying-tokens.test.ts` |
-| **16** | **Optional description** | ~86% of vaults omit it | Zod `.optional()` | `pitfall-16-optional-description.test.ts` |
-| **17** | **apy.reward null vs 0** | Protocol-specific | Normalize to 0 | `pitfall-17-apy-reward-null-vs-zero.test.ts` |
-| **18** | **apy1d null** | Exists with valid apy7d | Extended fallback chain | `pitfall-18-apy1d-null.test.ts` |
+**EarnForge eliminates every single one at the SDK layer.** Downstream surfaces (CLI, React,
+MCP, bot) never need to think about them.
 
-Pitfalls 15-18 (bold) were discovered via live API probing and are not in LI.FI's official documentation.
+<Aside type="tip">
+All 18 pitfall tests live under `packages/sdk/test/pitfalls/`. Run them with
+`pnpm turbo test --filter=@earnforge/sdk`.
+</Aside>
+
+---
+
+## Pitfall Reference
+
+### Pitfall 1 -- Wrong Base URL
+
+| | |
+|---|---|
+| **Root Cause** | Earn Data lives at `earn.li.fi`, Composer at `li.quest`. Mixing them returns 404. |
+| **SDK Mitigation** | Two typed clients: `EarnDataClient` (earn.li.fi) and `ComposerClient` (li.quest) with hard-coded defaults. |
+| **Test** | `pitfall-01-wrong-base-url.test.ts` |
+
+### Pitfall 2 -- Auth on Earn Data API
+
+| | |
+|---|---|
+| **Root Cause** | Sending an `Authorization` or `x-lifi-api-key` header to Earn Data returns 401 or is silently ignored. |
+| **SDK Mitigation** | `EarnDataClient.fetch()` sends zero auth headers. |
+| **Test** | `pitfall-02-auth-on-earn-data.test.ts` |
+
+### Pitfall 3 -- Missing Composer API Key
+
+| | |
+|---|---|
+| **Root Cause** | Composer `/v1/quote` returns 401 without `x-lifi-api-key`. |
+| **SDK Mitigation** | `ComposerClient` constructor throws `ComposerError` if `apiKey` is falsy. `createEarnForge()` gates all Composer paths behind `requireComposer()`. |
+| **Test** | `pitfall-03-missing-composer-key.test.ts` |
+
+### Pitfall 4 -- POST Instead of GET
+
+| | |
+|---|---|
+| **Root Cause** | Composer `/v1/quote` is GET with query params. POST returns 405. |
+| **SDK Mitigation** | `ComposerClient.getQuote()` hard-codes `method: 'GET'` and serializes params to query string. |
+| **Test** | `pitfall-04-post-instead-of-get.test.ts` |
+
+### Pitfall 5 -- Wrong `toToken`
+
+| | |
+|---|---|
+| **Root Cause** | Passing the underlying token address as `toToken` fails. The vault's share token **is** the vault address. |
+| **SDK Mitigation** | `buildDepositQuote()` wires `toToken = vault.address` automatically. |
+| **Test** | `pitfall-05-wrong-totoken.test.ts` |
+
+<Aside type="caution">
+This is the single most common integration mistake. The vault address itself is the deposit
+token -- **not** the underlying USDC/WETH address.
+</Aside>
+
+### Pitfall 6 -- Ignoring Pagination
+
+| | |
+|---|---|
+| **Root Cause** | `/v1/earn/vaults` returns max 50 per page. Without `nextCursor` handling you see less than 8% of vaults. |
+| **SDK Mitigation** | `EarnDataClient.listAllVaults()` is an async iterator that follows `nextCursor` until exhausted. |
+| **Test** | `pitfall-06-ignoring-pagination.test.ts` |
+
+### Pitfall 7 -- Null APY Values
+
+| | |
+|---|---|
+| **Root Cause** | `apy.total` is always a number, but `apy1d`, `apy7d`, `apy30d` can be `null` on new or low-volume vaults. |
+| **SDK Mitigation** | `AnalyticsSchema` types them as `number \| null`. `getBestApy()` implements a fallback chain: `apy.total` -> `apy30d` -> `apy7d` -> `apy1d` -> `0`. |
+| **Test** | `pitfall-07-null-apy.test.ts` |
+
+### Pitfall 8 -- TVL is a String
+
+| | |
+|---|---|
+| **Root Cause** | `analytics.tvl.usd` comes as `"12345678.90"` (string), not a number. Arithmetic on it silently produces `NaN`. |
+| **SDK Mitigation** | `parseTvl()` returns `{ raw: string, parsed: number, bigint: bigint }`. All SDK comparisons go through it. |
+| **Test** | `pitfall-08-tvl-string.test.ts` |
+
+### Pitfall 9 -- Decimal Mismatch
+
+| | |
+|---|---|
+| **Root Cause** | USDC has 6 decimals, WETH has 18. Passing `"1"` raw sends 1 wei instead of 1 token. |
+| **SDK Mitigation** | `toSmallestUnit(amount, decimals)` and `fromSmallestUnit()` handle the conversion. `buildDepositQuote()` reads decimals from `vault.underlyingTokens`. |
+| **Test** | `pitfall-09-decimal-mismatch.test.ts` |
+
+### Pitfall 10 -- Stale Quote
+
+| | |
+|---|---|
+| **Root Cause** | Quotes expire quickly. Using a cached quote for a transaction can revert. |
+| **SDK Mitigation** | `LRUCache` with configurable TTL (default 60s). Quote results are **not** cached; only read-only data (vaults, chains, protocols) is cached. |
+| **Test** | `pitfall-10-stale-quote.test.ts` |
+
+### Pitfall 11 -- No Gas Token
+
+| | |
+|---|---|
+| **Root Cause** | Submitting a tx with 0 native balance reverts with an opaque EVM error. |
+| **SDK Mitigation** | `preflight()` checks `nativeBalance` and returns a `NO_GAS` issue before any tx is built. |
+| **Test** | `pitfall-11-no-gas-token.test.ts` |
+
+### Pitfall 12 -- Chain Mismatch
+
+| | |
+|---|---|
+| **Root Cause** | Wallet connected to chain A, vault on chain B. Tx sent to wrong RPC. |
+| **SDK Mitigation** | `preflight()` compares `walletChainId` vs `vault.chainId` and returns a `CHAIN_MISMATCH` issue. |
+| **Test** | `pitfall-12-chain-mismatch.test.ts` |
+
+### Pitfall 13 -- Non-transactional Vault
+
+| | |
+|---|---|
+| **Root Cause** | About 30% of vaults have `isTransactional: false`. Deposit calls fail with an obscure Composer error. |
+| **SDK Mitigation** | `buildDepositQuote()` and `preflight()` both check `vault.isTransactional` and throw/report before hitting the network. |
+| **Test** | `pitfall-13-non-transactional.test.ts` |
+
+### Pitfall 14 -- Rate Limit
+
+| | |
+|---|---|
+| **Root Cause** | Earn Data API has undocumented rate limits. Hammering it returns 429. |
+| **SDK Mitigation** | `TokenBucketRateLimiter` at 100 req/min. `acquireAsync()` waits instead of throwing when the bucket is empty. |
+| **Test** | `pitfall-14-rate-limit.test.ts` |
+
+### Pitfall 15 -- Empty `underlyingTokens`
+
+| | |
+|---|---|
+| **Root Cause** | Some vaults return `underlyingTokens: []`. Accessing `[0].address` throws. |
+| **SDK Mitigation** | `VaultSchema` allows empty arrays. `buildDepositQuote()` checks length and requires explicit `fromToken` when empty. `preflight()` warns. |
+| **Test** | `pitfall-15-empty-underlying-tokens.test.ts` |
+
+### Pitfall 16 -- Optional `description`
+
+| | |
+|---|---|
+| **Root Cause** | About 14% of vaults omit the `description` field entirely. Accessing it without a guard crashes rendering. |
+| **SDK Mitigation** | `VaultSchema` types `description` as `z.string().optional()`. All display code uses optional chaining. |
+| **Test** | `pitfall-16-optional-description.test.ts` |
+
+### Pitfall 17 -- `apy.reward` null vs 0
+
+| | |
+|---|---|
+| **Root Cause** | Morpho vaults return `reward: 0`. Euler and Aave return `reward: null`. Inconsistent. |
+| **SDK Mitigation** | `ApySchema` applies `.nullable().transform(v => v ?? 0)` -- every consumer sees a plain `number`. |
+| **Test** | `pitfall-17-apy-reward-null-vs-zero.test.ts` |
+
+### Pitfall 18 -- `apy1d` null
+
+| | |
+|---|---|
+| **Root Cause** | Short-lived or freshly deployed vaults return `apy1d: null` and sometimes `apy7d: null`. Code that divides by `apy1d` gets `Infinity`. |
+| **SDK Mitigation** | `AnalyticsSchema` types all three as `number \| null`. `getBestApy()` fallback chain skips nulls. `riskScore()` handles missing historical data with a moderate default. |
+| **Test** | `pitfall-18-apy1d-null.test.ts` |
+
+---
+
+## Summary Table
+
+| # | Pitfall | SDK Guard |
+|---|---------|-----------|
+| 1 | Wrong base URL | Two typed clients with hard-coded URLs |
+| 2 | Auth on Earn Data | Zero auth headers on EarnDataClient |
+| 3 | Missing Composer key | Constructor throws; `requireComposer()` gate |
+| 4 | POST instead of GET | Hard-coded `method: 'GET'` on ComposerClient |
+| 5 | Wrong toToken | `buildDepositQuote()` wires `toToken = vault.address` |
+| 6 | Ignoring pagination | `listAllVaults()` async iterator follows cursors |
+| 7 | Null APY values | `getBestApy()` fallback chain |
+| 8 | TVL is a string | `parseTvl()` returns typed `{ raw, parsed, bigint }` |
+| 9 | Decimal mismatch | `toSmallestUnit()` / `fromSmallestUnit()` |
+| 10 | Stale quote | LRU cache excludes quotes; TTL on read data |
+| 11 | No gas token | `preflight()` checks native balance |
+| 12 | Chain mismatch | `preflight()` compares wallet chain vs vault chain |
+| 13 | Non-transactional | Both `buildDepositQuote()` and `preflight()` check |
+| 14 | Rate limit | `TokenBucketRateLimiter` at 100 req/min |
+| 15 | Empty underlyingTokens | Schema allows `[]`; explicit `fromToken` required |
+| 16 | Optional description | `z.string().optional()` in schema |
+| 17 | apy.reward null vs 0 | `.nullable().transform(v => v ?? 0)` normalization |
+| 18 | apy1d null | Typed as `number \| null`; fallback chain; moderate default |
+
+---
+
+## Running Pitfall Tests
+
+All 18 tests are individually named and live under `packages/sdk/test/pitfalls/`:
+
+```bash
+# Run all SDK tests (including pitfalls)
+pnpm turbo test --filter=@earnforge/sdk
+
+# Run only pitfall tests
+cd packages/sdk
+pnpm vitest run test/pitfalls/
+```
+
+Each test constructs a minimal fixture that triggers the pitfall and asserts the SDK handles
+it without error.

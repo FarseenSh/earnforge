@@ -16,7 +16,10 @@ export interface GasRoute {
 export interface GasOptimizeOptions {
   fromAmount: string;
   wallet: string;
+  /** Token address on the vault's chain (used for same-chain route) */
   fromToken?: string;
+  /** Map of chainId → token address for cross-chain routes */
+  fromTokens?: Record<number, string>;
   fromChains?: number[];
   fromAmountForGas?: string;
 }
@@ -50,13 +53,20 @@ export async function optimizeGasRoutes(
   const decimals = vault.underlyingTokens[0]?.decimals ?? 18;
   const rawAmount = toSmallestUnit(options.fromAmount, decimals);
 
-  const fromToken =
+  const defaultFromToken =
     options.fromToken ?? vault.underlyingTokens[0]?.address;
 
-  if (!fromToken) return [];
+  if (!defaultFromToken && !options.fromTokens) return [];
 
   const routePromises = fromChains.map(async (fromChain): Promise<GasRoute | null> => {
     try {
+      // For cross-chain routes, use the chain-specific token address if available
+      const fromToken =
+        options.fromTokens?.[fromChain] ??
+        (fromChain === vault.chainId ? defaultFromToken : undefined);
+
+      if (!fromToken) return null; // Skip chains without a known fromToken
+
       const quote = await composer.getQuote({
         fromChain,
         toChain: vault.chainId,

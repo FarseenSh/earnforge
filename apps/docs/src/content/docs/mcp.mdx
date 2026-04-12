@@ -1,51 +1,255 @@
 ---
 title: MCP Server
-description: 9 Earn-native MCP tools for Claude Desktop, Cursor, and Windsurf.
+description: 9 MCP tools for Claude Desktop, Cursor, Windsurf, and any MCP-capable client.
 ---
 
-# MCP Server
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-LI.FI's official MCP server has 19 tools — all swap/bridge, zero Earn. EarnForge adds 9 Earn-native tools.
+`@earnforge/mcp` exposes 9 Earn-native MCP (Model Context Protocol) tools. Any LLM client
+that speaks MCP -- Claude Desktop, Cursor, Windsurf, Continue, and others -- can discover and
+call these tools to query vaults, compute risk, build deposit quotes, and more.
 
 ## Installation
 
-```bash
-npm i -g @earnforge/mcp
-```
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm i -g @earnforge/mcp
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add -g @earnforge/mcp
+    ```
+  </TabItem>
+</Tabs>
+
+---
+
+## Configuration
+
+Add the EarnForge MCP server to your client's configuration file.
 
 ### Claude Desktop
 
-Add to `~/.config/claude/claude_desktop_config.json`:
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
+`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
   "mcpServers": {
     "earnforge": {
-      "command": "earnforge-mcp",
+      "command": "npx",
+      "args": ["-y", "@earnforge/mcp"],
       "env": {
-        "LIFI_API_KEY": "your-key"
+        "LIFI_API_KEY": "your-lifi-api-key-here"
       }
     }
   }
 }
 ```
 
-### Cursor / Windsurf
+### Cursor
 
-Add to your MCP config with the same command and env.
+Edit `.cursor/mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "earnforge": {
+      "command": "npx",
+      "args": ["-y", "@earnforge/mcp"],
+      "env": {
+        "LIFI_API_KEY": "your-lifi-api-key-here"
+      }
+    }
+  }
+}
+```
+
+### Windsurf
+
+Edit `~/.windsurf/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "earnforge": {
+      "command": "npx",
+      "args": ["-y", "@earnforge/mcp"],
+      "env": {
+        "LIFI_API_KEY": "your-lifi-api-key-here"
+      }
+    }
+  }
+}
+```
+
+<Aside>
+The `LIFI_API_KEY` environment variable is only required for the `quote-vault-deposit` tool.
+All read-only tools work without a key.
+</Aside>
+
+---
 
 ## Tools
 
-| Tool | Description |
-|---|---|
-| `get-earn-vaults` | List vaults with filters (chainId, asset, minTvl, strategy) |
-| `get-earn-vault` | Get single vault by slug |
-| `get-earn-chains` | List supported chains |
-| `get-earn-protocols` | List supported protocols |
-| `get-earn-portfolio` | Get portfolio positions for a wallet |
-| `get-vault-risk` | Compute 0-10 risk score for a vault |
-| `quote-vault-deposit` | Build an unsigned deposit quote |
-| `suggest-allocation` | Portfolio allocation suggestion |
-| `run-doctor` | Run 18 pitfall checks on a vault |
+### get-earn-vaults
 
-All tools return JSON. Error responses include `isError: true` with a message.
+List LI.FI Earn vaults with optional filters. Returns paginated vault data including APY,
+TVL, protocol info, and tags.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chainId` | number | no | EVM chain ID (e.g. 8453 for Base, 1 for Ethereum) |
+| `asset` | string | no | Underlying token symbol (e.g. "USDC", "ETH") |
+| `minTvl` | number | no | Minimum TVL in USD |
+| `sortBy` | string | no | Sort field (e.g. "apy", "tvl") |
+| `limit` | number | no | Max vaults to return (default 10) |
+| `strategy` | string | no | Strategy preset: "conservative", "max-apy", "diversified", "risk-adjusted" |
+
+**Example prompt:** "Show me the top 5 USDC vaults on Base with at least $1M TVL"
+
+---
+
+### get-earn-vault
+
+Get a single vault by its slug. Returns full vault details including APY breakdown, TVL,
+underlying tokens, protocol, and tags.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `slug` | string | yes | Vault slug: `<chainId>-<vaultAddress>` |
+
+**Example prompt:** "Get details for vault 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9"
+
+---
+
+### get-earn-chains
+
+List all blockchain chains supported by LI.FI Earn. Returns chain IDs, names, and CAIP
+identifiers.
+
+**Parameters:** None.
+
+**Example prompt:** "What chains does LI.FI Earn support?"
+
+---
+
+### get-earn-protocols
+
+List all DeFi protocols available on LI.FI Earn. Returns protocol names and URLs.
+
+**Parameters:** None.
+
+**Example prompt:** "Which protocols are available on LI.FI Earn?"
+
+---
+
+### get-earn-portfolio
+
+Get DeFi portfolio positions for a wallet address.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `wallet` | string | yes | Wallet address (0x...) |
+
+**Example prompt:** "Show me the Earn positions for wallet 0xabc123..."
+
+---
+
+### get-vault-risk
+
+Compute a composite 0-10 risk score for a vault. Dimensions: TVL magnitude, APY stability,
+protocol maturity, redeemability, and asset type.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `slug` | string | yes | Vault slug: `<chainId>-<vaultAddress>` |
+
+**Example prompt:** "What's the risk score for the Aave USDC vault on Base?"
+
+**Labels:** >= 7 is "low" risk (safe), 4-6.9 is "medium", < 4 is "high" risk.
+
+---
+
+### quote-vault-deposit
+
+Build a deposit quote for an Earn vault. Returns transaction data ready to sign.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `slug` | string | yes | Vault slug: `<chainId>-<vaultAddress>` |
+| `wallet` | string | yes | Wallet address |
+| `fromAmount` | string | yes | Human-readable amount (e.g. "100" for 100 USDC) |
+| `fromToken` | string | no | Override source token address |
+| `fromChain` | number | no | Override source chain ID |
+| `slippage` | number | no | Slippage tolerance (e.g. 0.03 for 3%) |
+
+**Example prompt:** "Build a quote to deposit 100 USDC into the Aave vault on Base from my wallet 0x..."
+
+<Aside type="caution">
+This tool requires the `LIFI_API_KEY` environment variable. The MCP server will return
+an error if the key is missing.
+</Aside>
+
+---
+
+### suggest-allocation
+
+Get a portfolio allocation suggestion using a risk-adjusted scoring engine.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `amount` | number | yes | Total USD amount to allocate |
+| `asset` | string | no | Filter by token symbol |
+| `maxChains` | number | no | Max chains to spread across (default 5) |
+| `maxVaults` | number | no | Max vaults in allocation (default 5) |
+| `strategy` | string | no | Strategy preset |
+
+**Example prompt:** "How should I allocate $10,000 in USDC across Earn vaults?"
+
+---
+
+### run-doctor
+
+Run preflight/pitfall checks on a vault before depositing.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `slug` | string | yes | Vault slug |
+| `wallet` | string | yes | Wallet address |
+| `walletChainId` | number | no | Current wallet chain ID (detects chain mismatch) |
+| `depositAmount` | string | no | Amount for balance sufficiency check |
+
+**Example prompt:** "Run doctor checks on vault 8453-0xbeef... for wallet 0xabc..."
+
+---
+
+## How It Works
+
+The MCP server uses the `@modelcontextprotocol/sdk` stdio transport. When started, it:
+
+1. Creates an `EarnForge` SDK instance (with caching: 60s TTL, 200 entries)
+2. Registers all 9 tools with Zod-validated parameter schemas
+3. Listens on stdin/stdout for MCP JSON-RPC messages
+
+The server name is `earnforge-mcp` and version `0.1.0`. Clients auto-discover the
+available tools from the server's tool listing.
+
+All tool responses are JSON-formatted text content. Errors include `isError: true` in the
+response for clients that support it.

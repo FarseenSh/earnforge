@@ -2,7 +2,7 @@
 import { RateLimitError } from './errors.js';
 
 /**
- * Token-bucket rate limiter.
+ * Token-bucket rate limiter with queued async acquisition.
  * Default: 100 requests per minute for Earn Data API (Pitfall #14).
  */
 export class TokenBucketRateLimiter {
@@ -10,10 +10,9 @@ export class TokenBucketRateLimiter {
   private lastRefill: number;
   private readonly maxTokens: number;
   private readonly refillRate: number; // tokens per ms
+  private _queue: Promise<void> = Promise.resolve();
 
-  constructor(
-    maxRequestsPerMinute = 100,
-  ) {
+  constructor(maxRequestsPerMinute = 100) {
     this.maxTokens = maxRequestsPerMinute;
     this.tokens = maxRequestsPerMinute;
     this.refillRate = maxRequestsPerMinute / 60_000;
@@ -36,7 +35,16 @@ export class TokenBucketRateLimiter {
     this.tokens -= 1;
   }
 
+  /**
+   * Queued async acquire — serializes concurrent callers to prevent
+   * race conditions where multiple callers pass the token check simultaneously.
+   */
   async acquireAsync(): Promise<void> {
+    this._queue = this._queue.then(() => this._acquireInternal());
+    return this._queue;
+  }
+
+  private async _acquireInternal(): Promise<void> {
     this.refill();
     if (this.tokens < 1) {
       const waitMs = Math.ceil((1 - this.tokens) / this.refillRate);

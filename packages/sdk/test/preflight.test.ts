@@ -24,10 +24,10 @@ describe('preflight', () => {
     expect(report.issues.some((i) => i.code === 'NOT_TRANSACTIONAL')).toBe(true);
   });
 
-  it('fails on chain mismatch (Pitfall #12)', () => {
+  it('warns on chain mismatch — Composer handles cross-chain (Pitfall #12)', () => {
     const report = preflight(vault, wallet, { walletChainId: 1 });
-    expect(report.ok).toBe(false);
-    expect(report.issues.some((i) => i.code === 'CHAIN_MISMATCH')).toBe(true);
+    expect(report.ok).toBe(true); // warning, not error — cross-chain is valid
+    expect(report.issues.some((i) => i.code === 'CHAIN_MISMATCH' && i.severity === 'warning')).toBe(true);
   });
 
   it('fails when no gas token (Pitfall #11)', () => {

@@ -14,6 +14,10 @@ export default defineConfig({
       ],
       sidebar: [
         {
+          label: 'Getting Started',
+          items: [{ label: 'Introduction', link: '/' }],
+        },
+        {
           label: 'Packages',
           items: [
             { label: 'SDK Reference', link: '/sdk/' },

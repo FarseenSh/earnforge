@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Vault, VaultListResponse } from '@earnforge/sdk';
 import type { StrategyPreset } from '@earnforge/sdk';
@@ -24,6 +24,7 @@ export interface UseVaultsReturn {
 
 /**
  * Fetch a paginated list of vaults with optional filters.
+ * Resets accumulated data when params change.
  *
  * ```tsx
  * const { data, isLoading, fetchMore, hasMore } = useVaults({ chainId: 8453 });
@@ -35,7 +36,22 @@ export function useVaults(params: UseVaultsParams = {}): UseVaultsReturn {
   const cursorRef = useRef<string | null>(null);
   const accumulatedRef = useRef<Vault[]>([]);
 
-  const queryKey = ['earnforge', 'vaults', params] as const;
+  // Stable serialized params key for comparison
+  const paramsKey = useMemo(
+    () => JSON.stringify({ chainId: params.chainId, asset: params.asset, minTvl: params.minTvl, sortBy: params.sortBy, strategy: params.strategy }),
+    [params.chainId, params.asset, params.minTvl, params.sortBy, params.strategy],
+  );
+
+  // Reset accumulated data and cursor when params change
+  useEffect(() => {
+    cursorRef.current = null;
+    accumulatedRef.current = [];
+  }, [paramsKey]);
+
+  const queryKey = useMemo(
+    () => ['earnforge', 'vaults', paramsKey, cursorRef.current] as const,
+    [paramsKey],
+  );
 
   const query = useQuery<VaultListResponse, Error>({
     queryKey,

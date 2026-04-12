@@ -73,14 +73,11 @@ export const AnalyticsSchema = z.object({
  * Order: apy.total → apy30d → apy7d → apy1d
  */
 export function getBestApy(analytics: z.infer<typeof AnalyticsSchema>): number {
-  // Use || (not ??) so 0 falls through to next option
-  return (
-    analytics.apy.total ||
-    analytics.apy30d ||
-    analytics.apy7d ||
-    analytics.apy1d ||
-    0
-  );
+  // apy.total is always a number (never null after Zod). If it's non-zero, use it.
+  // If it's exactly 0, fall through to historical data as a display hint.
+  if (analytics.apy.total !== 0) return analytics.apy.total;
+  // Fallback chain for null historical values
+  return analytics.apy30d ?? analytics.apy7d ?? analytics.apy1d ?? 0;
 }
 
 /**

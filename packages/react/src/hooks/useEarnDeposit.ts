@@ -38,8 +38,6 @@ export interface UseEarnDepositParams {
   fromToken?: string;
   fromChain?: number;
   slippage?: number;
-  /** wagmi's sendTransaction function — pass from useSendTransaction() */
-  sendTransaction?: (params: { to: `0x${string}`; data: `0x${string}`; value: bigint; chainId: number }) => void;
   /** wagmi's sendTransactionAsync function — pass from useSendTransaction() */
   sendTransactionAsync?: (params: { to: `0x${string}`; data: `0x${string}`; value: bigint; chainId: number }) => Promise<`0x${string}`>;
 }

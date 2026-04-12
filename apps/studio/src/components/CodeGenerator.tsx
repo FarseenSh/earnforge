@@ -26,65 +26,68 @@ console.log(vault.name, vault.analytics.apy.total);
 const risk = forge.riskScore(vault);
 console.log('Risk:', risk.score, risk.label);
 
-// Build deposit quote
+// Build deposit quote (correct field names from DepositQuoteOptions)
 const quote = await forge.buildDepositQuote(vault, {
-  fromChainId: ${vault.chainId},
+  fromAmount: '100',           // human-readable, auto-converted to smallest unit
+  wallet: '0xYourWallet',      // your wallet address
   fromToken: '${vault.underlyingTokens[0]?.address ?? '0x...'}',
-  amount: '1000000',
-  sender: '0xYourWallet',
+  fromChain: ${vault.chainId},            // source chain (omit for same-chain)
 });
-console.log('Quote:', quote);`;
+console.log('Tx to sign:', quote.quote.transactionRequest);`;
 }
 
 function generateReact(vault: Vault): string {
-  return `import { createEarnForge, type Vault } from '@earnforge/sdk';
-import { useQuery } from '@tanstack/react-query';
+  return `import { EarnForgeProvider, useVault, useRiskScore, useEarnDeposit } from '@earnforge/react';
+import { createEarnForge } from '@earnforge/sdk';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const forge = createEarnForge({
-  composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY,
-});
+const queryClient = new QueryClient();
+const forge = createEarnForge({ composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY });
 
-function useVault(slug: string) {
-  return useQuery({
-    queryKey: ['vault', slug],
-    queryFn: () => forge.vaults.get(slug),
-  });
-}
+// Wrap your app:
+// <QueryClientProvider client={queryClient}>
+//   <EarnForgeProvider sdk={forge}>
+//     <VaultDetail />
+//   </EarnForgeProvider>
+// </QueryClientProvider>
 
-function useRiskScore(vault: Vault | undefined) {
-  return vault ? forge.riskScore(vault) : null;
-}
-
-// Usage in a component:
 function VaultDetail() {
   const { data: vault, isLoading } = useVault('${vault.slug}');
   const risk = useRiskScore(vault);
+  const { prepare, execute, status } = useEarnDeposit();
 
   if (isLoading) return <div>Loading...</div>;
-  if (!vault) return <div>Vault not found</div>;
+  if (!vault) return <div>Not found</div>;
 
   return (
     <div>
       <h2>{vault.name}</h2>
-      <p>APY: {(vault.analytics.apy.total * 100).toFixed(2)}%</p>
-      <p>Risk: {risk?.score} ({risk?.label})</p>
+      <p>APY: {vault.analytics.apy.total.toFixed(2)}%</p>
+      <p>Risk: {risk?.score}/10 ({risk?.label})</p>
+      <button onClick={() => prepare({ vault, amount: '100' })}>
+        Deposit ({status})
+      </button>
     </div>
   );
 }`;
 }
 
 function generateCurl(vault: Vault): string {
-  return `# List vaults on chain ${vault.chainId}
+  const underlying = vault.underlyingTokens[0];
+  const fromToken = underlying?.address ?? '0x_FROM_TOKEN';
+  const decimals = underlying?.decimals ?? 18;
+  const fromAmount = '1' + '0'.repeat(decimals); // 1 token in smallest unit
+  return `# Get vault details (Earn Data API — no auth needed)
+curl -s "https://earn.li.fi/v1/earn/vaults/${vault.chainId}/${vault.address}" | jq '.'
+
+# List vaults on chain ${vault.chainId}
 curl -s "https://earn.li.fi/v1/earn/vaults?chainId=${vault.chainId}" | jq '.data[:5]'
 
-# Get specific vault by slug
-curl -s "https://earn.li.fi/v1/earn/vaults/${vault.slug}" | jq '.'
-
-# List all chains
-curl -s "https://earn.li.fi/v1/earn/chains" | jq '.'
-
-# List all protocols
-curl -s "https://earn.li.fi/v1/earn/protocols" | jq '.'`;
+# Build deposit quote (Composer — requires API key, uses GET not POST)
+# toToken = vault address (NOT underlying token) — Pitfall #5
+curl -s -H "x-lifi-api-key: YOUR_KEY" \\
+  "https://li.quest/v1/quote?fromChain=${vault.chainId}&toChain=${vault.chainId}&fromToken=${fromToken}&toToken=${vault.address}&fromAddress=0xYOUR_WALLET&toAddress=0xYOUR_WALLET&fromAmount=${fromAmount}" \\
+  | jq '.transactionRequest'`;
 }
 
 const TABS: { id: CodeTab; label: string }[] = [

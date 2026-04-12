@@ -1,11 +1,14 @@
 ---
 title: Agent Skill
-description: The first Earn-native Agent Skill — vault discovery, risk scoring, and deposits via CLI.
+description: SKILL.md + reference files for giving any AI coding agent Earn API superpowers.
 ---
 
-# Agent Skill
+import { Aside } from '@astrojs/starlight/components';
 
-EarnForge publishes an Agent Skill following the Anthropic Skills spec. It's the first Earn-native skill — LI.FI's own skills only cover swap/bridge.
+`@earnforge/skill` follows the [Agent Skill](https://github.com/anthropics/agent-skill)
+standard. It bundles a `SKILL.md` file plus 5 reference files that any coding agent
+(Claude Code, Cursor, Windsurf, Aider, etc.) can read to understand the LI.FI Earn API
+and use EarnForge correctly.
 
 ## Installation
 
@@ -13,27 +16,186 @@ EarnForge publishes an Agent Skill following the Anthropic Skills spec. It's the
 npm i @earnforge/skill
 ```
 
-The skill includes:
+The installed package contains:
 
-- `SKILL.md` — front door, always loaded by the agent (~500 tokens)
-- `references/pitfalls.md` — 18 pitfalls with fixes
-- `references/protocols.md` — 11 protocols with risk tiers
-- `references/chains.md` — 16 chains with IDs
-- `references/examples.md` — 8 worked examples
-- `references/strategies.md` — 4 yield strategy presets
+```
+@earnforge/skill/
+  SKILL.md
+  references/
+    pitfalls.md
+    protocols.md
+    chains.md
+    examples.md
+    strategies.md
+```
 
-## How it works
+## What is SKILL.md?
 
-The agent reads `SKILL.md` and shells out to the `earnforge` CLI with `--json` for every operation. This is the CLI-first architecture — the skill is a thin wrapper for discoverability.
+`SKILL.md` is a structured file that agents read to learn what tools are available and
+how to use them. It contains:
 
-## Key rules from SKILL.md
+1. **Frontmatter** -- Machine-readable name and description
+2. **Commands** -- Every CLI command with full usage and flags
+3. **Rules** -- Critical integration rules the agent must follow
+4. **References** -- Links to detailed reference files
 
-1. Never sign transactions — return unsigned `transactionRequest`
-2. APY can be null — prefer `apy30d` for stable yield comparisons
-3. Always check `isTransactional === true` before quoting
-4. Stablecoin vaults have the `"stablecoin"` tag
-5. Cross-chain: pass `--from-chain` for the source chain
-6. Check `isRedeemable === true` before withdraw
-7. Use `earnforge risk` and filter score >= 7 for "safe" requests
-8. Use `earnforge suggest` for portfolio allocation
-9. Pass `--optimize-gas` for gas-sensitive users
+### Frontmatter
+
+```yaml
+---
+name: earnforge
+description: >
+  Discovers, compares, risk-scores, and builds unsigned deposit quotes for
+  623+ DeFi yield vaults across 16 chains via the LI.FI Earn API.
+  Handles all 18 known API pitfalls by default.
+---
+```
+
+---
+
+## Commands in SKILL.md
+
+The skill defines these command groups:
+
+### Vault Discovery
+
+| Command | Description |
+|---------|-------------|
+| `earnforge list [--asset] [--chain] [--min-tvl] [--strategy] [--json]` | List vaults with filters |
+| `earnforge top [--asset] [--chain] [--limit] [--strategy] [--json]` | Top vaults by APY |
+| `earnforge get <slug> [--json]` | Single vault by slug |
+
+### Comparison and Analysis
+
+| Command | Description |
+|---------|-------------|
+| `earnforge compare <slug1> <slug2> [--json]` | Side-by-side vault comparison |
+| `earnforge risk <slug> [--json]` | Full risk score breakdown |
+| `earnforge history <address> <chain-id> [--json]` | 30-day APY history |
+
+### Portfolio and Suggestions
+
+| Command | Description |
+|---------|-------------|
+| `earnforge suggest <amount> <asset> [--max-vaults] [--max-chains] [--strategy] [--json]` | Portfolio allocation |
+| `earnforge portfolio <wallet> [--json]` | Current wallet positions |
+
+### Deposit and Withdraw
+
+| Command | Description |
+|---------|-------------|
+| `earnforge quote <slug> <amount> <wallet> [--from-chain] [--slippage] [--json]` | Build deposit quote |
+| `earnforge withdraw <slug> <amount> <wallet> [--json]` | Build withdraw quote |
+| `earnforge gas-optimize <slug> <amount> <wallet> [--from-chains] [--json]` | Compare cross-chain deposit costs |
+
+### Safety and Monitoring
+
+| Command | Description |
+|---------|-------------|
+| `earnforge doctor <slug> [--wallet] [--json]` | Run pitfall checks |
+| `earnforge watch <slug> [--apy-drop] [--tvl-drop] [--json]` | Monitor APY/TVL changes |
+
+### Reference Data
+
+| Command | Description |
+|---------|-------------|
+| `earnforge chains [--json]` | List 16 supported chains |
+| `earnforge protocols [--json]` | List 11 protocols |
+| `earnforge strategies [--json]` | List 4 strategy presets |
+
+---
+
+## Rules
+
+The `SKILL.md` defines 9 rules that agents must follow:
+
+1. **Never submit transactions.** Only build unsigned quotes. The user signs and broadcasts.
+
+2. **Always check `isTransactional` before quoting.** Non-transactional vaults cannot accept deposits.
+
+3. **Use `vault.address` as `toToken`, not the underlying token address.** This is Pitfall #5.
+
+4. **Filter stablecoins by the `stablecoin` tag, not by token symbol.**
+
+5. **Risk score thresholds:** >= 7 is low risk, 4-6.9 is medium, < 4 is high risk.
+
+6. **TVL is a string in USD.** Parse with `parseTvl()` before comparing.
+
+7. **APY fields (`apy1d`, `apy7d`, `apy30d`) can be null.** Use the fallback chain.
+
+8. **`apy.reward` is null for some protocols.** Normalize to 0 before summing.
+
+9. **Use chainId (number), not chain name (string), in all API calls.**
+
+<Aside type="tip">
+These rules are the distilled wisdom from the [18 Pitfalls Guide](/pitfalls/). Agents that
+follow them will avoid every known production issue in the LI.FI Earn API.
+</Aside>
+
+---
+
+## Reference Files
+
+### references/pitfalls.md
+
+All 18 API pitfalls with descriptions and fixes. Agents reference this when debugging
+integration issues or understanding why certain guards exist.
+
+### references/protocols.md
+
+The 11 protocols with risk tiers. Used by agents to understand protocol maturity
+when making recommendations.
+
+### references/chains.md
+
+All 16 chains with chainId mappings. Agents use this to convert between chain names
+and numeric IDs.
+
+### references/examples.md
+
+8 worked examples showing common workflows:
+- Find top USDC yield on Base
+- Compare two vaults
+- Build a deposit quote
+- Get a diversified allocation
+- Run doctor checks
+- Monitor a vault
+- Cross-chain gas optimization
+- Portfolio lookup
+
+### references/strategies.md
+
+The 4 yield strategy presets with their filter configs, sort behavior, and
+recommended use cases.
+
+---
+
+## Using the Skill
+
+### In Claude Code
+
+Place the skill package in your project's dependencies. Claude Code will automatically
+discover the `SKILL.md` and reference files.
+
+### In Cursor / Windsurf
+
+Point your agent to the `SKILL.md` file:
+
+```
+@earnforge/skill/SKILL.md
+```
+
+The agent will read the file and understand all available commands, rules, and references.
+
+### In Custom Agents
+
+Read `SKILL.md` as part of your system prompt or tool documentation:
+
+```ts
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+const skillPath = resolve('node_modules/@earnforge/skill/SKILL.md');
+const skill = readFileSync(skillPath, 'utf-8');
+// Include `skill` in your agent's context
+```

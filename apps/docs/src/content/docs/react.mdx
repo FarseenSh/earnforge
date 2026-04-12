@@ -1,25 +1,52 @@
 ---
 title: React Hooks
-description: 9 React hooks for the LI.FI Earn API — drop-in vault discovery, risk scoring, and deposits.
+description: 9 React hooks for building Earn-powered UIs with @earnforge/react.
 ---
 
-# React Hooks
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-```bash
-npm i @earnforge/react @earnforge/sdk @tanstack/react-query
-```
+`@earnforge/react` provides 9 hooks built on top of `@earnforge/sdk`, wagmi, and
+TanStack Query. Each hook handles loading states, errors, caching, and re-fetching
+automatically.
 
-## Setup
+## Installation
 
-Wrap your app with `EarnForgeProvider`:
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm i @earnforge/react @earnforge/sdk @tanstack/react-query
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @earnforge/react @earnforge/sdk @tanstack/react-query
+    ```
+  </TabItem>
+</Tabs>
+
+### Peer Dependencies
+
+| Package | Version |
+|---------|---------|
+| `@earnforge/sdk` | `^0.1.0` |
+| `@tanstack/react-query` | `^5.90.0` |
+| `react` | `^18.0.0 \|\| ^19.0.0` |
+
+---
+
+## EarnForgeProvider
+
+Wrap your application with `EarnForgeProvider` to make the SDK instance available to all hooks.
 
 ```tsx
+import { createEarnForge } from '@earnforge/sdk';
 import { EarnForgeProvider } from '@earnforge/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createEarnForge } from '@earnforge/sdk';
 
+const forge = createEarnForge({
+  composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY,
+});
 const queryClient = new QueryClient();
-const forge = createEarnForge({ composerApiKey: process.env.LIFI_API_KEY });
 
 function App() {
   return (
@@ -32,81 +59,364 @@ function App() {
 }
 ```
 
-## Hooks
+<Aside type="caution">
+All `@earnforge/react` hooks must be used inside both `EarnForgeProvider` and
+`QueryClientProvider`. Using them outside throws a clear error message.
+</Aside>
+
+---
+
+## Hook Reference
 
 ### useVaults
 
+Fetch a paginated list of vaults with optional filters.
+
 ```tsx
-const { data, isLoading, error, fetchMore, hasMore } = useVaults({
-  chainId: 8453,
-  asset: 'USDC',
-  limit: 10,
-  strategy: 'conservative',
-});
+import { useVaults } from '@earnforge/react';
+
+function VaultList() {
+  const { data, isLoading, error, fetchMore, hasMore } = useVaults({
+    chainId: 8453,
+    asset: 'USDC',
+    minTvl: 1_000_000,
+    limit: 20,
+    strategy: 'conservative',
+  });
+
+  if (isLoading) return <p>Loading vaults...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  return (
+    <div>
+      {data?.map((vault) => (
+        <div key={vault.slug}>
+          <h3>{vault.name}</h3>
+          <p>APY: {vault.analytics.apy.total}%</p>
+        </div>
+      ))}
+      {hasMore && <button onClick={fetchMore}>Load more</button>}
+    </div>
+  );
+}
 ```
+
+**Parameters:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `chainId` | `number` | Filter by chain ID |
+| `asset` | `string` | Filter by asset symbol |
+| `minTvl` | `number` | Minimum TVL in USD |
+| `sortBy` | `string` | Sort field |
+| `limit` | `number` | Max vaults to load |
+| `strategy` | `StrategyPreset` | Strategy preset filter |
+
+**Returns:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `data` | `Vault[] \| undefined` | Loaded vaults |
+| `isLoading` | `boolean` | Initial loading state |
+| `error` | `Error \| null` | Error if failed |
+| `fetchMore` | `() => void` | Load next page |
+| `hasMore` | `boolean` | Whether more pages exist |
+
+---
 
 ### useVault
 
+Fetch a single vault by slug.
+
 ```tsx
-const { data: vault, isLoading } = useVault('8453-0xbeef...');
+import { useVault } from '@earnforge/react';
+
+function VaultDetail({ slug }: { slug: string }) {
+  const { data: vault, isLoading, error } = useVault(slug);
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+  if (!vault) return null;
+
+  return (
+    <div>
+      <h2>{vault.name}</h2>
+      <p>APY: {vault.analytics.apy.total}%</p>
+      <p>Protocol: {vault.protocol.name}</p>
+    </div>
+  );
+}
 ```
+
+Pass `undefined` as the slug to disable the query (useful for conditional fetching).
+
+---
 
 ### useEarnTopYield
 
+Fetch top-yielding vaults sorted by APY.
+
 ```tsx
-const { data: topVaults } = useEarnTopYield({ asset: 'USDC', limit: 5 });
+import { useEarnTopYield } from '@earnforge/react';
+
+function TopYields() {
+  const { data, isLoading } = useEarnTopYield({
+    asset: 'USDC',
+    limit: 5,
+    strategy: 'risk-adjusted',
+  });
+
+  return (
+    <ul>
+      {data?.map((vault) => (
+        <li key={vault.slug}>
+          {vault.name} -- {vault.analytics.apy.total}%
+        </li>
+      ))}
+    </ul>
+  );
+}
 ```
+
+**Parameters:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `asset` | `string` | Filter by asset symbol |
+| `chainId` | `number` | Filter by chain ID |
+| `limit` | `number` | Max vaults |
+| `strategy` | `StrategyPreset` | Strategy preset |
+| `minTvl` | `number` | Minimum TVL in USD |
+
+---
 
 ### usePortfolio
 
+Fetch portfolio positions for a wallet address.
+
 ```tsx
-const { data: portfolio } = usePortfolio('0xYourWallet');
+import { usePortfolio } from '@earnforge/react';
+
+function Portfolio({ wallet }: { wallet: string }) {
+  const { data, isLoading, error } = usePortfolio(wallet);
+
+  if (isLoading) return <p>Loading portfolio...</p>;
+  if (!data) return null;
+
+  return (
+    <div>
+      {data.positions.map((pos, i) => (
+        <div key={i}>
+          {pos.vault.name}: ${pos.balanceUsd}
+        </div>
+      ))}
+    </div>
+  );
+}
 ```
+
+Pass `undefined` as the wallet to disable the query.
+
+---
 
 ### useRiskScore
 
+Compute a risk score for a vault. This is a synchronous computation wrapped in
+`useMemo` for referential stability.
+
 ```tsx
-const riskScore = useRiskScore(vault);
-// { score: 8.5, label: 'low', breakdown: { tvl: 9, ... } }
+import { useRiskScore } from '@earnforge/react';
+
+function RiskBadge({ vault }: { vault: Vault }) {
+  const { data: risk } = useRiskScore(vault);
+
+  if (!risk) return null;
+
+  const color = risk.label === 'low' ? 'green'
+    : risk.label === 'medium' ? 'yellow'
+    : 'red';
+
+  return (
+    <span style={{ color }}>
+      {risk.score}/10 ({risk.label})
+    </span>
+  );
+}
 ```
+
+---
 
 ### useStrategy
 
+Resolve a strategy preset into its filter configuration.
+
 ```tsx
-const strategy = useStrategy('conservative');
-// { name, description, filters, sort, sortDirection }
+import { useStrategy, useVaults } from '@earnforge/react';
+
+function StrategyVaults({ preset }: { preset: StrategyPreset }) {
+  const { filters } = useStrategy(preset);
+  const { data } = useVaults({ ...filters });
+
+  return (
+    <div>
+      <h2>{preset} strategy</h2>
+      {data?.map((v) => <p key={v.slug}>{v.name}</p>)}
+    </div>
+  );
+}
 ```
+
+**Returns:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `data` | `StrategyConfig \| undefined` | Full strategy config |
+| `filters` | `object \| undefined` | Filters to pass to `useVaults` |
+| `sort` | `string \| undefined` | Sort field |
+| `sortDirection` | `'asc' \| 'desc' \| undefined` | Sort direction |
+
+---
 
 ### useSuggest
 
+Get a suggested portfolio allocation.
+
 ```tsx
-const { data: suggestion } = useSuggest({
-  amount: 10000,
-  asset: 'USDC',
-  maxChains: 3,
-  strategy: 'risk-adjusted',
-});
+import { useSuggest } from '@earnforge/react';
+
+function Suggestions() {
+  const { data, isLoading } = useSuggest({
+    amount: 10_000,
+    asset: 'USDC',
+    maxChains: 3,
+    strategy: 'diversified',
+  });
+
+  if (isLoading) return <p>Computing allocations...</p>;
+  if (!data) return null;
+
+  return (
+    <div>
+      <p>Expected APY: {data.expectedApy}%</p>
+      {data.allocations.map((alloc, i) => (
+        <div key={i}>
+          {alloc.vault.name}: ${alloc.amount} ({alloc.percentage}%)
+        </div>
+      ))}
+    </div>
+  );
+}
 ```
+
+Pass `undefined` or set `amount` to `0` to disable the query.
+
+---
 
 ### useApyHistory
 
+Fetch 30-day APY history from DeFiLlama.
+
 ```tsx
-const { data: history } = useApyHistory(vault.address, vault.chainId);
-// [{ timestamp, apy, tvlUsd }, ...]
+import { useApyHistory } from '@earnforge/react';
+
+function ApyChart({ address, chainId }: { address: string; chainId: number }) {
+  const { data, isLoading } = useApyHistory(address, chainId);
+
+  if (isLoading) return <p>Loading history...</p>;
+
+  return (
+    <ul>
+      {data?.map((point, i) => (
+        <li key={i}>{point.date}: {point.apy}%</li>
+      ))}
+    </ul>
+  );
+}
 ```
+
+Pass `undefined` for either parameter to disable the query.
+
+---
 
 ### useEarnDeposit
 
-Full deposit state machine:
+Full deposit state machine hook. Handles preflight checks, quote building, and
+transaction sending through distinct phases.
 
 ```tsx
-const { status, prepare, execute, reset, preflight, quote, txHash } = useEarnDeposit();
+import { useEarnDeposit } from '@earnforge/react';
+import { useSendTransaction, useAccount } from 'wagmi';
 
-// Step 1: Prepare (runs preflight + builds quote)
-await prepare({ vault, amount: '500' });
+function DepositForm({ vault }: { vault: Vault }) {
+  const { address } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
 
-// Step 2: Execute (sends transaction via wagmi)
-await execute({ sendTransactionAsync });
+  const { state, prepare, execute, reset } = useEarnDeposit({
+    vault,
+    amount: '100',
+    wallet: address ?? '',
+    sendTransactionAsync,
+  });
 
-// status: 'idle' → 'preflight' → 'quoting' → 'ready' → 'sending' → 'success'
+  return (
+    <div>
+      <p>Phase: {state.phase}</p>
+
+      {state.phase === 'idle' && (
+        <button onClick={prepare}>Prepare Deposit</button>
+      )}
+
+      {state.phase === 'ready' && state.quote && (
+        <div>
+          <p>Quote ready: {state.quote.humanAmount} tokens</p>
+          <button onClick={execute}>Confirm Deposit</button>
+        </div>
+      )}
+
+      {state.phase === 'success' && (
+        <p>Transaction sent: {state.txHash}</p>
+      )}
+
+      {state.phase === 'error' && (
+        <div>
+          <p>Error: {state.error?.message}</p>
+          <button onClick={reset}>Try Again</button>
+        </div>
+      )}
+    </div>
+  );
+}
 ```
+
+#### State Machine
+
+The deposit flow progresses through these phases:
+
+```
+idle --> preflight --> quoting --> ready --> sending --> success
+  \         |            |          |          |
+   \________|____________|__________|__________|-->  error
+```
+
+| Phase | Description |
+|-------|-------------|
+| `idle` | Initial state. Call `prepare()` to start. |
+| `preflight` | Running pitfall checks (isTransactional, chain, gas, etc.) |
+| `quoting` | Building the deposit quote via Composer API |
+| `ready` | Quote ready. Call `execute()` to send the transaction. |
+| `sending` | Transaction submitted, waiting for hash |
+| `success` | Transaction hash received |
+| `error` | Something failed. `state.error` contains the Error. Call `reset()` to return to idle. |
+
+#### Return Value
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `state.phase` | `DepositPhase` | Current phase |
+| `state.preflightReport` | `PreflightReport \| null` | Preflight result |
+| `state.quote` | `DepositQuoteResult \| null` | Built quote |
+| `state.txHash` | `string \| null` | Transaction hash on success |
+| `state.error` | `Error \| null` | Error details |
+| `prepare` | `() => Promise<void>` | Start preflight + quote flow |
+| `execute` | `() => Promise<void>` | Send the transaction |
+| `reset` | `() => void` | Reset to idle |

@@ -64,8 +64,9 @@ export class EarnDataClient {
       const url = `${this.baseUrl}${path}`;
       const res = await globalThis.fetch(url);
       if (!res.ok) {
+        const body = await res.text().catch(() => '');
         throw new EarnApiError(
-          `Earn API error: ${res.status} ${res.statusText}`,
+          `Earn API error: ${res.status} ${res.statusText}. ${body}`.trim(),
           res.status,
           url,
         );

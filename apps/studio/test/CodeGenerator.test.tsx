@@ -25,8 +25,9 @@ describe('CodeGenerator', () => {
     render(<CodeGenerator vault={vault} onClose={() => {}} />);
     fireEvent.click(screen.getByTestId('code-tab-react'));
     const code = screen.getByTestId('code-generator').querySelector('code');
-    expect(code?.textContent).toContain('useQuery');
+    expect(code?.textContent).toContain('EarnForgeProvider');
     expect(code?.textContent).toContain('useVault');
+    expect(code?.textContent).toContain('useRiskScore');
   });
 
   it('switches to curl tab on click', () => {

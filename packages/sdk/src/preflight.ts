@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Vault } from './schemas/index.js';
 import type { PreflightIssue } from './errors.js';
+import { toSmallestUnit } from './build-deposit-quote.js';
 
 export interface PreflightReport {
   ok: boolean;
@@ -15,14 +16,16 @@ export interface PreflightOptions {
   tokenBalance?: bigint;
   tokenDecimals?: number;
   depositAmount?: string;
+  /** If true, cross-chain deposit is intended — skip chain mismatch error */
+  crossChain?: boolean;
 }
 
 /**
  * Run preflight checks before a deposit:
  * - isTransactional check (Pitfall #13)
- * - Chain mismatch check (Pitfall #12)
+ * - Chain mismatch check (Pitfall #12) — warning for cross-chain, error for same-chain
  * - Gas token balance check (Pitfall #11)
- * - Token balance check
+ * - Token balance check (uses string-based toSmallestUnit to avoid float precision loss)
  * - underlyingTokens existence (Pitfall #15)
  * - isRedeemable warning
  */
@@ -42,12 +45,12 @@ export function preflight(
     });
   }
 
-  // Pitfall #12: chain mismatch
+  // Pitfall #12: chain mismatch — warning for cross-chain (Composer handles bridging)
   if (options.walletChainId !== undefined && options.walletChainId !== vault.chainId) {
     issues.push({
       code: 'CHAIN_MISMATCH',
-      message: `Wallet is on chain ${options.walletChainId} but vault is on chain ${vault.chainId}. Switch network first.`,
-      severity: 'error',
+      message: `Wallet is on chain ${options.walletChainId} but vault is on chain ${vault.chainId}. ${options.crossChain ? 'Composer will handle cross-chain bridging.' : 'Switch network or use cross-chain deposit.'}`,
+      severity: 'warning',
     });
   }
 
@@ -69,12 +72,10 @@ export function preflight(
     });
   }
 
-  // Token balance check
+  // Token balance check — uses string-based conversion to avoid float precision loss
   if (options.tokenBalance !== undefined && options.depositAmount !== undefined) {
     const decimals = options.tokenDecimals ?? vault.underlyingTokens[0]?.decimals ?? 18;
-    const requiredRaw = BigInt(
-      Math.floor(Number(options.depositAmount) * 10 ** decimals),
-    );
+    const requiredRaw = BigInt(toSmallestUnit(options.depositAmount, decimals));
     if (options.tokenBalance < requiredRaw) {
       issues.push({
         code: 'INSUFFICIENT_BALANCE',
