@@ -1,55 +1,195 @@
-/* EarnForge docs — black & orange theme */
+/* EarnForge — bold black & orange, inspired by agno.com */
 
+/* Dark theme (default) */
 :root {
-  --sl-color-accent-low: #1a0f00;
+  --sl-color-accent-low: #1c0a00;
   --sl-color-accent: #f97316;
-  --sl-color-accent-high: #ffd4a8;
-  --sl-color-white: #f5f5f5;
-  --sl-color-gray-1: #e0e0e0;
-  --sl-color-gray-2: #a0a0a0;
-  --sl-color-gray-3: #505050;
-  --sl-color-gray-4: #2a2a2a;
-  --sl-color-gray-5: #1a1a1a;
-  --sl-color-gray-6: #111111;
-  --sl-color-black: #0a0a0a;
+  --sl-color-accent-high: #fed7aa;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eeeeee;
+  --sl-color-gray-2: #999999;
+  --sl-color-gray-3: #555555;
+  --sl-color-gray-4: #222222;
+  --sl-color-gray-5: #141414;
+  --sl-color-gray-6: #0a0a0a;
+  --sl-color-black: #000000;
+  --sl-color-bg-sidebar: #000000;
+  --sl-color-bg-nav: rgba(0, 0, 0, 0.9);
+  --sl-color-hairline-light: #1a1a1a;
+  --sl-color-hairline: #222222;
 }
 
+/* Light theme */
 :root[data-theme='light'] {
-  --sl-color-accent-low: #fff3e6;
-  --sl-color-accent: #e05d00;
-  --sl-color-accent-high: #4a2000;
-  --sl-color-white: #1a1a1a;
-  --sl-color-gray-1: #2a2a2a;
-  --sl-color-gray-2: #505050;
-  --sl-color-gray-3: #a0a0a0;
-  --sl-color-gray-4: #d0d0d0;
-  --sl-color-gray-5: #f0f0f0;
-  --sl-color-gray-6: #f8f8f8;
+  --sl-color-accent-low: #fff7ed;
+  --sl-color-accent: #ea580c;
+  --sl-color-accent-high: #431407;
+  --sl-color-white: #0a0a0a;
+  --sl-color-gray-1: #1a1a1a;
+  --sl-color-gray-2: #444444;
+  --sl-color-gray-3: #888888;
+  --sl-color-gray-4: #cccccc;
+  --sl-color-gray-5: #f5f5f5;
+  --sl-color-gray-6: #fafafa;
   --sl-color-black: #ffffff;
 }
 
-/* Hero buttons */
+/* Force pure black body */
+html {
+  background: #000 !important;
+}
+
+/* Header */
+header.header {
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1a1a1a !important;
+}
+
+/* Site title — bold orange */
+.site-title {
+  font-weight: 800 !important;
+  color: #f97316 !important;
+  letter-spacing: -0.02em;
+}
+
+/* Hero section */
+.hero {
+  padding-block: 4rem !important;
+}
+
+.hero h1 {
+  font-size: 3.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em;
+  line-height: 1.1 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero .tagline {
+  color: #999 !important;
+  font-size: 1.15rem !important;
+  max-width: 540px;
+}
+
+/* Hero buttons — bold like Agno */
+.hero .action {
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.5rem !important;
+  text-transform: uppercase;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease !important;
+}
+
 .hero .action.primary {
-  background: var(--sl-color-accent);
-  border-color: var(--sl-color-accent);
-  color: #000;
+  background: #f97316 !important;
+  border: 2px solid #f97316 !important;
+  color: #000 !important;
 }
 
 .hero .action.primary:hover {
-  background: #fb923c;
+  background: #fb923c !important;
+  border-color: #fb923c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
 }
 
-/* Sidebar active link */
+.hero .action.minimal {
+  border: 2px solid #333 !important;
+  color: #fff !important;
+}
+
+.hero .action.minimal:hover {
+  border-color: #f97316 !important;
+  color: #f97316 !important;
+  transform: translateY(-1px);
+}
+
+/* Sidebar */
+nav.sidebar {
+  border-right: 1px solid #1a1a1a !important;
+}
+
 [data-current='true'] > a {
-  color: var(--sl-color-accent) !important;
+  color: #f97316 !important;
+  font-weight: 700 !important;
 }
 
-/* Code blocks */
-.expressive-code .frame {
-  border-color: #2a2a2a !important;
-}
-
-/* Card borders */
+/* Cards — sharp borders, subtle glow on hover */
 .card {
-  border-color: #333 !important;
+  border: 1px solid #222 !important;
+  border-radius: 12px !important;
+  background: #0a0a0a !important;
+  transition: all 0.2s ease !important;
+}
+
+.card:hover {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.08);
+}
+
+.card .title {
+  color: #f97316 !important;
+  font-weight: 700 !important;
+}
+
+/* Code blocks — dark with orange tint */
+.expressive-code .frame {
+  border: 1px solid #1a1a1a !important;
+  border-radius: 10px !important;
+  background: #0a0a0a !important;
+}
+
+.expressive-code .frame pre {
+  background: #0a0a0a !important;
+}
+
+/* Content headings */
+.sl-markdown-content h2 {
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid #1a1a1a;
+  padding-bottom: 0.5rem;
+}
+
+/* Links */
+.sl-markdown-content a:not(.action) {
+  color: #f97316 !important;
+  text-decoration: none !important;
+}
+
+.sl-markdown-content a:not(.action):hover {
+  text-decoration: underline !important;
+}
+
+/* Table of contents active */
+starlight-toc a[aria-current='true'] {
+  color: #f97316 !important;
+}
+
+/* Mobile nav */
+starlight-menu-button button {
+  color: #f97316 !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
 }
