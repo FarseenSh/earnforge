@@ -9,6 +9,7 @@ export * from './retry.js';
 export { EarnDataClient, type EarnDataClientOptions, type VaultListParams } from './clients/index.js';
 export { ComposerClient, type ComposerClientOptions, type QuoteParams } from './clients/index.js';
 export { buildDepositQuote, toSmallestUnit, fromSmallestUnit, type DepositQuoteOptions, type DepositQuoteResult } from './build-deposit-quote.js';
+export { buildRedeemQuote, type RedeemQuoteOptions, type RedeemQuoteResult } from './build-redeem-quote.js';
 export { preflight, type PreflightReport, type PreflightOptions } from './preflight.js';
 export { riskScore, type RiskScore, type RiskBreakdown } from './risk-scorer.js';
 export { suggest, type SuggestParams, type SuggestResult, type Allocation } from './suggest.js';
@@ -22,6 +23,7 @@ export { parseTvl, getBestApy, type TvlParsed } from './schemas/vault.js';
 import { EarnDataClient, type EarnDataClientOptions } from './clients/index.js';
 import { ComposerClient } from './clients/index.js';
 import { buildDepositQuote, type DepositQuoteOptions } from './build-deposit-quote.js';
+import { buildRedeemQuote, type RedeemQuoteOptions } from './build-redeem-quote.js';
 import { preflight, type PreflightOptions, type PreflightReport } from './preflight.js';
 import { riskScore, type RiskScore } from './risk-scorer.js';
 import { suggest, type SuggestParams, type SuggestResult } from './suggest.js';
@@ -56,6 +58,7 @@ export interface EarnForge {
     get: (wallet: string) => Promise<PortfolioResponse>;
   };
   buildDepositQuote: (vault: Vault, options: DepositQuoteOptions) => Promise<import('./build-deposit-quote.js').DepositQuoteResult>;
+  buildRedeemQuote: (vault: Vault, options: RedeemQuoteOptions) => Promise<import('./build-redeem-quote.js').RedeemQuoteResult>;
   preflight: (vault: Vault, wallet: string, options?: PreflightOptions) => PreflightReport;
   riskScore: (vault: Vault) => RiskScore;
   suggest: (params: SuggestParams & { vaults?: Vault[] }) => Promise<SuggestResult>;
@@ -161,6 +164,7 @@ export function createEarnForge(options: EarnForgeOptions = {}): EarnForge {
       get: (wallet) => earnData.getPortfolio(wallet),
     },
     buildDepositQuote: (vault, opts) => buildDepositQuote(vault, opts, requireComposer()),
+    buildRedeemQuote: (vault, opts) => buildRedeemQuote(vault, opts, requireComposer()),
     preflight: (vault, wallet, opts) => preflight(vault, wallet, opts),
     riskScore: (vault) => riskScore(vault),
     suggest: async (params) => {
