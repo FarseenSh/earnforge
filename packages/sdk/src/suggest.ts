@@ -2,7 +2,7 @@
 import type { Vault } from './schemas/index.js';
 import { parseTvl } from './schemas/vault.js';
 import { riskScore, type RiskScore } from './risk-scorer.js';
-import type { StrategyPreset } from './strategies.js';
+import { STRATEGIES, type StrategyPreset } from './strategies.js';
 
 export interface SuggestParams {
   amount: number;
@@ -47,6 +47,29 @@ export function suggest(vaults: Vault[], params: SuggestParams): SuggestResult {
 
   // Only transactional vaults
   candidates = candidates.filter((v) => v.isTransactional);
+
+  // Apply strategy filters if specified
+  if (params.strategy) {
+    const strategy = STRATEGIES[params.strategy];
+    if (strategy) {
+      if (strategy.filters.minTvlUsd) {
+        const minTvl = strategy.filters.minTvlUsd;
+        candidates = candidates.filter((v) => parseTvl(v.analytics.tvl).parsed >= minTvl);
+      }
+      if (strategy.filters.tags?.length) {
+        const requiredTags = strategy.filters.tags;
+        candidates = candidates.filter((v) => requiredTags.some((t) => v.tags.includes(t)));
+      }
+      if (strategy.filters.protocols?.length) {
+        const allowedProtocols = strategy.filters.protocols;
+        candidates = candidates.filter((v) => allowedProtocols.includes(v.protocol.name));
+      }
+      if (strategy.filters.minRiskScore) {
+        const minScore = strategy.filters.minRiskScore;
+        candidates = candidates.filter((v) => riskScore(v).score >= minScore);
+      }
+    }
+  }
 
   // Score each candidate
   const scored = candidates.map((vault) => {
