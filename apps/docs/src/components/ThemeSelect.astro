@@ -1,0 +1,7 @@
+---
+// Force dark mode — no theme toggle
+---
+<script is:inline>
+  window.StarlightThemeProvider?.updatePickers?.('dark');
+  document.documentElement.dataset.theme = 'dark';
+</script>
