@@ -1,5 +1,17 @@
 # EarnForge
 
+[![CI](https://github.com/FarseenSh/earnforge/actions/workflows/ci.yml/badge.svg)](https://github.com/FarseenSh/earnforge/actions)
+[![npm](https://img.shields.io/npm/v/@earnforge/sdk?label=%40earnforge%2Fsdk&color=f97316)](https://www.npmjs.com/package/@earnforge/sdk)
+[![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
+[![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-474%20passing-brightgreen)](#)
+[![Vaults](https://img.shields.io/badge/vaults-623%2B-blueviolet)](#)
+[![Chains](https://img.shields.io/badge/chains-16-blue)](#)
+[![Pitfalls](https://img.shields.io/badge/pitfall%20guards-18-red)](#)
+
+> **1 SDK. 7 surfaces. 18 pitfalls defeated.**
+
 Developer toolkit for the LI.FI Earn API. One SDK eliminates 18 integration
 pitfalls; seven surfaces put it in your terminal, your React app, your
 AI agent, and your Telegram group.
@@ -51,15 +63,28 @@ caching, and retry logic.
 
 ## Packages
 
-| Package | Name | Description |
-|---------|------|-------------|
-| `packages/sdk` | `@earnforge/sdk` | Typed client, Zod schemas, risk scorer, strategy engine, deposit quoting, preflight checks |
-| `packages/cli` | `@earnforge/cli` | Terminal interface -- `earnforge list`, `earnforge doctor`, `earnforge quote` |
-| `packages/react` | `@earnforge/react` | React hooks with TanStack Query -- `useVaults`, `useRiskScore`, `useDepositQuote` |
-| `packages/mcp` | `@earnforge/mcp` | MCP server exposing 9 tools for vault discovery, risk scoring, deposit quoting |
-| `packages/skill` | `@earnforge/skill` | Agent Skill -- SKILL.md + reference docs for Claude Code / Cursor integration |
-| `packages/bot` | `@earnforge/bot` | Telegram bot -- yield queries, risk checks, portfolio suggestions via grammY |
-| `apps/studio` | `earnforge-studio` | Next.js dashboard -- vault explorer, strategy builder, portfolio view |
+| Package | npm | Description |
+|---------|-----|-------------|
+| `@earnforge/sdk` | [![npm](https://img.shields.io/npm/v/@earnforge/sdk?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/sdk) | Typed client, Zod schemas, risk scorer, strategy engine, deposit quoting, preflight checks |
+| `@earnforge/cli` | [![npm](https://img.shields.io/npm/v/@earnforge/cli?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/cli) | Terminal interface -- `earnforge list`, `earnforge doctor`, `earnforge quote`, `earnforge compare` |
+| `@earnforge/react` | [![npm](https://img.shields.io/npm/v/@earnforge/react?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/react) | React hooks with TanStack Query -- `useVaults`, `useRiskScore`, `useEarnDeposit` |
+| `@earnforge/mcp` | [![npm](https://img.shields.io/npm/v/@earnforge/mcp?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/mcp) | MCP server -- 11 tools for vault discovery, risk scoring, deposit quoting |
+| `@earnforge/skill` | [![npm](https://img.shields.io/npm/v/@earnforge/skill?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/skill) | Agent Skill -- SKILL.md + reference docs for Claude Code / Cursor integration |
+| `@earnforge/bot` | [![npm](https://img.shields.io/npm/v/@earnforge/bot?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/bot) | Telegram bot -- yield queries, risk checks, portfolio suggestions via grammY |
+| `earnforge-studio` | [Live](https://earnforge-studio.vercel.app) | Next.js dashboard -- vault explorer, DeFiLlama sparklines, risk badges, code generator |
+
+---
+
+## Key features
+
+- **Risk scoring** -- composite 0-10 score across 5 dimensions (TVL, APY stability, protocol maturity, redeemability, asset type)
+- **Strategy presets** -- conservative, max-apy, diversified, risk-adjusted filters
+- **Portfolio suggestions** -- risk-adjusted allocation engine with chain diversification
+- **Gas optimization** -- compare deposit routes across multiple chains
+- **DeFiLlama integration** -- 30-day APY history sparklines with intelligent pool matching
+- **Deposit + withdraw quoting** -- full Composer integration with ERC-20 allowance checks
+- **`earnforge doctor`** -- run all 18 pitfall checks against any vault in 10 seconds
+- **`earnforge compare`** -- side-by-side vault comparison
 
 ---
 
@@ -98,14 +123,22 @@ Full details with root causes and test paths: [`PITFALLS.md`](./PITFALLS.md)
 earnforge list            # list vaults with filters
 earnforge top             # top vaults by APY for an asset
 earnforge vault <slug>    # detailed vault info
+earnforge compare         # side-by-side vault comparison
 earnforge portfolio <wal> # portfolio positions
 earnforge quote           # build a deposit quote
+earnforge withdraw        # build a withdrawal quote
+earnforge allowance       # check ERC-20 token allowance
+earnforge approve         # build approval transaction
 earnforge risk <slug>     # risk score breakdown
 earnforge suggest         # portfolio allocation suggestions
 earnforge watch           # live APY/TVL monitoring
+earnforge apy-history     # 30-day DeFiLlama APY chart
+earnforge preflight       # pre-deposit validation
+earnforge simulate        # eth_call dry-run
+earnforge doctor          # 18-pitfall diagnostics
 earnforge chains          # supported chains
 earnforge protocols       # supported protocols
-earnforge doctor          # 18-pitfall diagnostics
+earnforge init <name>     # scaffold a new project
 ```
 
 Every command supports `--json` for machine-readable output.
@@ -142,7 +175,7 @@ pnpm turbo test
 Run live integration tests against the real API:
 
 ```bash
-pnpm turbo test:live --filter=@earnforge/sdk
+pnpm --filter @earnforge/sdk test:live
 ```
 
 ---
