@@ -65,7 +65,10 @@ export interface EarnForge {
   suggest: (params: SuggestParams & { vaults?: Vault[] }) => Promise<SuggestResult>;
   optimizeGasRoutes: (vault: Vault, options: GasOptimizeOptions) => Promise<GasRoute[]>;
   watch: (vaultSlug: string, options?: WatchOptions) => AsyncGenerator<WatchEvent>;
-  getApyHistory: (vaultAddress: string, chainId: number) => Promise<ApyDataPoint[]>;
+  getApyHistory: {
+    (vault: Vault): Promise<ApyDataPoint[]>;
+    (vaultAddress: string, chainId: number): Promise<ApyDataPoint[]>;
+  };
   earnDataClient: EarnDataClient;
   composerClient: ComposerClient | null;
 }

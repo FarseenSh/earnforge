@@ -2,7 +2,7 @@
 'use client';
 
 import type { Vault, Chain, StrategyPreset, RiskScore } from '@earnforge/sdk';
-import { riskScore } from '@earnforge/sdk';
+import { riskScore, parseTvl } from '@earnforge/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { getEarnForge } from '@/lib/earnforge';
@@ -32,7 +32,7 @@ function applyStrategyFilter(
   switch (strategy) {
     case 'conservative':
       return vaults.filter((v) => {
-        const tvl = Number(v.analytics.tvl.usd);
+        const tvl = parseTvl(v.analytics.tvl).parsed;
         return (
           v.tags.includes('stablecoin') &&
           tvl >= 50_000_000
@@ -43,7 +43,7 @@ function applyStrategyFilter(
         (a, b) => b.analytics.apy.total - a.analytics.apy.total,
       );
     case 'diversified':
-      return vaults.filter((v) => Number(v.analytics.tvl.usd) >= 1_000_000);
+      return vaults.filter((v) => parseTvl(v.analytics.tvl).parsed >= 1_000_000);
     case 'risk-adjusted':
       return vaults.filter((v) => {
         const r = scores.get(v.address + v.chainId);

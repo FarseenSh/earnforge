@@ -6,6 +6,9 @@ import ora from 'ora';
 import {
   createEarnForge,
   parseTvl,
+  checkAllowance,
+  buildApprovalTx,
+  MAX_UINT256,
   type Vault,
   type EarnForge,
   type StrategyPreset,
@@ -18,6 +21,8 @@ import {
   portfolioTable,
   riskTable,
   suggestTable,
+  apyHistoryTable,
+  preflightTable,
   fmtPct,
   fmtUsd,
   riskLabel,
@@ -83,7 +88,7 @@ program
   .description('List vaults with filters')
   .option('--chain <id>', 'Filter by chain ID', parseInt)
   .option('--asset <sym>', 'Filter by asset symbol')
-  .option('--min-apy <n>', 'Minimum APY (as fraction, e.g. 0.05 = 5%)', parseFloat)
+  .option('--min-apy <n>', 'Minimum APY (e.g. 5 = 5%)', parseFloat)
   .option('--min-tvl <n>', 'Minimum TVL in USD', parseFloat)
   .option('--sort <field>', 'Sort by apy or tvl', 'apy')
   .option('--limit <n>', 'Max results', parseInt)
@@ -299,6 +304,8 @@ program
         });
         spinner.stop();
 
+        const approvalAddress = (result.quote.estimate as Record<string, unknown>).approvalAddress as string | undefined;
+
         outputResult(
           {
             vault: vault.slug,
@@ -311,6 +318,7 @@ program
             gasCosts: result.quote.estimate.gasCosts,
             feeCosts: result.quote.estimate.feeCosts,
             executionDuration: result.quote.estimate.executionDuration,
+            approvalAddress,
           },
           opts.json,
           () => {
@@ -333,6 +341,11 @@ program
               const totalFee = feeCosts.reduce((s, f) => s + Number(f.amountUSD), 0);
               lines.push(`  ${chalk.dim('Fee Cost:')}    ${fmtUsd(totalFee)}`);
             }
+            if (approvalAddress) {
+              lines.push('');
+              lines.push(chalk.yellow(`  Approval needed: approve ${result.quote.action.fromToken.symbol} for spender ${approvalAddress}`));
+              lines.push(chalk.dim(`  Run: earnforge allowance --token ${result.quote.action.fromToken.address} --owner ${opts.wallet} --spender ${approvalAddress} --amount ${result.rawAmount} --chain ${result.quote.action.fromChainId}`));
+            }
             lines.push('');
             lines.push(chalk.dim('Transaction ready to sign via quote.transactionRequest'));
             return lines.join('\n');
@@ -341,6 +354,240 @@ program
       }
     } catch (err) {
       spinner.fail('Failed to build quote');
+      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+      process.exitCode = 1;
+    }
+  });
+
+// ── withdraw ──
+
+program
+  .command('withdraw')
+  .description('Build a withdrawal/redeem quote')
+  .requiredOption('--vault <slug>', 'Vault slug')
+  .requiredOption('--amount <human>', 'Amount of vault shares to redeem')
+  .requiredOption('--wallet <addr>', 'Wallet address')
+  .option('--to-token <addr>', 'Override destination token address')
+  .option('--to-chain <id>', 'Override destination chain', parseInt)
+  .option('--slippage <n>', 'Slippage tolerance (0.03 = 3%)', parseFloat)
+  .option('--json', 'Output as JSON', false)
+  .action(async (opts) => {
+    const spinner = ora('Building redeem quote...').start();
+    try {
+      const forge = getForge();
+      const vault = await forge.vaults.get(opts.vault);
+      const result = await forge.buildRedeemQuote(vault, {
+        fromAmount: opts.amount,
+        wallet: opts.wallet,
+        toToken: opts.toToken,
+        toChain: opts.toChain,
+        slippage: opts.slippage,
+      });
+      spinner.stop();
+
+      outputResult(
+        {
+          vault: vault.slug,
+          humanAmount: result.humanAmount,
+          rawAmount: result.rawAmount,
+          fromToken: result.quote.action.fromToken.symbol,
+          toToken: result.quote.action.toToken.symbol,
+          estimatedOutput: result.quote.estimate.toAmount,
+          gasCosts: result.quote.estimate.gasCosts,
+          feeCosts: result.quote.estimate.feeCosts,
+          executionDuration: result.quote.estimate.executionDuration,
+        },
+        opts.json,
+        () => {
+          const lines = [
+            chalk.bold(`Withdraw Quote — ${vault.name}`),
+            '',
+            `  ${chalk.dim('Amount:')}      ${result.humanAmount} vault shares (${result.rawAmount} raw)`,
+            `  ${chalk.dim('From:')}        ${result.quote.action.fromToken.symbol} (vault token) on chain ${result.quote.action.fromChainId}`,
+            `  ${chalk.dim('To:')}          ${result.quote.action.toToken.symbol} on chain ${result.quote.action.toChainId}`,
+            `  ${chalk.dim('Est. Output:')} ${result.quote.estimate.toAmount}`,
+            `  ${chalk.dim('Duration:')}    ${result.quote.estimate.executionDuration}s`,
+          ];
+          const gasCosts = result.quote.estimate.gasCosts ?? [];
+          const feeCosts = result.quote.estimate.feeCosts ?? [];
+          if (gasCosts.length > 0) {
+            const totalGas = gasCosts.reduce((s: number, g: { amountUSD: string }) => s + Number(g.amountUSD), 0);
+            lines.push(`  ${chalk.dim('Gas Cost:')}    ${fmtUsd(totalGas)}`);
+          }
+          if (feeCosts.length > 0) {
+            const totalFee = feeCosts.reduce((s: number, f: { amountUSD: string }) => s + Number(f.amountUSD), 0);
+            lines.push(`  ${chalk.dim('Fee Cost:')}    ${fmtUsd(totalFee)}`);
+          }
+          lines.push('');
+          lines.push(chalk.dim('Transaction ready to sign via quote.transactionRequest'));
+          return lines.join('\n');
+        },
+      );
+    } catch (err) {
+      spinner.fail('Failed to build redeem quote');
+      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+      process.exitCode = 1;
+    }
+  });
+
+// ── allowance ──
+
+program
+  .command('allowance')
+  .description('Check ERC-20 token allowance for a spender')
+  .requiredOption('--token <addr>', 'ERC-20 token address')
+  .requiredOption('--owner <addr>', 'Token owner (wallet) address')
+  .requiredOption('--spender <addr>', 'Spender address (from quote.estimate.approvalAddress)')
+  .requiredOption('--amount <raw>', 'Required amount in smallest unit')
+  .requiredOption('--chain <id>', 'Chain ID', parseInt)
+  .option('--rpc <url>', 'Custom RPC URL')
+  .option('--json', 'Output as JSON', false)
+  .action(async (opts) => {
+    const spinner = ora('Checking allowance...').start();
+    try {
+      const rpcUrl = opts.rpc ?? `https://rpc.li.fi/v1/chain/${opts.chain}`;
+      const result = await checkAllowance(
+        rpcUrl,
+        opts.token,
+        opts.owner,
+        opts.spender,
+        BigInt(opts.amount),
+      );
+      spinner.stop();
+
+      const jsonData = {
+        token: opts.token,
+        owner: opts.owner,
+        spender: opts.spender,
+        allowance: result.allowance.toString(),
+        requiredAmount: result.requiredAmount.toString(),
+        sufficient: result.sufficient,
+      };
+
+      outputResult(jsonData, opts.json, () => {
+        const status = result.sufficient
+          ? chalk.green('SUFFICIENT — no approval needed')
+          : chalk.red('INSUFFICIENT — approval required');
+        return [
+          chalk.bold('Allowance Check'),
+          '',
+          `  ${chalk.dim('Token:')}     ${opts.token}`,
+          `  ${chalk.dim('Owner:')}     ${opts.owner}`,
+          `  ${chalk.dim('Spender:')}   ${opts.spender}`,
+          `  ${chalk.dim('Allowance:')} ${result.allowance.toString()}`,
+          `  ${chalk.dim('Required:')}  ${result.requiredAmount.toString()}`,
+          `  ${chalk.dim('Status:')}    ${status}`,
+          '',
+          ...(result.sufficient
+            ? []
+            : [
+                chalk.dim('To approve, run:'),
+                chalk.dim(`  earnforge approve --token ${opts.token} --spender ${opts.spender} --chain ${opts.chain}`),
+              ]),
+        ].join('\n');
+      });
+    } catch (err) {
+      spinner.fail('Failed to check allowance');
+      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+      process.exitCode = 1;
+    }
+  });
+
+// ── approve ──
+
+program
+  .command('approve')
+  .description('Build an ERC-20 approval transaction')
+  .requiredOption('--token <addr>', 'ERC-20 token address')
+  .requiredOption('--spender <addr>', 'Spender address (from quote.estimate.approvalAddress)')
+  .requiredOption('--chain <id>', 'Chain ID', parseInt)
+  .option('--amount <raw>', 'Amount to approve (default: unlimited)')
+  .option('--json', 'Output as JSON', false)
+  .action(async (opts) => {
+    const amount = opts.amount ? BigInt(opts.amount) : MAX_UINT256;
+    const tx = buildApprovalTx(opts.token, opts.spender, amount, opts.chain);
+
+    outputResult(tx, opts.json, () => {
+      return [
+        chalk.bold('Approval Transaction'),
+        '',
+        `  ${chalk.dim('To:')}      ${tx.to}`,
+        `  ${chalk.dim('Chain:')}   ${tx.chainId}`,
+        `  ${chalk.dim('Amount:')}  ${amount === MAX_UINT256 ? 'Unlimited (MaxUint256)' : amount.toString()}`,
+        `  ${chalk.dim('Data:')}    ${tx.data.slice(0, 20)}...`,
+        '',
+        chalk.dim('Sign and send this transaction before the deposit/quote transaction.'),
+      ].join('\n');
+    });
+  });
+
+// ── apy-history ──
+
+program
+  .command('apy-history')
+  .description('Fetch 30-day APY history from DeFiLlama')
+  .argument('<slug>', 'Vault slug')
+  .option('--json', 'Output as JSON', false)
+  .action(async (slug: string, opts) => {
+    const spinner = ora('Fetching APY history...').start();
+    try {
+      const forge = getForge();
+      const vault = await forge.vaults.get(slug);
+      const history = await forge.getApyHistory(vault);
+      spinner.stop();
+
+      outputResult(
+        { vault: vault.slug, name: vault.name, dataPoints: history.length, history },
+        opts.json,
+        () => {
+          if (history.length === 0) {
+            return chalk.yellow(`No APY history found for ${vault.name}. DeFiLlama may not track this vault.`);
+          }
+          return `${chalk.bold(`APY History — ${vault.name} (${history.length} days)`)}\n\n${apyHistoryTable(history)}`;
+        },
+      );
+    } catch (err) {
+      spinner.fail('Failed to fetch APY history');
+      console.error(chalk.red(err instanceof Error ? err.message : String(err)));
+      process.exitCode = 1;
+    }
+  });
+
+// ── preflight ──
+
+program
+  .command('preflight')
+  .description('Run pre-deposit checks on a vault + wallet')
+  .requiredOption('--vault <slug>', 'Vault slug')
+  .requiredOption('--wallet <addr>', 'Wallet address')
+  .option('--amount <human>', 'Deposit amount (human-readable)')
+  .option('--wallet-chain <id>', 'Wallet current chain ID', parseInt)
+  .option('--cross-chain', 'Flag cross-chain deposit intent', false)
+  .option('--json', 'Output as JSON', false)
+  .action(async (opts) => {
+    const spinner = ora('Running preflight checks...').start();
+    try {
+      const forge = getForge();
+      const vault = await forge.vaults.get(opts.vault);
+      const report = forge.preflight(vault, opts.wallet, {
+        walletChainId: opts.walletChain,
+        depositAmount: opts.amount,
+        crossChain: opts.crossChain,
+      });
+      spinner.stop();
+
+      outputResult(
+        {
+          ok: report.ok,
+          vault: vault.slug,
+          wallet: opts.wallet,
+          issues: report.issues,
+        },
+        opts.json,
+        () => preflightTable(report),
+      );
+    } catch (err) {
+      spinner.fail('Preflight failed');
       console.error(chalk.red(err instanceof Error ? err.message : String(err)));
       process.exitCode = 1;
     }
@@ -478,6 +725,8 @@ program
   .requiredOption('--vault <slug>', 'Vault slug')
   .option('--apy-drop <pct>', 'APY drop threshold (%)', parseFloat)
   .option('--tvl-drop <pct>', 'TVL drop threshold (%)', parseFloat)
+  .option('--interval <ms>', 'Poll interval in milliseconds', parseInt)
+  .option('--max-iterations <n>', 'Max iterations (0 = unlimited)', parseInt)
   .option('--json', 'Output events as JSON', false)
   .action(async (opts) => {
     if (!opts.json) {
@@ -485,9 +734,19 @@ program
     }
     try {
       const forge = getForge();
+      const ac = new AbortController();
+
+      // Wire SIGINT/SIGTERM to AbortSignal for clean shutdown
+      const onSignal = () => { ac.abort(); };
+      process.on('SIGINT', onSignal);
+      process.on('SIGTERM', onSignal);
+
       const gen = forge.watch(opts.vault, {
         apyDropPercent: opts.apyDrop,
         tvlDropPercent: opts.tvlDrop,
+        interval: opts.interval,
+        maxIterations: opts.maxIterations,
+        signal: ac.signal,
       });
 
       for await (const event of gen) {
@@ -507,10 +766,12 @@ program
                 ? chalk.yellow
                 : chalk.dim;
 
+          const prevApy = event.previous ? fmtPct(event.previous.apy) : 'N/A';
+          const prevTvl = event.previous ? fmtUsd(event.previous.tvlUsd) : 'N/A';
           console.log(
             `[${event.timestamp.toISOString()}] ${typeColor(event.type.toUpperCase())} ` +
-              `APY: ${fmtPct(event.current.apy)} (prev: ${fmtPct(event.previous.apy)}) ` +
-              `TVL: ${fmtUsd(event.current.tvlUsd)} (prev: ${fmtUsd(event.previous.tvlUsd)})`,
+              `APY: ${fmtPct(event.current.apy)} (prev: ${prevApy}) ` +
+              `TVL: ${fmtUsd(event.current.tvlUsd)} (prev: ${prevTvl})`,
           );
         }
       }
@@ -661,10 +922,29 @@ program
   .option('--rpc <url>', 'Custom RPC URL (default: auto-detect)')
   .option('--json', 'JSON output')
   .action(async (opts: { vault: string; amount: string; wallet: string; rpc?: string; json?: boolean }) => {
-    const spinner = ora('Building quote for simulation...').start();
+    const spinner = ora('Running preflight checks...').start();
     try {
       const forge = getForge();
       const vault = await forge.vaults.get(opts.vault);
+
+      // Run preflight checks before building quote
+      const pre = forge.preflight(vault, opts.wallet, { depositAmount: opts.amount });
+      if (!pre.ok) {
+        spinner.fail('Preflight failed');
+        const errors = pre.issues.filter((i) => i.severity === 'error');
+        for (const e of errors) {
+          console.error(chalk.red(`  [${e.code}] ${e.message}`));
+        }
+        process.exitCode = 1;
+        return;
+      }
+      // Show warnings even if ok
+      const warnings = pre.issues.filter((i) => i.severity === 'warning');
+      for (const w of warnings) {
+        console.warn(chalk.yellow(`  [${w.code}] ${w.message}`));
+      }
+
+      spinner.text = 'Building quote for simulation...';
       const result = await forge.buildDepositQuote(vault, {
         fromAmount: opts.amount,
         wallet: opts.wallet,

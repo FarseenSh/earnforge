@@ -3,85 +3,74 @@ import { useState, useCallback, useRef } from 'react';
 import type {
   Vault,
   PreflightReport,
-  DepositQuoteResult,
-  AllowanceResult,
-  ApprovalTx,
+  RedeemQuoteResult,
 } from '@earnforge/sdk';
-import { checkAllowance, buildApprovalTx, MAX_UINT256, toSmallestUnit } from '@earnforge/sdk';
 import { useEarnForge } from '../context.js';
 
 /**
- * Deposit state machine:
+ * Redeem state machine:
  *
- *   idle --> preflight --> checking-allowance --> approving --> quoting --> ready --> sending --> success
- *     \         |               |                   |            |          |          |
- *      \________|_______________|___________________|____________|__________|__________|-->  error
- *
- * The "checking-allowance" phase verifies the ERC-20 allowance for the fromToken.
- * If allowance is insufficient, "approving" sends an approval tx before quoting.
+ *   idle  -->  preflight  -->  quoting  -->  ready  -->  sending  -->  success
+ *     \           |              |            |            |
+ *      \__________|______________|____________|____________|-->  error
  */
-export type DepositPhase =
+export type RedeemPhase =
   | 'idle'
   | 'preflight'
-  | 'checking-allowance'
-  | 'approving'
   | 'quoting'
   | 'ready'
   | 'sending'
   | 'success'
   | 'error';
 
-export interface DepositState {
-  phase: DepositPhase;
+export interface RedeemState {
+  phase: RedeemPhase;
   preflightReport: PreflightReport | null;
-  allowance: AllowanceResult | null;
-  approvalTx: ApprovalTx | null;
-  quote: DepositQuoteResult | null;
+  quote: RedeemQuoteResult | null;
   txHash: string | null;
   error: Error | null;
 }
 
-export interface UseEarnDepositParams {
+export interface UseEarnRedeemParams {
   vault: Vault | undefined;
+  /** Amount of vault share tokens to redeem (human-readable) */
   amount: string;
   wallet: string;
-  fromToken?: string;
-  fromChain?: number;
+  /** Token to receive. Defaults to underlying token on vault chain. */
+  toToken?: string;
+  /** Destination chain. Defaults to vault chain. */
+  toChain?: number;
   slippage?: number;
-  /** JSON-RPC URL for the source chain — needed for allowance checking */
-  rpcUrl?: string;
   /** wagmi's sendTransactionAsync function — pass from useSendTransaction() */
   sendTransactionAsync?: (params: { to: `0x${string}`; data: `0x${string}`; value: bigint; chainId: number }) => Promise<`0x${string}`>;
 }
 
-export interface UseEarnDepositReturn {
-  state: DepositState;
+export interface UseEarnRedeemReturn {
+  state: RedeemState;
   /** Kick off the preflight -> quote -> ready flow */
   prepare: () => Promise<void>;
-  /** Execute the deposit transaction (requires sendTransactionAsync or sendTransaction) */
+  /** Execute the redeem transaction (requires sendTransactionAsync) */
   execute: () => Promise<void>;
   /** Reset back to idle */
   reset: () => void;
 }
 
-const INITIAL_STATE: DepositState = {
+const INITIAL_STATE: RedeemState = {
   phase: 'idle',
   preflightReport: null,
-  allowance: null,
-  approvalTx: null,
   quote: null,
   txHash: null,
   error: null,
 };
 
 /**
- * Deposit state machine hook.
+ * Withdrawal/redeem state machine hook.
  *
  * Flow: idle -> preflight -> quoting -> ready
  * Then call `execute()` to send: ready -> sending -> success
  *
  * ```tsx
- * const { state, prepare, execute, reset } = useEarnDeposit({
+ * const { state, prepare, execute, reset } = useEarnRedeem({
  *   vault,
  *   amount: '100',
  *   wallet: address,
@@ -89,9 +78,9 @@ const INITIAL_STATE: DepositState = {
  * });
  * ```
  */
-export function useEarnDeposit(params: UseEarnDepositParams): UseEarnDepositReturn {
+export function useEarnRedeem(params: UseEarnRedeemParams): UseEarnRedeemReturn {
   const sdk = useEarnForge();
-  const [state, setState] = useState<DepositState>(INITIAL_STATE);
+  const [state, setState] = useState<RedeemState>(INITIAL_STATE);
   const abortRef = useRef(false);
 
   const prepare = useCallback(async () => {
@@ -100,6 +89,15 @@ export function useEarnDeposit(params: UseEarnDepositParams): UseEarnDepositRetu
         ...INITIAL_STATE,
         phase: 'error',
         error: new Error('Missing vault, wallet, or amount'),
+      });
+      return;
+    }
+
+    if (!params.vault.isRedeemable) {
+      setState({
+        ...INITIAL_STATE,
+        phase: 'error',
+        error: new Error(`Vault ${params.vault.slug} is not redeemable — withdrawals are not supported.`),
       });
       return;
     }
@@ -125,80 +123,18 @@ export function useEarnDeposit(params: UseEarnDepositParams): UseEarnDepositRetu
         return;
       }
 
-      // Phase: checking-allowance (if rpcUrl and fromToken are provided)
-      const fromToken = params.fromToken ?? params.vault.underlyingTokens[0]?.address;
-      let allowanceResult: AllowanceResult | null = null;
-      let approval: ApprovalTx | null = null;
-
-      if (params.rpcUrl && fromToken) {
-        setState({
-          ...INITIAL_STATE,
-          phase: 'checking-allowance',
-          preflightReport: report,
-        });
-
-        const decimals = params.vault.underlyingTokens[0]?.decimals ?? 18;
-        const requiredAmount = BigInt(toSmallestUnit(params.amount, decimals));
-
-        // Spender = vault address (Composer routes through vault contract)
-        allowanceResult = await checkAllowance(
-          params.rpcUrl,
-          fromToken,
-          params.wallet,
-          params.vault.address,
-          requiredAmount,
-        );
-        if (abortRef.current) return;
-
-        // If allowance insufficient, build approval tx and wait for it
-        if (!allowanceResult.sufficient) {
-          approval = buildApprovalTx(
-            fromToken,
-            params.vault.address,
-            MAX_UINT256,
-            params.vault.chainId,
-          );
-
-          setState({
-            ...INITIAL_STATE,
-            phase: 'approving',
-            preflightReport: report,
-            allowance: allowanceResult,
-            approvalTx: approval,
-          });
-
-          // Send approval tx if sendTransactionAsync is available
-          const sendFn = params.sendTransactionAsync;
-          if (sendFn) {
-            await sendFn({
-              to: approval.to as `0x${string}`,
-              data: approval.data as `0x${string}`,
-              value: 0n,
-              chainId: approval.chainId,
-            });
-            if (abortRef.current) return;
-          } else {
-            // Cannot auto-approve without sendTransactionAsync — expose the tx for manual sending
-            // The caller should check state.approvalTx and handle it
-            return;
-          }
-        }
-      }
-
       // Phase: quoting
       setState({
         ...INITIAL_STATE,
         phase: 'quoting',
         preflightReport: report,
-        allowance: allowanceResult,
-        approvalTx: approval,
       });
 
-      const quote = await sdk.buildDepositQuote(params.vault, {
+      const quote = await sdk.buildRedeemQuote(params.vault, {
         fromAmount: params.amount,
         wallet: params.wallet,
-        fromToken: params.fromToken,
-        fromChain: params.fromChain,
+        toToken: params.toToken,
+        toChain: params.toChain,
         slippage: params.slippage,
       });
       if (abortRef.current) return;
@@ -208,8 +144,6 @@ export function useEarnDeposit(params: UseEarnDepositParams): UseEarnDepositRetu
         ...INITIAL_STATE,
         phase: 'ready',
         preflightReport: report,
-        allowance: allowanceResult,
-        approvalTx: approval,
         quote,
       });
     } catch (err) {
@@ -220,7 +154,7 @@ export function useEarnDeposit(params: UseEarnDepositParams): UseEarnDepositRetu
         error: err instanceof Error ? err : new Error(String(err)),
       });
     }
-  }, [sdk, params.vault, params.wallet, params.amount, params.fromToken, params.fromChain, params.slippage, params.rpcUrl, params.sendTransactionAsync]);
+  }, [sdk, params.vault, params.wallet, params.amount, params.toToken, params.toChain, params.slippage]);
 
   const execute = useCallback(async () => {
     if (state.phase !== 'ready' || !state.quote) {

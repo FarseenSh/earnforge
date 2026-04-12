@@ -36,3 +36,11 @@ export type {
   UseEarnDepositParams,
   UseEarnDepositReturn,
 } from './hooks/useEarnDeposit.js';
+
+export { useEarnRedeem } from './hooks/useEarnRedeem.js';
+export type {
+  RedeemPhase,
+  RedeemState,
+  UseEarnRedeemParams,
+  UseEarnRedeemReturn,
+} from './hooks/useEarnRedeem.js';

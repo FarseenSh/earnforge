@@ -163,7 +163,7 @@ export function createServer(): McpServer {
 
   server.tool(
     'quote-vault-deposit',
-    'Build a deposit quote for an Earn vault. Requires a LI.FI API key (set LIFI_API_KEY env var). Returns the quote with transaction data ready to sign, including gas costs, fees, and expected output.',
+    'Build a deposit quote for an Earn vault. Requires a LI.FI API key (set LIFI_API_KEY env var). Returns the quote with transaction data ready to sign. IMPORTANT: Before executing the deposit, use check-allowance with the quote\'s approvalAddress to verify token approval.',
     {
       slug: z.string().describe('Vault slug in the format "<chainId>-<vaultAddress>".'),
       wallet: z.string().describe('Wallet address (0x...) that will execute the deposit.'),
@@ -203,6 +203,90 @@ export function createServer(): McpServer {
         });
       } catch (err) {
         return error(`Failed to build deposit quote: ${(err as Error).message}`);
+      }
+    },
+  );
+
+  // ── quote-vault-redeem ─────────────────────────────────────────────
+
+  server.tool(
+    'quote-vault-redeem',
+    'Build a withdrawal/redeem quote for an Earn vault. Withdraws vault share tokens back to the underlying asset. Requires LIFI_API_KEY. Checks isRedeemable before quoting.',
+    {
+      slug: z.string().describe('Vault slug "<chainId>-<vaultAddress>".'),
+      wallet: z.string().describe('Wallet address (0x...).'),
+      fromAmount: z.string().describe('Amount of vault share tokens to redeem (human-readable).'),
+      toToken: z.string().optional().describe('Override destination token address.'),
+      toChain: z.number().optional().describe('Override destination chain ID.'),
+      slippage: z.number().optional().describe('Slippage tolerance.'),
+    },
+    async (params) => {
+      try {
+        const vault = await forge.vaults.get(params.slug);
+        const result = await forge.buildRedeemQuote(vault, {
+          fromAmount: params.fromAmount,
+          wallet: params.wallet,
+          toToken: params.toToken,
+          toChain: params.toChain,
+          slippage: params.slippage,
+        });
+        return json({
+          vault: result.vault.name,
+          humanAmount: result.humanAmount,
+          rawAmount: result.rawAmount,
+          isRedeemable: vault.isRedeemable,
+          estimate: {
+            toAmount: result.quote.estimate.toAmount,
+            toAmountMin: result.quote.estimate.toAmountMin,
+            executionDuration: result.quote.estimate.executionDuration,
+          },
+          transactionRequest: {
+            to: result.quote.transactionRequest.to,
+            value: result.quote.transactionRequest.value,
+            chainId: result.quote.transactionRequest.chainId,
+          },
+        });
+      } catch (err) {
+        return error(`Failed to build redeem quote: ${(err as Error).message}`);
+      }
+    },
+  );
+
+  // ── check-allowance ───────────────────────────────────────────────
+
+  server.tool(
+    'check-allowance',
+    'Check ERC-20 token allowance and build an approval tx if needed. Use before depositing — the Composer contract needs token approval. Get the spender from quote.estimate.approvalAddress.',
+    {
+      rpcUrl: z.string().describe('JSON-RPC endpoint for the chain.'),
+      tokenAddress: z.string().describe('ERC-20 token contract address.'),
+      owner: z.string().describe('Wallet address (token holder).'),
+      spender: z.string().describe('Spender address (from quote.estimate.approvalAddress).'),
+      requiredAmount: z.string().describe('Required amount in smallest unit (from quote rawAmount).'),
+      chainId: z.number().describe('Chain ID for the approval transaction.'),
+    },
+    async (params) => {
+      try {
+        const { checkAllowance, buildApprovalTx, MAX_UINT256 } = await import('@earnforge/sdk');
+        const required = BigInt(params.requiredAmount);
+        const result = await checkAllowance(
+          params.rpcUrl, params.tokenAddress, params.owner, params.spender, required,
+        );
+
+        const response: Record<string, unknown> = {
+          allowance: result.allowance.toString(),
+          sufficient: result.sufficient,
+          requiredAmount: result.requiredAmount.toString(),
+        };
+
+        if (!result.sufficient) {
+          response.approvalTx = buildApprovalTx(params.tokenAddress, params.spender, MAX_UINT256, params.chainId);
+          response.note = 'Allowance insufficient. Sign the approvalTx before depositing.';
+        }
+
+        return json(response);
+      } catch (err) {
+        return error(`Failed to check allowance: ${(err as Error).message}`);
       }
     },
   );

@@ -8,6 +8,7 @@ import {
   type RiskScore,
   type Allocation,
   type PreflightReport,
+  type StrategyPreset,
   parseTvl,
 } from '@earnforge/sdk';
 
@@ -223,14 +224,16 @@ export function createBot(token: string, forge: EarnForge): Bot {
   });
 
   // /suggest <amount> <asset>
+  // /suggest <amount> <asset> [strategy]
   bot.command('suggest', async (ctx: Context) => {
     const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
     const amountStr = args[0];
     const asset = args[1];
+    const strategyArg = args[2]?.toLowerCase();
 
     if (!amountStr || !asset) {
       await ctx.reply(
-        'Usage: `/suggest <amount> <asset>`\nExample: `/suggest 10000 USDC`',
+        'Usage: `/suggest <amount> <asset> [strategy]`\nExample: `/suggest 10000 USDC conservative`\nStrategies: conservative, max\\-apy, diversified, risk\\-adjusted',
         { parse_mode: 'MarkdownV2' },
       );
       return;
@@ -242,8 +245,13 @@ export function createBot(token: string, forge: EarnForge): Bot {
       return;
     }
 
+    const validStrategies = ['conservative', 'max-apy', 'diversified', 'risk-adjusted'];
+    const strategy = strategyArg && validStrategies.includes(strategyArg)
+      ? (strategyArg as StrategyPreset)
+      : undefined;
+
     try {
-      const result = await forge.suggest({ amount, asset: asset.toUpperCase(), maxVaults: 5 });
+      const result = await forge.suggest({ amount, asset: asset.toUpperCase(), maxVaults: 5, strategy });
 
       if (result.allocations.length === 0) {
         await ctx.reply(
@@ -264,19 +272,69 @@ export function createBot(token: string, forge: EarnForge): Bot {
     }
   });
 
-  // /doctor <slug>
+  // /doctor <slug> [wallet]
   bot.command('doctor', async (ctx: Context) => {
     const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
     const slug = args[0];
     if (!slug) {
-      await ctx.reply('Usage: `/doctor <slug>`\nExample: `/doctor 8453\\-0xbeef\\.\\.\\.`', { parse_mode: 'MarkdownV2' });
+      await ctx.reply(
+        'Usage: `/doctor <slug> [wallet]`\nExample: `/doctor 8453\\-0xbeef\\.\\.\\.`\nOptionally pass a wallet for balance checks\\.',
+        { parse_mode: 'MarkdownV2' },
+      );
+      return;
+    }
+
+    const wallet = args[1] && /^0x[0-9a-fA-F]{40}$/.test(args[1])
+      ? args[1]
+      : '0x0000000000000000000000000000000000000000';
+
+    try {
+      const vault = await forge.vaults.get(slug);
+      const report = forge.preflight(vault, wallet);
+      const text = fmtPreflightReport(report);
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+    } catch (err) {
+      await ctx.reply(`Error: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+    }
+  });
+
+  // /withdraw <slug> <amount>
+  bot.command('withdraw', async (ctx: Context) => {
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
+    const slug = args[0];
+    const amountStr = args[1];
+
+    if (!slug || !amountStr) {
+      await ctx.reply(
+        'Usage: `/withdraw <slug> <amount>`\nBuilds an unsigned redeem quote\\.',
+        { parse_mode: 'MarkdownV2' },
+      );
       return;
     }
 
     try {
       const vault = await forge.vaults.get(slug);
-      const report = forge.preflight(vault, '0x0000000000000000000000000000000000000000');
-      const text = fmtPreflightReport(report);
+      if (!vault.isRedeemable) {
+        await ctx.reply(
+          `Vault \`${escMd(vault.name)}\` is not redeemable\\.`,
+          { parse_mode: 'MarkdownV2' },
+        );
+        return;
+      }
+
+      const result = await forge.buildRedeemQuote(vault, {
+        fromAmount: amountStr,
+        wallet: '0x0000000000000000000000000000000000000001',
+      });
+
+      const text =
+        `*Redeem Quote* \\- \`${escMd(vault.name)}\`\n\n` +
+        `Amount: \`${escMd(result.humanAmount)}\` vault tokens\n` +
+        `Receive: \`${escMd(result.quote.estimate.toAmount)}\`\n` +
+        `Min: \`${escMd(result.quote.estimate.toAmountMin)}\`\n` +
+        `Duration: \`${result.quote.estimate.executionDuration}s\`\n\n` +
+        `_Sign the tx in your wallet to withdraw\\._`;
+
       await ctx.reply(text, { parse_mode: 'MarkdownV2' });
     } catch (err) {
       await ctx.reply(`Error: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });

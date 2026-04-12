@@ -4,7 +4,7 @@
 import type { Vault } from '@earnforge/sdk';
 import { useState } from 'react';
 
-type CodeTab = 'typescript' | 'react' | 'curl';
+type CodeTab = 'typescript' | 'react' | 'curl' | 'withdraw';
 
 interface CodeGeneratorProps {
   vault: Vault;
@@ -37,7 +37,10 @@ console.log('Tx to sign:', quote.quote.transactionRequest);`;
 }
 
 function generateReact(vault: Vault): string {
-  return `import { EarnForgeProvider, useVault, useRiskScore, useEarnDeposit } from '@earnforge/react';
+  return `import {
+  EarnForgeProvider, useVault, useRiskScore,
+  useEarnDeposit, useEarnRedeem, useApyHistory,
+} from '@earnforge/react';
 import { createEarnForge } from '@earnforge/sdk';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -55,11 +58,22 @@ const forge = createEarnForge({ composerApiKey: process.env.LIFI_API_KEY });
 function VaultDetail() {
   const { data: vault, isLoading } = useVault('${vault.slug}');
   const risk = useRiskScore(vault);
-  const { state, prepare, execute, reset } = useEarnDeposit({
+  // Pass rpcUrl for automatic allowance checking before deposit
+  const deposit = useEarnDeposit({
     vault,
     amount: '100',
     wallet: '0xYourWallet',
+    rpcUrl: 'https://mainnet.base.org', // JSON-RPC for allowance check
+    sendTransactionAsync,               // from wagmi useSendTransaction()
   });
+  const redeem = useEarnRedeem({
+    vault,
+    amount: '50',
+    wallet: '0xYourWallet',
+    sendTransactionAsync,
+  });
+  // Full vault object gives better DeFiLlama matching than address+chainId
+  const { data: apyHistory } = useApyHistory(vault);
 
   if (isLoading) return <div>Loading...</div>;
   if (!vault) return <div>Not found</div>;
@@ -69,9 +83,14 @@ function VaultDetail() {
       <h2>{vault.name}</h2>
       <p>APY: {vault.analytics.apy.total.toFixed(2)}%</p>
       <p>Risk: {risk?.score}/10 ({risk?.label})</p>
-      <button onClick={() => prepare()}>
-        Deposit ({state.phase})
+      <button onClick={() => deposit.prepare()}>
+        Deposit ({deposit.state.phase})
       </button>
+      {vault.isRedeemable && (
+        <button onClick={() => redeem.prepare()}>
+          Withdraw ({redeem.state.phase})
+        </button>
+      )}
     </div>
   );
 }`;
@@ -95,9 +114,58 @@ curl -s -H "x-lifi-api-key: YOUR_KEY" \\
   | jq '.transactionRequest'`;
 }
 
+function generateWithdraw(vault: Vault): string {
+  const underlying = vault.underlyingTokens[0];
+  const toToken = underlying?.address ?? '0x_UNDERLYING_TOKEN';
+  return `import { createEarnForge } from '@earnforge/sdk';
+
+const forge = createEarnForge({
+  composerApiKey: process.env.LIFI_API_KEY,
+});
+
+// Fetch vault
+const vault = await forge.vaults.get('${vault.slug}');
+
+// Check if vault supports withdrawals
+if (!vault.isRedeemable) {
+  console.error('This vault does not support withdrawals');
+  process.exit(1);
+}
+
+// Build redeem/withdrawal quote
+// fromToken = vault address (share token), toToken = underlying
+const redeemQuote = await forge.buildRedeemQuote(vault, {
+  fromAmount: '100',              // amount of vault share tokens to redeem
+  wallet: '0xYourWallet',
+  toToken: '${toToken}',  // token to receive (defaults to underlying)
+  toChain: ${vault.chainId},              // destination chain (defaults to vault chain)
+});
+console.log('Redeem tx to sign:', redeemQuote.quote.transactionRequest);
+
+// Check ERC-20 allowance before sending (optional but recommended)
+import { checkAllowance, buildApprovalTx, MAX_UINT256 } from '@earnforge/sdk';
+const allowance = await checkAllowance(
+  'YOUR_RPC_URL',
+  vault.address,           // vault share token needs approval
+  '0xYourWallet',
+  redeemQuote.quote.estimate?.approvalAddress ?? vault.address,
+  BigInt(redeemQuote.rawAmount),
+);
+if (!allowance.sufficient) {
+  const approvalTx = buildApprovalTx(
+    vault.address,
+    redeemQuote.quote.estimate?.approvalAddress ?? vault.address,
+    MAX_UINT256,
+    ${vault.chainId},
+  );
+  console.log('Send approval first:', approvalTx);
+}`;
+}
+
 const TABS: { id: CodeTab; label: string }[] = [
   { id: 'typescript', label: 'TypeScript (SDK)' },
   { id: 'react', label: 'React (Hooks)' },
+  { id: 'withdraw', label: 'Withdraw (SDK)' },
   { id: 'curl', label: 'curl' },
 ];
 
@@ -108,6 +176,7 @@ export function CodeGenerator({ vault, onClose }: CodeGeneratorProps) {
   const generators: Record<CodeTab, (v: Vault) => string> = {
     typescript: generateTypeScript,
     react: generateReact,
+    withdraw: generateWithdraw,
     curl: generateCurl,
   };
 

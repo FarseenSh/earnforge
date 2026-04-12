@@ -2,7 +2,7 @@
 
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import type { Vault, Chain, ProtocolDetail, RiskScore } from '@earnforge/sdk';
+import type { Vault, Chain, ProtocolDetail, RiskScore, ApyDataPoint, PreflightReport } from '@earnforge/sdk';
 import { parseTvl } from '@earnforge/sdk';
 
 // ── Formatting helpers ──
@@ -183,6 +183,35 @@ export function suggestTable(allocations: Array<{ vault: Vault; risk: RiskScore;
     ]);
   }
   return table.toString();
+}
+
+export function apyHistoryTable(history: ApyDataPoint[]): string {
+  const table = new Table({
+    head: [chalk.bold('Date'), chalk.bold('APY'), chalk.bold('TVL')],
+  });
+  for (const d of history) {
+    const date = d.timestamp.split('T')[0] ?? d.timestamp;
+    table.push([date, fmtPct(d.apy), fmtUsd(d.tvlUsd)]);
+  }
+  return table.toString();
+}
+
+export function preflightTable(report: PreflightReport): string {
+  const lines: string[] = [];
+  const status = report.ok ? chalk.green('PASS') : chalk.red('FAIL');
+  lines.push(chalk.bold(`Preflight — ${report.vault.name}  ${status}`));
+  lines.push('');
+
+  if (report.issues.length === 0) {
+    lines.push(chalk.green('  All checks passed. Ready to deposit.'));
+  } else {
+    for (const issue of report.issues) {
+      const icon = issue.severity === 'error' ? chalk.red('ERROR') : chalk.yellow('WARN');
+      lines.push(`  ${icon}  [${issue.code}] ${issue.message}`);
+    }
+  }
+
+  return lines.join('\n');
 }
 
 // ── Output helper ──
