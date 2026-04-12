@@ -1,9 +1,10 @@
 ---
 name: earnforge
 description: >
-  Discovers, compares, risk-scores, and builds unsigned deposit quotes for
-  623+ DeFi yield vaults across 16 chains via the LI.FI Earn API.
-  Handles all 18 known API pitfalls by default.
+  Discovers, compares, risk-scores, and builds unsigned deposit and withdrawal
+  quotes for 623+ DeFi yield vaults across 16 chains via the LI.FI Earn API.
+  Includes ERC-20 allowance checking, risk scoring (0-10), yield strategy
+  presets, portfolio allocation, and all 18 known API pitfalls handled.
 ---
 
 # EarnForge Agent Skill
@@ -14,30 +15,27 @@ All commands accept `--json` for machine-readable output.
 
 ### Vault Discovery
 
-- `earnforge list [--asset USDC] [--chain base] [--min-tvl 1000000] [--strategy conservative] [--json]`
+- `earnforge list [--asset USDC] [--chain 8453] [--min-tvl 1000000] [--strategy conservative] [--json]`
   List vaults with optional filters. Supports pagination.
 
-- `earnforge top [--asset USDC] [--chain ethereum] [--limit 10] [--strategy max-apy] [--json]`
+- `earnforge top --asset USDC [--chain 8453] [--limit 10] [--strategy max-apy] [--json]`
   Top vaults sorted by APY descending.
 
-- `earnforge get <slug> [--json]`
+- `earnforge vault <slug> [--json]`
   Fetch a single vault by its slug.
 
 ### Comparison & Analysis
-
-- `earnforge compare <slug1> <slug2> [--json]`
-  Side-by-side comparison of two vaults: APY, TVL, risk score, protocol.
 
 - `earnforge risk <slug> [--json]`
   Full risk score breakdown (0-10 scale): TVL magnitude, APY stability,
   protocol maturity, redeemability, asset type.
 
-- `earnforge history <vault-address> <chain-id> [--json]`
+- `earnforge apy-history <slug> [--json]`
   30-day APY history from DeFiLlama yields API.
 
 ### Portfolio & Suggestions
 
-- `earnforge suggest <amount> <asset> [--max-vaults 5] [--max-chains 3] [--strategy diversified] [--json]`
+- `earnforge suggest --amount 10000 --asset USDC [--max-chains 3] [--strategy diversified] [--json]`
   Risk-adjusted portfolio allocation. Returns vault list with amounts and percentages.
 
 - `earnforge portfolio <wallet> [--json]`
@@ -45,58 +43,76 @@ All commands accept `--json` for machine-readable output.
 
 ### Deposit & Withdraw
 
-- `earnforge quote <slug> <amount> <wallet> [--from-chain 1] [--slippage 0.5] [--json]`
+- `earnforge quote --vault <slug> --amount 100 --wallet 0x... [--from-chain 1] [--optimize-gas] [--json]`
   Build an unsigned deposit quote. Validates all pitfalls before quoting.
+  **Check allowance before executing** — the response includes `approvalAddress`.
 
-- `earnforge withdraw <slug> <amount> <wallet> [--json]`
-  Build an unsigned redeem/withdraw quote.
+- `earnforge withdraw --vault <slug> --amount 100 --wallet 0x... [--to-token 0x...] [--json]`
+  Build an unsigned redeem/withdraw quote. Checks `isRedeemable` first.
 
-- `earnforge gas-optimize <slug> <amount> <wallet> [--from-chains 1,10,8453] [--json]`
-  Compare deposit costs from multiple source chains. Cheapest route first.
+- `earnforge allowance --token 0x... --owner 0x... --spender 0x... --amount 1000000 --rpc-url <url> --chain-id 8453 [--json]`
+  Check ERC-20 token allowance. Returns whether approval is sufficient and
+  builds an unsigned approval tx if not. Use `approvalAddress` from the
+  deposit quote as the `--spender`.
+
+- `earnforge approve --token 0x... --spender 0x... --amount 1000000 --chain-id 8453 [--json]`
+  Build an unsigned ERC-20 approval transaction.
 
 ### Safety & Monitoring
 
-- `earnforge doctor <slug> [--wallet 0x...] [--json]`
-  Run all preflight pitfall checks on a vault.
+- `earnforge preflight --vault <slug> --wallet 0x... [--amount 100] [--cross-chain] [--json]`
+  Run all preflight checks: isTransactional, chain match, gas balance,
+  token balance, redeemability.
 
-- `earnforge watch <slug> [--apy-drop 20] [--tvl-drop 30] [--interval 60000] [--json]`
+- `earnforge doctor --vault <slug> [--env] [--json]`
+  Run all 18 pitfall checks on a vault.
+
+- `earnforge watch --vault <slug> [--apy-drop 20] [--tvl-drop 30] [--json]`
   Monitor a vault for APY/TVL drops. Streams events.
+
+- `earnforge simulate --vault <slug> --amount 100 --wallet 0x... [--json]`
+  Dry-run a deposit via eth_call. Runs preflight first.
 
 ### Reference Data
 
-- `earnforge chains [--json]`
-  List all 16 supported chains with chainIds.
-
-- `earnforge protocols [--json]`
-  List all 11 protocols with URLs.
-
-- `earnforge strategies [--json]`
-  List the 4 strategy presets: conservative, max-apy, diversified, risk-adjusted.
+- `earnforge chains [--json]` — 16 supported chains with chainIds
+- `earnforge protocols [--json]` — 11 protocols with URLs
+- `earnforge init <name>` — Scaffold a new project with EarnForge wired up
 
 ## Rules
 
-1. **Never submit transactions.** Only build unsigned quotes. The user signs and broadcasts.
+1. **Never submit transactions.** Only build unsigned quotes. The user signs.
 
-2. **Always check `isTransactional` before quoting.** Non-transactional vaults cannot accept deposits. Use `doctor` to verify.
+2. **Check ERC-20 allowance before depositing.** Use `earnforge allowance`
+   with the quote's `approvalAddress` as spender. If insufficient, have the
+   user sign the approval tx from `earnforge approve` first, then the deposit.
 
-3. **Use `vault.address` as `toToken`, not the underlying token address.** This is Pitfall #5 and the most common integration mistake.
+3. **Always check `isTransactional` before quoting deposits.** Use `doctor`
+   or `preflight` to verify.
 
-4. **Filter stablecoins by the `stablecoin` tag, not by token symbol.** Some USDC vaults lack the tag; some non-USDC vaults have it.
+4. **Check `isRedeemable` before quoting withdrawals.** Non-redeemable vaults
+   have locked liquidity.
 
-5. **Risk score thresholds:** >= 7 is low risk (safe), 4-6.9 is medium, < 4 is high risk. Always display the score with color indicator.
+5. **Use `vault.address` as `toToken` for deposits, not the underlying.**
+   This is Pitfall #5. The SDK handles it automatically.
 
-6. **TVL is a string in USD.** Parse with `parseTvl()` before comparing. Never compare raw strings numerically.
+6. **Filter stablecoins by the `stablecoin` tag, not by token symbol.**
 
-7. **APY fields (`apy1d`, `apy7d`, `apy30d`) can be null.** Use the fallback chain: `apy.total` -> `apy30d` -> `apy7d` -> `apy1d`.
+7. **Risk score thresholds:** >= 7 is low risk, 4-6.9 is medium, < 4 is
+   high risk. Always show score alongside APY.
 
-8. **`apy.reward` is null for some protocols** (Morpho returns 0, Euler returns null). Normalize to 0 before summing.
+8. **APY values are already percentages** (3.84 = 3.84%). Do NOT multiply
+   by 100. `apy1d/apy7d/apy30d` can be null — use the fallback chain.
 
-9. **Use chainId (number), not chain name (string), in all API calls.** Map names to IDs using the chains reference.
+9. **Cross-chain deposits require explicit `--from-token`.** The vault's
+   underlying token address is on the vault's chain, not the source chain.
+
+10. **Use chainId (number), not chain name, in all API paths.**
 
 ## References
 
-- [references/pitfalls.md](references/pitfalls.md) - All 18 API pitfalls with descriptions and fixes
-- [references/protocols.md](references/protocols.md) - 11 protocols with risk tiers
-- [references/chains.md](references/chains.md) - 16 chains with chainIds
-- [references/examples.md](references/examples.md) - 8 worked examples
-- [references/strategies.md](references/strategies.md) - 4 yield strategy presets
+- [references/pitfalls.md](references/pitfalls.md) — All 18 API pitfalls
+- [references/protocols.md](references/protocols.md) — 11 protocols with risk tiers
+- [references/chains.md](references/chains.md) — 16 chains with chainIds
+- [references/examples.md](references/examples.md) — Worked examples
+- [references/strategies.md](references/strategies.md) — 4 yield strategy presets

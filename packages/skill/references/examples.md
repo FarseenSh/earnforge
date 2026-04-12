@@ -138,3 +138,35 @@ The conservative strategy applies these filters:
 - Blue-chip protocols only (aave-v3, morpho-v1, euler-v2, pendle, maple)
 
 Other strategies: `max-apy` (no filters, pure APY sort), `diversified` (3+ chains, $1M+ TVL), `risk-adjusted` (risk score >= 7).
+
+## 9. Full Deposit Flow with Allowance Check
+
+The complete deposit flow has 3 steps: quote, approve, deposit.
+
+```bash
+# Step 1: Build deposit quote
+earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour --json
+# Note the approvalAddress in the response
+
+# Step 2: Check if approval is needed
+earnforge allowance --token 0xUSDC --owner 0xYour --spender 0xApprovalAddr --amount 100000000 --rpc-url https://mainnet.base.org --chain-id 8453 --json
+# If sufficient: false, sign the approvalTx first
+
+# Step 3: Execute deposit (user signs the transactionRequest from step 1)
+```
+
+The SDK's `buildDepositQuote()` handles toToken, decimals, and pitfall validation automatically. The allowance check uses a raw JSON-RPC `eth_call` to read the ERC-20 contract.
+
+## 10. Withdraw from a Vault
+
+Withdrawal reverses the deposit — fromToken is the vault share token, toToken is the underlying.
+
+```bash
+# Check if vault is redeemable
+earnforge vault 8453-0xbeef... --json | jq '.isRedeemable'
+
+# Build withdrawal quote
+earnforge withdraw --vault 8453-0xbeef... --amount 50 --wallet 0xYour --json
+```
+
+The Composer uses the same `/v1/quote` endpoint with swapped tokens. Cross-chain withdrawals are supported — add `--to-chain` and `--to-token` for the destination.
