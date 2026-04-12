@@ -4,12 +4,13 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
   integrations: [
     starlight({
-      title: 'EarnForge Docs',
+      title: 'EarnForge',
+      customCss: ['./src/styles/custom.css'],
       social: [
         {
           icon: 'github',
           label: 'GitHub',
-          href: 'https://github.com/nicktmro/earnforge',
+          href: 'https://github.com/FarseenSh/earnforge',
         },
       ],
       sidebar: [
