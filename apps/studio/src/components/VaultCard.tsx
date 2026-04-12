@@ -10,6 +10,7 @@ interface VaultCardProps {
   risk: RiskScore;
   isSelected: boolean;
   onClick: () => void;
+  apyHistory?: number[];
 }
 
 function formatTvl(tvlUsd: number): string {
@@ -24,7 +25,38 @@ function formatApy(apy: number): string {
   return `${apy.toFixed(2)}%`;
 }
 
-export function VaultCard({ vault, risk, isSelected, onClick }: VaultCardProps) {
+/** Tiny inline SVG sparkline — no chart library needed */
+function Sparkline({ data }: { data: number[] }) {
+  if (data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const w = 80;
+  const h = 24;
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / range) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+
+  return (
+    <svg width={w} height={h} className="inline-block opacity-60" aria-label="APY trend">
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-green-400"
+      />
+    </svg>
+  );
+}
+
+export function VaultCard({ vault, risk, isSelected, onClick, apyHistory }: VaultCardProps) {
   const tvl = parseTvl(vault.analytics.tvl);
   const isStablecoin = vault.tags.includes('stablecoin');
 
@@ -77,6 +109,13 @@ export function VaultCard({ vault, risk, isSelected, onClick }: VaultCardProps) 
           </p>
         </div>
       </div>
+
+      {apyHistory && apyHistory.length > 1 && (
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-xs text-[var(--color-text-muted)]">30d</span>
+          <Sparkline data={apyHistory} />
+        </div>
+      )}
 
       {vault.description && (
         <p className="mt-2 text-xs text-[var(--color-text-muted)] line-clamp-2">
