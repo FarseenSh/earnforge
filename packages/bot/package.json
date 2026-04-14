@@ -1,13 +1,13 @@
 {
   "name": "@earnforge/bot",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "license": "Apache-2.0",
   "description": "Telegram bot for the LI.FI Earn API — yield queries, risk scoring, and portfolio suggestions",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/esm/index.d.ts"
+      "import": "./dist/esm/index.mjs",
+      "types": "./dist/esm/index.d.mts"
     }
   },
   "files": ["dist", "README.md", "LICENSE"],

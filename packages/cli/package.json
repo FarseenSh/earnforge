@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "license": "Apache-2.0",
   "description": "CLI for the LI.FI Earn API — vault discovery, risk scoring, deposit quoting, and the 18-pitfall doctor",

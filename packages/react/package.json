@@ -1,13 +1,13 @@
 {
   "name": "@earnforge/react",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "license": "Apache-2.0",
   "description": "React hooks for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposits",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/esm/index.d.ts"
+      "import": "./dist/esm/index.mjs",
+      "types": "./dist/esm/index.d.mts"
     }
   },
   "files": ["dist", "README.md", "LICENSE"],
