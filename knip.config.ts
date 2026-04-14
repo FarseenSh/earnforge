@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { KnipConfig } from 'knip';
+import type { KnipConfig } from 'knip'
 
 const config: KnipConfig = {
   workspaces: {
@@ -30,6 +30,6 @@ const config: KnipConfig = {
     },
   },
   ignore: ['apps/**', '.changeset/**'],
-};
+}
 
-export default config;
+export default config

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { z } from 'zod';
+import { z } from 'zod'
 
 /** Token info in Composer responses */
 export const ComposerTokenSchema = z.object({
@@ -14,20 +14,20 @@ export const ComposerTokenSchema = z.object({
   tags: z.array(z.string()).optional(),
   verificationStatus: z.string().optional(),
   verificationStatusBreakdown: z.array(z.unknown()).optional(),
-});
+})
 
 /** Tool details */
 export const ToolDetailsSchema = z.object({
   key: z.string(),
   name: z.string(),
   logoURI: z.string().optional(),
-});
+})
 
 /** Fee split */
 export const FeeSplitSchema = z.object({
   integratorFee: z.string(),
   lifiFee: z.string(),
-});
+})
 
 /** Fee cost */
 export const FeeCostSchema = z.object({
@@ -39,7 +39,7 @@ export const FeeCostSchema = z.object({
   percentage: z.string(),
   included: z.boolean(),
   feeSplit: FeeSplitSchema.optional(),
-});
+})
 
 /** Gas cost */
 export const GasCostSchema = z.object({
@@ -50,7 +50,7 @@ export const GasCostSchema = z.object({
   amount: z.string(),
   amountUSD: z.string(),
   token: ComposerTokenSchema,
-});
+})
 
 /** Quote action */
 export const QuoteActionSchema = z.object({
@@ -62,7 +62,7 @@ export const QuoteActionSchema = z.object({
   slippage: z.number(),
   fromAddress: z.string(),
   toAddress: z.string(),
-});
+})
 
 /** Quote estimate */
 export const QuoteEstimateSchema = z.object({
@@ -76,7 +76,7 @@ export const QuoteEstimateSchema = z.object({
   executionDuration: z.number(),
   fromAmountUSD: z.string().optional(),
   toAmountUSD: z.string().optional(),
-});
+})
 
 /** Transaction request — ready to sign */
 export const TransactionRequestSchema = z.object({
@@ -87,9 +87,9 @@ export const TransactionRequestSchema = z.object({
   gasPrice: z.string().optional(),
   gasLimit: z.string().optional(),
   from: z.string().optional(),
-});
+})
 
-export type TransactionRequest = z.infer<typeof TransactionRequestSchema>;
+export type TransactionRequest = z.infer<typeof TransactionRequestSchema>
 
 /** Included step */
 export const IncludedStepSchema = z.object({
@@ -99,7 +99,7 @@ export const IncludedStepSchema = z.object({
   toolDetails: ToolDetailsSchema.optional(),
   action: z.record(z.unknown()),
   estimate: z.record(z.unknown()),
-});
+})
 
 /** Full Composer quote response */
 export const QuoteResponseSchema = z.object({
@@ -113,6 +113,6 @@ export const QuoteResponseSchema = z.object({
   integrator: z.string().optional(),
   transactionRequest: TransactionRequestSchema,
   transactionId: z.string().optional(),
-});
+})
 
-export type QuoteResponse = z.infer<typeof QuoteResponseSchema>;
+export type QuoteResponse = z.infer<typeof QuoteResponseSchema>

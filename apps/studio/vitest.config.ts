@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import react from '@vitejs/plugin-react-oxc';
-import { resolve } from 'node:path';
-import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react-oxc'
+import { resolve } from 'node:path'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
@@ -16,4 +16,4 @@ export default defineConfig({
     setupFiles: ['./test/setup.ts'],
     include: ['test/**/*.test.{ts,tsx}'],
   },
-});
+})

@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { ComposerClient } from './clients/index.js';
-import type { Vault, QuoteResponse } from './schemas/index.js';
-import { toSmallestUnit } from './build-deposit-quote.js';
+import type { ComposerClient } from './clients/index.js'
+import type { Vault, QuoteResponse } from './schemas/index.js'
+import { toSmallestUnit } from './build-deposit-quote.js'
 
 export interface GasRoute {
-  fromChain: number;
-  fromChainName: string;
-  quote: QuoteResponse;
-  totalCostUsd: number;
-  gasCostUsd: number;
-  feeCostUsd: number;
-  executionDuration: number;
+  fromChain: number
+  fromChainName: string
+  quote: QuoteResponse
+  totalCostUsd: number
+  gasCostUsd: number
+  feeCostUsd: number
+  executionDuration: number
 }
 
 export interface GasOptimizeOptions {
-  fromAmount: string;
-  wallet: string;
+  fromAmount: string
+  wallet: string
   /** Token address on the vault's chain (used for same-chain route) */
-  fromToken?: string;
+  fromToken?: string
   /** Map of chainId → token address for cross-chain routes */
-  fromTokens?: Record<number, string>;
-  fromChains?: number[];
-  fromAmountForGas?: string;
+  fromTokens?: Record<number, string>
+  fromChains?: number[]
+  fromAmountForGas?: string
 }
 
 const CHAIN_NAMES: Record<number, string> = {
@@ -41,7 +41,7 @@ const CHAIN_NAMES: Record<number, string> = {
   59144: 'Linea',
   80094: 'Berachain',
   747474: 'Katana',
-};
+}
 
 /**
  * Compare deposit routes from multiple source chains.
@@ -51,62 +51,64 @@ const CHAIN_NAMES: Record<number, string> = {
 export async function optimizeGasRoutes(
   vault: Vault,
   composer: ComposerClient,
-  options: GasOptimizeOptions,
+  options: GasOptimizeOptions
 ): Promise<GasRoute[]> {
-  const fromChains = options.fromChains ?? [vault.chainId];
-  const decimals = vault.underlyingTokens[0]?.decimals ?? 18;
-  const rawAmount = toSmallestUnit(options.fromAmount, decimals);
+  const fromChains = options.fromChains ?? [vault.chainId]
+  const decimals = vault.underlyingTokens[0]?.decimals ?? 18
+  const rawAmount = toSmallestUnit(options.fromAmount, decimals)
 
   const defaultFromToken =
-    options.fromToken ?? vault.underlyingTokens[0]?.address;
+    options.fromToken ?? vault.underlyingTokens[0]?.address
 
-  if (!defaultFromToken && !options.fromTokens) return [];
+  if (!defaultFromToken && !options.fromTokens) return []
 
-  const routePromises = fromChains.map(async (fromChain): Promise<GasRoute | null> => {
-    try {
-      // For cross-chain routes, use the chain-specific token address if available
-      const fromToken =
-        options.fromTokens?.[fromChain] ??
-        (fromChain === vault.chainId ? defaultFromToken : undefined);
+  const routePromises = fromChains.map(
+    async (fromChain): Promise<GasRoute | null> => {
+      try {
+        // For cross-chain routes, use the chain-specific token address if available
+        const fromToken =
+          options.fromTokens?.[fromChain] ??
+          (fromChain === vault.chainId ? defaultFromToken : undefined)
 
-      if (!fromToken) return null; // Skip chains without a known fromToken
+        if (!fromToken) return null // Skip chains without a known fromToken
 
-      const quote = await composer.getQuote({
-        fromChain,
-        toChain: vault.chainId,
-        fromToken,
-        toToken: vault.address,
-        fromAddress: options.wallet,
-        toAddress: options.wallet,
-        fromAmount: rawAmount,
-        fromAmountForGas: options.fromAmountForGas,
-      });
+        const quote = await composer.getQuote({
+          fromChain,
+          toChain: vault.chainId,
+          fromToken,
+          toToken: vault.address,
+          fromAddress: options.wallet,
+          toAddress: options.wallet,
+          fromAmount: rawAmount,
+          fromAmountForGas: options.fromAmountForGas,
+        })
 
-      const gasCostUsd = (quote.estimate.gasCosts ?? []).reduce(
-        (sum, g) => sum + Number(g.amountUSD),
-        0,
-      );
-      const feeCostUsd = (quote.estimate.feeCosts ?? []).reduce(
-        (sum, f) => sum + Number(f.amountUSD),
-        0,
-      );
+        const gasCostUsd = (quote.estimate.gasCosts ?? []).reduce(
+          (sum, g) => sum + Number(g.amountUSD),
+          0
+        )
+        const feeCostUsd = (quote.estimate.feeCosts ?? []).reduce(
+          (sum, f) => sum + Number(f.amountUSD),
+          0
+        )
 
-      return {
-        fromChain,
-        fromChainName: CHAIN_NAMES[fromChain] ?? `Chain ${fromChain}`,
-        quote,
-        totalCostUsd: gasCostUsd + feeCostUsd,
-        gasCostUsd,
-        feeCostUsd,
-        executionDuration: quote.estimate.executionDuration,
-      };
-    } catch {
-      return null;
+        return {
+          fromChain,
+          fromChainName: CHAIN_NAMES[fromChain] ?? `Chain ${fromChain}`,
+          quote,
+          totalCostUsd: gasCostUsd + feeCostUsd,
+          gasCostUsd,
+          feeCostUsd,
+          executionDuration: quote.estimate.executionDuration,
+        }
+      } catch {
+        return null
+      }
     }
-  });
+  )
 
-  const results = await Promise.all(routePromises);
+  const results = await Promise.all(routePromises)
   return results
     .filter((r): r is GasRoute => r !== null)
-    .sort((a, b) => a.totalCostUsd - b.totalCostUsd);
+    .sort((a, b) => a.totalCostUsd - b.totalCostUsd)
 }

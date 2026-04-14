@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useQuery } from '@tanstack/react-query';
-import type { ApyDataPoint, Vault } from '@earnforge/sdk';
-import { useEarnForge } from '../context.js';
+import { useQuery } from '@tanstack/react-query'
+import type { ApyDataPoint, Vault } from '@earnforge/sdk'
+import { useEarnForge } from '../context.js'
 
 export interface UseApyHistoryReturn {
-  data: ApyDataPoint[] | undefined;
-  isLoading: boolean;
-  error: Error | null;
+  data: ApyDataPoint[] | undefined
+  isLoading: boolean
+  error: Error | null
 }
 
 /**
@@ -24,44 +24,47 @@ export interface UseApyHistoryReturn {
  * const { data: history } = useApyHistory('0xabc...', 8453);
  * ```
  */
-export function useApyHistory(vault: Vault | undefined): UseApyHistoryReturn;
-export function useApyHistory(vaultAddress: string | undefined, chainId: number | undefined): UseApyHistoryReturn;
+export function useApyHistory(vault: Vault | undefined): UseApyHistoryReturn
+export function useApyHistory(
+  vaultAddress: string | undefined,
+  chainId: number | undefined
+): UseApyHistoryReturn
 export function useApyHistory(
   vaultOrAddress: Vault | string | undefined,
-  chainId?: number | undefined,
+  chainId?: number | undefined
 ): UseApyHistoryReturn {
-  const sdk = useEarnForge();
+  const sdk = useEarnForge()
 
   // Determine if we received a Vault object or address+chainId
-  const isVaultObject = typeof vaultOrAddress === 'object' && vaultOrAddress !== null;
-  const vault = isVaultObject ? (vaultOrAddress as Vault) : undefined;
-  const address = typeof vaultOrAddress === 'string' ? vaultOrAddress : undefined;
+  const isVaultObject =
+    typeof vaultOrAddress === 'object' && vaultOrAddress !== null
+  const vault = isVaultObject ? (vaultOrAddress as Vault) : undefined
+  const address =
+    typeof vaultOrAddress === 'string' ? vaultOrAddress : undefined
 
-  const enabled = isVaultObject
-    ? !!vault
-    : !!address && !!chainId;
+  const enabled = isVaultObject ? !!vault : !!address && !!chainId
 
   // Use vault slug + chainId as cache key for vault objects, address + chainId for legacy
   const queryKey = isVaultObject
     ? ['earnforge', 'apyHistory', vault?.slug, vault?.chainId]
-    : ['earnforge', 'apyHistory', address, chainId];
+    : ['earnforge', 'apyHistory', address, chainId]
 
   const query = useQuery<ApyDataPoint[], Error>({
     queryKey,
     queryFn: () => {
       if (vault) {
         // Full vault object — accurate DeFiLlama matching via protocol+chain+tokens
-        return sdk.getApyHistory(vault);
+        return sdk.getApyHistory(vault)
       }
       // Legacy: address + chainId
-      return sdk.getApyHistory(address!, chainId!);
+      return sdk.getApyHistory(address!, chainId!)
     },
     enabled,
-  });
+  })
 
   return {
     data: query.data,
     isLoading: query.isLoading,
     error: query.error,
-  };
+  }
 }

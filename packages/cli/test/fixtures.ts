@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Vault, Chain, ProtocolDetail, PortfolioResponse, RiskScore } from '@earnforge/sdk';
+import type {
+  Vault,
+  Chain,
+  ProtocolDetail,
+  PortfolioResponse,
+  RiskScore,
+} from '@earnforge/sdk'
 
 export function makeVault(overrides: Partial<Vault> = {}): Vault {
   return {
@@ -13,9 +19,7 @@ export function makeVault(overrides: Partial<Vault> = {}): Vault {
     provider: 'aave',
     syncedAt: '2026-04-11T00:00:00Z',
     tags: ['stablecoin'],
-    underlyingTokens: [
-      { symbol: 'USDC', address: '0xusdc', decimals: 6 },
-    ],
+    underlyingTokens: [{ symbol: 'USDC', address: '0xusdc', decimals: 6 }],
     lpTokens: [],
     analytics: {
       apy: { base: 0.04, total: 0.05, reward: 0.01 },
@@ -30,7 +34,7 @@ export function makeVault(overrides: Partial<Vault> = {}): Vault {
     depositPacks: [{ name: 'default', stepsType: 'single' }],
     redeemPacks: [{ name: 'default', stepsType: 'single' }],
     ...overrides,
-  };
+  }
 }
 
 export function makeVault2(overrides: Partial<Vault> = {}): Vault {
@@ -43,9 +47,7 @@ export function makeVault2(overrides: Partial<Vault> = {}): Vault {
     protocol: { name: 'euler-v2', url: 'https://euler.finance' },
     provider: 'euler',
     tags: ['lst'],
-    underlyingTokens: [
-      { symbol: 'WETH', address: '0xweth', decimals: 18 },
-    ],
+    underlyingTokens: [{ symbol: 'WETH', address: '0xweth', decimals: 18 }],
     analytics: {
       apy: { base: 0.03, total: 0.08, reward: 0.05 },
       tvl: { usd: '120000000' },
@@ -55,7 +57,7 @@ export function makeVault2(overrides: Partial<Vault> = {}): Vault {
       updatedAt: '2026-04-11T12:00:00Z',
     },
     ...overrides,
-  });
+  })
 }
 
 export function makeNonTransactionalVault(): Vault {
@@ -68,7 +70,7 @@ export function makeNonTransactionalVault(): Vault {
     isRedeemable: false,
     underlyingTokens: [],
     tags: [],
-  });
+  })
 }
 
 export function makeHighRiskVault(): Vault {
@@ -83,7 +85,7 @@ export function makeHighRiskVault(): Vault {
     tags: [],
     underlyingTokens: [{ symbol: 'USDT', address: '0xusdt', decimals: 6 }],
     analytics: {
-      apy: { base: 0.80, total: 0.90, reward: 0.10 },
+      apy: { base: 0.8, total: 0.9, reward: 0.1 },
       tvl: { usd: '50000' },
       apy1d: 0.5,
       apy7d: null,
@@ -92,39 +94,49 @@ export function makeHighRiskVault(): Vault {
     },
     isTransactional: true,
     isRedeemable: false,
-  });
+  })
 }
 
 export const MOCK_CHAINS: Chain[] = [
   { chainId: 1, name: 'Ethereum', networkCaip: 'eip155:1' },
   { chainId: 8453, name: 'Base', networkCaip: 'eip155:8453' },
   { chainId: 42161, name: 'Arbitrum', networkCaip: 'eip155:42161' },
-];
+]
 
 export const MOCK_PROTOCOLS: ProtocolDetail[] = [
   { name: 'aave-v3', url: 'https://aave.com' },
   { name: 'euler-v2', url: 'https://euler.finance' },
   { name: 'morpho-v1', url: 'https://morpho.xyz' },
-];
+]
 
 export const MOCK_PORTFOLIO: PortfolioResponse = {
   positions: [
     {
       chainId: 8453,
       protocolName: 'aave-v3',
-      asset: { address: '0xusdc', name: 'USD Coin', symbol: 'USDC', decimals: 6 },
+      asset: {
+        address: '0xusdc',
+        name: 'USD Coin',
+        symbol: 'USDC',
+        decimals: 6,
+      },
       balanceUsd: '10000',
       balanceNative: '10000',
     },
     {
       chainId: 42161,
       protocolName: 'euler-v2',
-      asset: { address: '0xweth', name: 'Wrapped Ether', symbol: 'WETH', decimals: 18 },
+      asset: {
+        address: '0xweth',
+        name: 'Wrapped Ether',
+        symbol: 'WETH',
+        decimals: 18,
+      },
       balanceUsd: '5000',
       balanceNative: '2.5',
     },
   ],
-};
+}
 
 export const MOCK_RISK_SCORE: RiskScore = {
   score: 7.8,
@@ -136,7 +148,7 @@ export const MOCK_RISK_SCORE: RiskScore = {
     assetType: 9,
   },
   label: 'low',
-};
+}
 
 export const MOCK_SUGGEST_RESULT = {
   totalAmount: 10000,
@@ -157,7 +169,7 @@ export const MOCK_SUGGEST_RESULT = {
       apy: 0.08,
     },
   ],
-};
+}
 
 export const MOCK_QUOTE_RESULT = {
   quote: {
@@ -165,9 +177,21 @@ export const MOCK_QUOTE_RESULT = {
     id: 'quote-123',
     tool: 'aave',
     action: {
-      fromToken: { address: '0xusdc', chainId: 8453, symbol: 'USDC', decimals: 6, name: 'USD Coin' },
+      fromToken: {
+        address: '0xusdc',
+        chainId: 8453,
+        symbol: 'USDC',
+        decimals: 6,
+        name: 'USD Coin',
+      },
       fromAmount: '10000000',
-      toToken: { address: '0xbeef0001', chainId: 8453, symbol: 'aUSDC', decimals: 6, name: 'Aave USDC' },
+      toToken: {
+        address: '0xbeef0001',
+        chainId: 8453,
+        symbol: 'aUSDC',
+        decimals: 6,
+        name: 'Aave USDC',
+      },
       fromChainId: 8453,
       toChainId: 8453,
       slippage: 0.005,
@@ -184,7 +208,13 @@ export const MOCK_QUOTE_RESULT = {
           type: 'SEND',
           amount: '50000',
           amountUSD: '0.12',
-          token: { address: '0x0', chainId: 8453, symbol: 'ETH', decimals: 18, name: 'Ether' },
+          token: {
+            address: '0x0',
+            chainId: 8453,
+            symbol: 'ETH',
+            decimals: 18,
+            name: 'Ether',
+          },
         },
       ],
       feeCosts: [],
@@ -201,7 +231,7 @@ export const MOCK_QUOTE_RESULT = {
   humanAmount: '10',
   rawAmount: '10000000',
   decimals: 6,
-};
+}
 
 export const MOCK_GAS_ROUTES = [
   {
@@ -209,7 +239,7 @@ export const MOCK_GAS_ROUTES = [
     fromChainName: 'Base',
     quote: MOCK_QUOTE_RESULT.quote,
     totalCostUsd: 0.12,
-    gasCostUsd: 0.10,
+    gasCostUsd: 0.1,
     feeCostUsd: 0.02,
     executionDuration: 15,
   },
@@ -219,7 +249,7 @@ export const MOCK_GAS_ROUTES = [
     quote: MOCK_QUOTE_RESULT.quote,
     totalCostUsd: 0.35,
     gasCostUsd: 0.25,
-    feeCostUsd: 0.10,
+    feeCostUsd: 0.1,
     executionDuration: 45,
   },
-];
+]

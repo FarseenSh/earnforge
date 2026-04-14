@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-'use client';
+'use client'
 
-import type { Vault } from '@earnforge/sdk';
-import { useState } from 'react';
+import type { Vault } from '@earnforge/sdk'
+import { useState } from 'react'
 
-type CodeTab = 'typescript' | 'react' | 'curl' | 'withdraw';
+type CodeTab = 'typescript' | 'react' | 'curl' | 'withdraw'
 
 interface CodeGeneratorProps {
-  vault: Vault;
-  onClose: () => void;
+  vault: Vault
+  onClose: () => void
 }
 
 function generateTypeScript(vault: Vault): string {
@@ -33,7 +33,7 @@ const quote = await forge.buildDepositQuote(vault, {
   fromToken: '${vault.underlyingTokens[0]?.address ?? '0x...'}',
   fromChain: ${vault.chainId},            // source chain (omit for same-chain)
 });
-console.log('Tx to sign:', quote.quote.transactionRequest);`;
+console.log('Tx to sign:', quote.quote.transactionRequest);`
 }
 
 function generateReact(vault: Vault): string {
@@ -93,14 +93,14 @@ function VaultDetail() {
       )}
     </div>
   );
-}`;
+}`
 }
 
 function generateCurl(vault: Vault): string {
-  const underlying = vault.underlyingTokens[0];
-  const fromToken = underlying?.address ?? '0x_FROM_TOKEN';
-  const decimals = underlying?.decimals ?? 18;
-  const fromAmount = '1' + '0'.repeat(decimals); // 1 token in smallest unit
+  const underlying = vault.underlyingTokens[0]
+  const fromToken = underlying?.address ?? '0x_FROM_TOKEN'
+  const decimals = underlying?.decimals ?? 18
+  const fromAmount = '1' + '0'.repeat(decimals) // 1 token in smallest unit
   return `# Get vault details (Earn Data API — no auth needed)
 curl -s "https://earn.li.fi/v1/earn/vaults/${vault.chainId}/${vault.address}" | jq '.'
 
@@ -111,12 +111,12 @@ curl -s "https://earn.li.fi/v1/earn/vaults?chainId=${vault.chainId}" | jq '.data
 # toToken = vault address (NOT underlying token) — Pitfall #5
 curl -s -H "x-lifi-api-key: YOUR_KEY" \\
   "https://li.quest/v1/quote?fromChain=${vault.chainId}&toChain=${vault.chainId}&fromToken=${fromToken}&toToken=${vault.address}&fromAddress=0xYOUR_WALLET&toAddress=0xYOUR_WALLET&fromAmount=${fromAmount}" \\
-  | jq '.transactionRequest'`;
+  | jq '.transactionRequest'`
 }
 
 function generateWithdraw(vault: Vault): string {
-  const underlying = vault.underlyingTokens[0];
-  const toToken = underlying?.address ?? '0x_UNDERLYING_TOKEN';
+  const underlying = vault.underlyingTokens[0]
+  const toToken = underlying?.address ?? '0x_UNDERLYING_TOKEN'
   return `import { createEarnForge } from '@earnforge/sdk';
 
 const forge = createEarnForge({
@@ -159,7 +159,7 @@ if (!allowance.sufficient) {
     ${vault.chainId},
   );
   console.log('Send approval first:', approvalTx);
-}`;
+}`
 }
 
 const TABS: { id: CodeTab; label: string }[] = [
@@ -167,26 +167,26 @@ const TABS: { id: CodeTab; label: string }[] = [
   { id: 'react', label: 'React (Hooks)' },
   { id: 'withdraw', label: 'Withdraw (SDK)' },
   { id: 'curl', label: 'curl' },
-];
+]
 
 export function CodeGenerator({ vault, onClose }: CodeGeneratorProps) {
-  const [activeTab, setActiveTab] = useState<CodeTab>('typescript');
-  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<CodeTab>('typescript')
+  const [copied, setCopied] = useState(false)
 
   const generators: Record<CodeTab, (v: Vault) => string> = {
     typescript: generateTypeScript,
     react: generateReact,
     withdraw: generateWithdraw,
     curl: generateCurl,
-  };
+  }
 
-  const code = generators[activeTab](vault);
+  const code = generators[activeTab](vault)
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // Clipboard API may fail in some contexts
     }
@@ -240,5 +240,5 @@ export function CodeGenerator({ vault, onClose }: CodeGeneratorProps) {
         </button>
       </div>
     </div>
-  );
+  )
 }

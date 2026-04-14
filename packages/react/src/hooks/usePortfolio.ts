@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useQuery } from '@tanstack/react-query';
-import type { PortfolioResponse } from '@earnforge/sdk';
-import { useEarnForge } from '../context.js';
+import { useQuery } from '@tanstack/react-query'
+import type { PortfolioResponse } from '@earnforge/sdk'
+import { useEarnForge } from '../context.js'
 
 export interface UsePortfolioReturn {
-  data: PortfolioResponse | undefined;
-  isLoading: boolean;
-  error: Error | null;
+  data: PortfolioResponse | undefined
+  isLoading: boolean
+  error: Error | null
 }
 
 /**
@@ -17,17 +17,17 @@ export interface UsePortfolioReturn {
  * ```
  */
 export function usePortfolio(wallet: string | undefined): UsePortfolioReturn {
-  const sdk = useEarnForge();
+  const sdk = useEarnForge()
 
   const query = useQuery<PortfolioResponse, Error>({
     queryKey: ['earnforge', 'portfolio', wallet],
     queryFn: () => sdk.portfolio.get(wallet!),
     enabled: !!wallet,
-  });
+  })
 
   return {
     data: query.data,
     isLoading: query.isLoading,
     error: query.error,
-  };
+  }
 }

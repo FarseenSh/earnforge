@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-'use client';
+'use client'
 
-import type { StrategyPreset } from '@earnforge/sdk';
+import type { StrategyPreset } from '@earnforge/sdk'
 
-const STRATEGY_OPTIONS: { value: StrategyPreset | ''; label: string; description: string }[] = [
+const STRATEGY_OPTIONS: {
+  value: StrategyPreset | ''
+  label: string
+  description: string
+}[] = [
   { value: '', label: 'All Vaults', description: 'No strategy filter applied' },
   {
     value: 'conservative',
@@ -25,17 +29,20 @@ const STRATEGY_OPTIONS: { value: StrategyPreset | ''; label: string; description
     label: 'Risk-Adjusted',
     description: 'Risk score >= 7, sorted by APY',
   },
-];
+]
 
 interface StrategyPickerProps {
-  value: StrategyPreset | '';
-  onChange: (strategy: StrategyPreset | '') => void;
+  value: StrategyPreset | ''
+  onChange: (strategy: StrategyPreset | '') => void
 }
 
 export function StrategyPicker({ value, onChange }: StrategyPickerProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor="strategy-picker" className="text-sm font-medium text-[var(--color-text-muted)]">
+      <label
+        htmlFor="strategy-picker"
+        className="text-sm font-medium text-[var(--color-text-muted)]"
+      >
         Strategy
       </label>
       <select
@@ -52,5 +59,5 @@ export function StrategyPicker({ value, onChange }: StrategyPickerProps) {
         ))}
       </select>
     </div>
-  );
+  )
 }

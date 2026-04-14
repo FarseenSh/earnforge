@@ -1,27 +1,38 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { VaultListParams } from './clients/index.js';
+import type { VaultListParams } from './clients/index.js'
 
-export type StrategyPreset = 'conservative' | 'max-apy' | 'diversified' | 'risk-adjusted';
+export type StrategyPreset =
+  | 'conservative'
+  | 'max-apy'
+  | 'diversified'
+  | 'risk-adjusted'
 
 export interface StrategyConfig {
-  name: StrategyPreset;
-  description: string;
+  name: StrategyPreset
+  description: string
   filters: Partial<VaultListParams> & {
-    minTvlUsd?: number;
-    tags?: string[];
-    protocols?: string[];
-    minRiskScore?: number;
-  };
-  sort: 'apy' | 'tvl' | 'risk';
-  sortDirection: 'asc' | 'desc';
+    minTvlUsd?: number
+    tags?: string[]
+    protocols?: string[]
+    minRiskScore?: number
+  }
+  sort: 'apy' | 'tvl' | 'risk'
+  sortDirection: 'asc' | 'desc'
 }
 
-const BLUE_CHIP_PROTOCOLS = ['aave-v3', 'morpho-v1', 'euler-v2', 'pendle', 'maple'];
+const BLUE_CHIP_PROTOCOLS = [
+  'aave-v3',
+  'morpho-v1',
+  'euler-v2',
+  'pendle',
+  'maple',
+]
 
 export const STRATEGIES: Record<StrategyPreset, StrategyConfig> = {
   conservative: {
     name: 'conservative',
-    description: 'Stablecoin-tagged, TVL > $50M, APY 3-7%, blue-chip protocols only',
+    description:
+      'Stablecoin-tagged, TVL > $50M, APY 3-7%, blue-chip protocols only',
     filters: {
       tags: ['stablecoin'],
       minTvlUsd: 50_000_000,
@@ -41,7 +52,8 @@ export const STRATEGIES: Record<StrategyPreset, StrategyConfig> = {
 
   diversified: {
     name: 'diversified',
-    description: 'Spread across 3+ chains, 3+ protocols, mix of stablecoin + LST',
+    description:
+      'Spread across 3+ chains, 3+ protocols, mix of stablecoin + LST',
     filters: {
       minTvlUsd: 1_000_000,
     },
@@ -58,8 +70,8 @@ export const STRATEGIES: Record<StrategyPreset, StrategyConfig> = {
     sort: 'apy',
     sortDirection: 'desc',
   },
-};
+}
 
 export function getStrategy(preset: StrategyPreset): StrategyConfig {
-  return STRATEGIES[preset];
+  return STRATEGIES[preset]
 }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo } from 'react';
-import type { Vault, RiskScore } from '@earnforge/sdk';
-import { useEarnForge } from '../context.js';
+import { useMemo } from 'react'
+import type { Vault, RiskScore } from '@earnforge/sdk'
+import { useEarnForge } from '../context.js'
 
 export interface UseRiskScoreReturn {
-  data: RiskScore | undefined;
+  data: RiskScore | undefined
 }
 
 /**
@@ -17,12 +17,12 @@ export interface UseRiskScoreReturn {
  * ```
  */
 export function useRiskScore(vault: Vault | undefined): UseRiskScoreReturn {
-  const sdk = useEarnForge();
+  const sdk = useEarnForge()
 
   const data = useMemo(() => {
-    if (!vault) return undefined;
-    return sdk.riskScore(vault);
-  }, [sdk, vault]);
+    if (!vault) return undefined
+    return sdk.riskScore(vault)
+  }, [sdk, vault])
 
-  return { data };
+  return { data }
 }

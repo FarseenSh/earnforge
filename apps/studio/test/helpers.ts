@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Vault, RiskScore } from '@earnforge/sdk';
+import type { Vault, RiskScore } from '@earnforge/sdk'
 
 /**
  * Creates a mock Vault object for testing.
@@ -15,9 +15,7 @@ export function mockVault(overrides: Partial<Vault> = {}): Vault {
     provider: 'aave',
     syncedAt: '2026-04-11T00:00:00Z',
     tags: ['stablecoin'],
-    underlyingTokens: [
-      { symbol: 'USDC', address: '0xusdc', decimals: 6 },
-    ],
+    underlyingTokens: [{ symbol: 'USDC', address: '0xusdc', decimals: 6 }],
     lpTokens: [],
     analytics: {
       apy: { base: 3.5, total: 4.5, reward: 1.0 },
@@ -32,7 +30,7 @@ export function mockVault(overrides: Partial<Vault> = {}): Vault {
     depositPacks: [{ name: 'default', stepsType: 'deposit' }],
     redeemPacks: [{ name: 'default', stepsType: 'redeem' }],
     ...overrides,
-  };
+  }
 }
 
 /**
@@ -54,7 +52,7 @@ export function mockHighRiskVault(): Vault {
       updatedAt: '2026-04-11T00:00:00Z',
     },
     isRedeemable: false,
-  });
+  })
 }
 
 /**
@@ -72,7 +70,7 @@ export function mockRiskScore(overrides: Partial<RiskScore> = {}): RiskScore {
       assetType: 9,
     },
     ...overrides,
-  };
+  }
 }
 
 export function mockHighRiskScore(): RiskScore {
@@ -86,7 +84,7 @@ export function mockHighRiskScore(): RiskScore {
       redeemability: 3,
       assetType: 5,
     },
-  };
+  }
 }
 
 export function mockMediumRiskScore(): RiskScore {
@@ -100,5 +98,5 @@ export function mockMediumRiskScore(): RiskScore {
       redeemability: 10,
       assetType: 5,
     },
-  };
+  }
 }

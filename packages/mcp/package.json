@@ -13,7 +13,11 @@
   "bin": {
     "earnforge-mcp": "./dist/esm/index.mjs"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsdown src/index.ts --format esm --dts --out-dir dist/esm",
     "typecheck": "tsc --noEmit",

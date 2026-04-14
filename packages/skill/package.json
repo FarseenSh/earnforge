@@ -4,7 +4,12 @@
   "type": "module",
   "license": "Apache-2.0",
   "description": "Agent Skill for LI.FI Earn — vault discovery, risk scoring, and deposit quoting via CLI",
-  "files": ["SKILL.md", "references", "README.md", "LICENSE"],
+  "files": [
+    "SKILL.md",
+    "references",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "echo 'Skill package has no tests — content only'"
   }

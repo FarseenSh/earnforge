@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { VaultExplorer } from '@/components/VaultExplorer';
-import { PortfolioSuggestion } from '@/components/PortfolioSuggestion';
-import { WalletBar } from '@/components/WalletBar';
+import { VaultExplorer } from '@/components/VaultExplorer'
+import { PortfolioSuggestion } from '@/components/PortfolioSuggestion'
+import { WalletBar } from '@/components/WalletBar'
 
 export default function HomePage() {
   return (
@@ -10,5 +10,5 @@ export default function HomePage() {
       <VaultExplorer />
       <PortfolioSuggestion />
     </main>
-  );
+  )
 }

@@ -1,61 +1,65 @@
 // SPDX-License-Identifier: Apache-2.0
-import { EarnApiError, ComposerError } from './errors.js';
+import { EarnApiError, ComposerError } from './errors.js'
 
 export interface RetryOptions {
-  maxRetries?: number;
-  baseDelay?: number;
-  maxDelay?: number;
+  maxRetries?: number
+  baseDelay?: number
+  maxDelay?: number
 }
 
 const DEFAULTS: Required<RetryOptions> = {
   maxRetries: 3,
   baseDelay: 1000,
   maxDelay: 10_000,
-};
+}
 
 /**
  * Retry with exponential backoff on 429 / 5xx / network errors.
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  options?: RetryOptions,
+  options?: RetryOptions
 ): Promise<T> {
-  const opts = { ...DEFAULTS, ...options };
-  let lastError: unknown;
+  const opts = { ...DEFAULTS, ...options }
+  let lastError: unknown
 
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
     try {
-      return await fn();
+      return await fn()
     } catch (error: unknown) {
-      lastError = error;
-      if (attempt === opts.maxRetries) break;
-      if (!isRetryable(error)) throw error;
+      lastError = error
+      if (attempt === opts.maxRetries) break
+      if (!isRetryable(error)) throw error
 
       const delay = Math.min(
         opts.baseDelay * 2 ** attempt + Math.random() * 200,
-        opts.maxDelay,
-      );
-      await new Promise((resolve) => setTimeout(resolve, delay));
+        opts.maxDelay
+      )
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 
-  throw lastError;
+  throw lastError
 }
 
 export function isRetryable(error: unknown): boolean {
   // Match our typed error classes directly
   if (error instanceof EarnApiError) {
-    return error.status === 429 || error.status >= 500;
+    return error.status === 429 || error.status >= 500
   }
   if (error instanceof ComposerError) {
-    return error.status === 429 || error.status >= 500;
+    return error.status === 429 || error.status >= 500
   }
   if (error instanceof Error) {
-    const msg = error.message.toLowerCase();
-    if (msg.includes('rate limit') || msg.includes('429')) return true;
-    if (msg.includes('network') || msg.includes('fetch') || msg.includes('econnreset')) {
-      return true;
+    const msg = error.message.toLowerCase()
+    if (msg.includes('rate limit') || msg.includes('429')) return true
+    if (
+      msg.includes('network') ||
+      msg.includes('fetch') ||
+      msg.includes('econnreset')
+    ) {
+      return true
     }
   }
-  return false;
+  return false
 }

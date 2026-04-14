@@ -8,5 +8,7 @@
     ".": "./src/index.ts",
     "./*.json": "./src/*.json"
   },
-  "files": ["src"]
+  "files": [
+    "src"
+  ]
 }

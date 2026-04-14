@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { z } from 'zod';
+import { z } from 'zod'
 
 /** Position asset */
 export const PositionAssetSchema = z.object({
@@ -7,7 +7,7 @@ export const PositionAssetSchema = z.object({
   name: z.string(),
   symbol: z.string(),
   decimals: z.number(),
-});
+})
 
 /** Single portfolio position */
 export const PositionSchema = z.object({
@@ -16,13 +16,13 @@ export const PositionSchema = z.object({
   asset: PositionAssetSchema,
   balanceUsd: z.string(),
   balanceNative: z.string(),
-});
+})
 
-export type Position = z.infer<typeof PositionSchema>;
+export type Position = z.infer<typeof PositionSchema>
 
 /** Portfolio response */
 export const PortfolioResponseSchema = z.object({
   positions: z.array(PositionSchema),
-});
+})
 
-export type PortfolioResponse = z.infer<typeof PortfolioResponseSchema>;
+export type PortfolioResponse = z.infer<typeof PortfolioResponseSchema>

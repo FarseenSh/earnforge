@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
-import { z } from 'zod';
+import { z } from 'zod'
 
 /** Protocol info — always has name + url */
 export const ProtocolSchema = z.object({
   name: z.string(),
   url: z.string(),
-});
+})
 
 /** Underlying token — symbol, address, decimals */
 export const UnderlyingTokenSchema = z.object({
   symbol: z.string(),
   address: z.string(),
   decimals: z.number(),
-});
+})
 
 /** Pack (deposit or redeem method) */
 export const PackSchema = z.object({
   name: z.string(),
   stepsType: z.string(),
-});
+})
 
 /**
  * APY — base and total always present.
@@ -28,8 +28,11 @@ export const PackSchema = z.object({
 export const ApySchema = z.object({
   base: z.number(),
   total: z.number(),
-  reward: z.number().nullable().transform((v) => v ?? 0),
-});
+  reward: z
+    .number()
+    .nullable()
+    .transform((v) => v ?? 0),
+})
 
 /**
  * TVL — usd is always a string from the API.
@@ -38,22 +41,22 @@ export const ApySchema = z.object({
  */
 export const TvlSchema = z.object({
   usd: z.string(),
-});
+})
 
 export type TvlParsed = {
-  raw: string;
-  parsed: number;
-  bigint: bigint;
-};
+  raw: string
+  parsed: number
+  bigint: bigint
+}
 
 export function parseTvl(tvl: z.infer<typeof TvlSchema>): TvlParsed {
   // Parse bigint directly from string to avoid Number() precision loss for large values
-  const integerPart = tvl.usd.split('.')[0] ?? '0';
+  const integerPart = tvl.usd.split('.')[0] ?? '0'
   return {
     raw: tvl.usd,
     parsed: Number(tvl.usd),
     bigint: BigInt(integerPart),
-  };
+  }
 }
 
 /**
@@ -68,7 +71,7 @@ export const AnalyticsSchema = z.object({
   apy7d: z.number().nullable(),
   apy30d: z.number().nullable(),
   updatedAt: z.string(),
-});
+})
 
 /**
  * Get best available APY with fallback chain.
@@ -77,9 +80,9 @@ export const AnalyticsSchema = z.object({
 export function getBestApy(analytics: z.infer<typeof AnalyticsSchema>): number {
   // apy.total is always a number (never null after Zod). If it's non-zero, use it.
   // If it's exactly 0, fall through to historical data as a display hint.
-  if (analytics.apy.total !== 0) return analytics.apy.total;
+  if (analytics.apy.total !== 0) return analytics.apy.total
   // Fallback chain for null historical values
-  return analytics.apy30d ?? analytics.apy7d ?? analytics.apy1d ?? 0;
+  return analytics.apy30d ?? analytics.apy7d ?? analytics.apy1d ?? 0
 }
 
 /**
@@ -110,15 +113,15 @@ export const VaultSchema = z.object({
   isRedeemable: z.boolean(),
   depositPacks: z.array(PackSchema),
   redeemPacks: z.array(PackSchema),
-});
+})
 
-export type Vault = z.infer<typeof VaultSchema>;
+export type Vault = z.infer<typeof VaultSchema>
 
 /** Paginated vault list response */
 export const VaultListResponseSchema = z.object({
   data: z.array(VaultSchema),
   nextCursor: z.string().nullable().optional(),
   total: z.number(),
-});
+})
 
-export type VaultListResponse = z.infer<typeof VaultListResponseSchema>;
+export type VaultListResponse = z.infer<typeof VaultListResponseSchema>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Bot, Context } from 'grammy';
+import { Bot, Context } from 'grammy'
 import {
   createEarnForge,
   type EarnForge,
@@ -10,7 +10,7 @@ import {
   type PreflightReport,
   type StrategyPreset,
   parseTvl,
-} from '@earnforge/sdk';
+} from '@earnforge/sdk'
 
 // ── Chain name → chainId mapping ──
 
@@ -31,30 +31,33 @@ const CHAIN_NAME_TO_ID: Record<string, number> = {
   linea: 59144,
   berachain: 80094,
   katana: 747474,
-};
+}
 
 const CHAIN_ID_TO_NAME: Record<number, string> = Object.fromEntries(
-  Object.entries(CHAIN_NAME_TO_ID).map(([name, id]) => [id, name.charAt(0).toUpperCase() + name.slice(1)]),
-);
+  Object.entries(CHAIN_NAME_TO_ID).map(([name, id]) => [
+    id,
+    name.charAt(0).toUpperCase() + name.slice(1),
+  ])
+)
 
 // ── Formatting helpers ──
 
 function riskEmoji(label: 'low' | 'medium' | 'high'): string {
-  if (label === 'low') return '\u{1F7E2}';
-  if (label === 'medium') return '\u{1F7E1}';
-  return '\u{1F534}';
+  if (label === 'low') return '\u{1F7E2}'
+  if (label === 'medium') return '\u{1F7E1}'
+  return '\u{1F534}'
 }
 
 function fmtApy(apy: number): string {
-  return `${(apy).toFixed(2)}%`;
+  return `${(apy).toFixed(2)}%`
 }
 
 function fmtTvl(vault: Vault): string {
-  const tvl = parseTvl(vault.analytics.tvl).parsed;
-  if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`;
-  if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(2)}M`;
-  if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(2)}K`;
-  return `$${tvl.toFixed(2)}`;
+  const tvl = parseTvl(vault.analytics.tvl).parsed
+  if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`
+  if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(2)}M`
+  if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(2)}K`
+  return `$${tvl.toFixed(2)}`
 }
 
 function fmtVaultLine(vault: Vault, risk: RiskScore, index: number): string {
@@ -64,11 +67,11 @@ function fmtVaultLine(vault: Vault, risk: RiskScore, index: number): string {
     `   Protocol: \`${vault.protocol.name}\` | Chain: \`${CHAIN_ID_TO_NAME[vault.chainId] ?? vault.network}\`\n` +
     `   Risk: ${riskEmoji(risk.label)} \`${risk.score}/10\` (${risk.label})\n` +
     `   Slug: \`${vault.slug}\``
-  );
+  )
 }
 
 function fmtRiskBreakdown(risk: RiskScore, vault: Vault): string {
-  const b = risk.breakdown;
+  const b = risk.breakdown
   return (
     `*Risk Score for* \`${escMd(vault.name)}\`\n\n` +
     `${riskEmoji(risk.label)} *Overall: ${risk.score}/10* (${risk.label})\n\n` +
@@ -79,7 +82,7 @@ function fmtRiskBreakdown(risk: RiskScore, vault: Vault): string {
     `  Redeemability: \`${b.redeemability}/10\`\n` +
     `  Asset Type: \`${b.assetType}/10\`\n\n` +
     `*Weights:* TVL 25%, APY 20%, Protocol 25%, Redeem 15%, Asset 15%`
-  );
+  )
 }
 
 function fmtAllocation(alloc: Allocation, index: number): string {
@@ -88,29 +91,29 @@ function fmtAllocation(alloc: Allocation, index: number): string {
     `   Amount: \`$${alloc.amount.toFixed(2)}\` (${alloc.percentage.toFixed(1)}%)\n` +
     `   APY: \`${fmtApy(alloc.apy)}\` | Risk: ${riskEmoji(alloc.risk.label)} \`${alloc.risk.score}/10\`\n` +
     `   Chain: \`${CHAIN_ID_TO_NAME[alloc.vault.chainId] ?? alloc.vault.network}\` | Protocol: \`${alloc.vault.protocol.name}\``
-  );
+  )
 }
 
 function fmtPreflightReport(report: PreflightReport): string {
-  const vault = report.vault;
-  let text = `*Preflight Check for* \`${escMd(vault.name)}\`\n\n`;
+  const vault = report.vault
+  let text = `*Preflight Check for* \`${escMd(vault.name)}\`\n\n`
 
   if (report.ok) {
-    text += '\u{2705} *All checks passed*\n\n';
+    text += '\u{2705} *All checks passed*\n\n'
   } else {
-    text += '\u{274C} *Issues found:*\n\n';
+    text += '\u{274C} *Issues found:*\n\n'
   }
 
   for (const issue of report.issues) {
-    const icon = issue.severity === 'error' ? '\u{1F534}' : '\u{1F7E1}';
-    text += `${icon} \`${issue.code}\`: ${escMd(issue.message)}\n`;
+    const icon = issue.severity === 'error' ? '\u{1F534}' : '\u{1F7E1}'
+    text += `${icon} \`${issue.code}\`: ${escMd(issue.message)}\n`
   }
 
   if (report.issues.length === 0) {
-    text += 'No issues detected\\.';
+    text += 'No issues detected\\.'
   }
 
-  return text;
+  return text
 }
 
 /**
@@ -118,13 +121,13 @@ function fmtPreflightReport(report: PreflightReport): string {
  * grammy uses MarkdownV2 parse mode.
  */
 function escMd(text: string): string {
-  return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
+  return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, '\\$1')
 }
 
 // ── Bot setup ──
 
 export function createBot(token: string, forge: EarnForge): Bot {
-  const bot = new Bot(token);
+  const bot = new Bot(token)
 
   // /start
   bot.command('start', async (ctx: Context) => {
@@ -137,195 +140,235 @@ export function createBot(token: string, forge: EarnForge): Bot {
       `/risk \\<slug\\> \\- Risk score breakdown for a vault\n` +
       `/suggest \\<amount\\> \\<asset\\> \\- Portfolio allocation suggestion\n` +
       `/doctor \\<slug\\> \\- Run preflight pitfall checks\n\n` +
-      `_Powered by @earnforge/sdk and LI\\.FI_`;
-    await ctx.reply(text, { parse_mode: 'MarkdownV2' });
-  });
+      `_Powered by @earnforge/sdk and LI\\.FI_`
+    await ctx.reply(text, { parse_mode: 'MarkdownV2' })
+  })
 
   // /yield <asset>
   bot.command('yield', async (ctx: Context) => {
-    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
-    const asset = args[0];
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? []
+    const asset = args[0]
     if (!asset) {
-      await ctx.reply('Usage: `/yield <asset>`\nExample: `/yield USDC`', { parse_mode: 'MarkdownV2' });
-      return;
+      await ctx.reply('Usage: `/yield <asset>`\nExample: `/yield USDC`', {
+        parse_mode: 'MarkdownV2',
+      })
+      return
     }
 
     try {
-      const vaults = await forge.vaults.top({ asset: asset.toUpperCase(), limit: 5 });
+      const vaults = await forge.vaults.top({
+        asset: asset.toUpperCase(),
+        limit: 5,
+      })
       if (vaults.length === 0) {
-        await ctx.reply(`No vaults found for asset \`${escMd(asset.toUpperCase())}\`\\.`, { parse_mode: 'MarkdownV2' });
-        return;
+        await ctx.reply(
+          `No vaults found for asset \`${escMd(asset.toUpperCase())}\`\\.`,
+          { parse_mode: 'MarkdownV2' }
+        )
+        return
       }
 
-      const lines = vaults.map((v, i) => fmtVaultLine(v, forge.riskScore(v), i + 1));
-      const text = `*Top ${vaults.length} vaults for ${escMd(asset.toUpperCase())}:*\n\n${lines.join('\n\n')}`;
-      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+      const lines = vaults.map((v, i) =>
+        fmtVaultLine(v, forge.riskScore(v), i + 1)
+      )
+      const text = `*Top ${vaults.length} vaults for ${escMd(asset.toUpperCase())}:*\n\n${lines.join('\n\n')}`
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
-      await ctx.reply(`Error fetching vaults: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`Error fetching vaults: \`${escMd(String(err))}\``, {
+        parse_mode: 'MarkdownV2',
+      })
     }
-  });
+  })
 
   // /top <chain>
   bot.command('top', async (ctx: Context) => {
-    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
-    const chainName = args[0]?.toLowerCase();
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? []
+    const chainName = args[0]?.toLowerCase()
     if (!chainName) {
-      const supported = Object.keys(CHAIN_NAME_TO_ID).join(', ');
+      const supported = Object.keys(CHAIN_NAME_TO_ID).join(', ')
       await ctx.reply(
         `Usage: \`/top <chain>\`\nExample: \`/top base\`\n\nSupported: \`${escMd(supported)}\``,
-        { parse_mode: 'MarkdownV2' },
-      );
-      return;
+        { parse_mode: 'MarkdownV2' }
+      )
+      return
     }
 
-    const chainId = CHAIN_NAME_TO_ID[chainName];
+    const chainId = CHAIN_NAME_TO_ID[chainName]
     if (chainId === undefined) {
-      const supported = Object.keys(CHAIN_NAME_TO_ID).join(', ');
+      const supported = Object.keys(CHAIN_NAME_TO_ID).join(', ')
       await ctx.reply(
         `Unknown chain \`${escMd(chainName)}\`\\. Supported: \`${escMd(supported)}\``,
-        { parse_mode: 'MarkdownV2' },
-      );
-      return;
+        { parse_mode: 'MarkdownV2' }
+      )
+      return
     }
 
     try {
-      const vaults = await forge.vaults.top({ chainId, limit: 5 });
+      const vaults = await forge.vaults.top({ chainId, limit: 5 })
       if (vaults.length === 0) {
-        await ctx.reply(`No vaults found on \`${escMd(chainName)}\`\\.`, { parse_mode: 'MarkdownV2' });
-        return;
+        await ctx.reply(`No vaults found on \`${escMd(chainName)}\`\\.`, {
+          parse_mode: 'MarkdownV2',
+        })
+        return
       }
 
-      const lines = vaults.map((v, i) => fmtVaultLine(v, forge.riskScore(v), i + 1));
-      const header = CHAIN_ID_TO_NAME[chainId] ?? chainName;
-      const text = `*Top ${vaults.length} vaults on ${escMd(header)}:*\n\n${lines.join('\n\n')}`;
-      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+      const lines = vaults.map((v, i) =>
+        fmtVaultLine(v, forge.riskScore(v), i + 1)
+      )
+      const header = CHAIN_ID_TO_NAME[chainId] ?? chainName
+      const text = `*Top ${vaults.length} vaults on ${escMd(header)}:*\n\n${lines.join('\n\n')}`
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
-      await ctx.reply(`Error fetching vaults: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`Error fetching vaults: \`${escMd(String(err))}\``, {
+        parse_mode: 'MarkdownV2',
+      })
     }
-  });
+  })
 
   // /risk <slug>
   bot.command('risk', async (ctx: Context) => {
-    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
-    const slug = args[0];
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? []
+    const slug = args[0]
     if (!slug) {
-      await ctx.reply('Usage: `/risk <slug>`\nExample: `/risk 8453\\-0xbeef\\.\\.\\.`', { parse_mode: 'MarkdownV2' });
-      return;
+      await ctx.reply(
+        'Usage: `/risk <slug>`\nExample: `/risk 8453\\-0xbeef\\.\\.\\.`',
+        { parse_mode: 'MarkdownV2' }
+      )
+      return
     }
 
     try {
-      const vault = await forge.vaults.get(slug);
-      const risk = forge.riskScore(vault);
-      const text = fmtRiskBreakdown(risk, vault);
-      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+      const vault = await forge.vaults.get(slug)
+      const risk = forge.riskScore(vault)
+      const text = fmtRiskBreakdown(risk, vault)
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
-      await ctx.reply(`Error: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`Error: \`${escMd(String(err))}\``, {
+        parse_mode: 'MarkdownV2',
+      })
     }
-  });
+  })
 
   // /suggest <amount> <asset>
   // /suggest <amount> <asset> [strategy]
   bot.command('suggest', async (ctx: Context) => {
-    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
-    const amountStr = args[0];
-    const asset = args[1];
-    const strategyArg = args[2]?.toLowerCase();
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? []
+    const amountStr = args[0]
+    const asset = args[1]
+    const strategyArg = args[2]?.toLowerCase()
 
     if (!amountStr || !asset) {
       await ctx.reply(
         'Usage: `/suggest <amount> <asset> [strategy]`\nExample: `/suggest 10000 USDC conservative`\nStrategies: conservative, max\\-apy, diversified, risk\\-adjusted',
-        { parse_mode: 'MarkdownV2' },
-      );
-      return;
+        { parse_mode: 'MarkdownV2' }
+      )
+      return
     }
 
-    const amount = Number(amountStr);
+    const amount = Number(amountStr)
     if (Number.isNaN(amount) || amount <= 0) {
-      await ctx.reply('Amount must be a positive number\\.', { parse_mode: 'MarkdownV2' });
-      return;
+      await ctx.reply('Amount must be a positive number\\.', {
+        parse_mode: 'MarkdownV2',
+      })
+      return
     }
 
-    const validStrategies = ['conservative', 'max-apy', 'diversified', 'risk-adjusted'];
-    const strategy = strategyArg && validStrategies.includes(strategyArg)
-      ? (strategyArg as StrategyPreset)
-      : undefined;
+    const validStrategies = [
+      'conservative',
+      'max-apy',
+      'diversified',
+      'risk-adjusted',
+    ]
+    const strategy =
+      strategyArg && validStrategies.includes(strategyArg)
+        ? (strategyArg as StrategyPreset)
+        : undefined
 
     try {
-      const result = await forge.suggest({ amount, asset: asset.toUpperCase(), maxVaults: 5, strategy });
+      const result = await forge.suggest({
+        amount,
+        asset: asset.toUpperCase(),
+        maxVaults: 5,
+        strategy,
+      })
 
       if (result.allocations.length === 0) {
         await ctx.reply(
           `No suitable vaults found for \`${escMd(asset.toUpperCase())}\`\\.`,
-          { parse_mode: 'MarkdownV2' },
-        );
-        return;
+          { parse_mode: 'MarkdownV2' }
+        )
+        return
       }
 
-      const lines = result.allocations.map((a, i) => fmtAllocation(a, i + 1));
+      const lines = result.allocations.map((a, i) => fmtAllocation(a, i + 1))
       const text =
         `*Portfolio Suggestion for $${escMd(amount.toLocaleString())} ${escMd(asset.toUpperCase())}:*\n\n` +
         `Expected APY: \`${fmtApy(result.expectedApy)}\`\n\n` +
-        lines.join('\n\n');
-      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+        lines.join('\n\n')
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
-      await ctx.reply(`Error: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`Error: \`${escMd(String(err))}\``, {
+        parse_mode: 'MarkdownV2',
+      })
     }
-  });
+  })
 
   // /doctor <slug> [wallet]
   bot.command('doctor', async (ctx: Context) => {
-    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
-    const slug = args[0];
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? []
+    const slug = args[0]
     if (!slug) {
       await ctx.reply(
         'Usage: `/doctor <slug> [wallet]`\nExample: `/doctor 8453\\-0xbeef\\.\\.\\.`\nOptionally pass a wallet for balance checks\\.',
-        { parse_mode: 'MarkdownV2' },
-      );
-      return;
+        { parse_mode: 'MarkdownV2' }
+      )
+      return
     }
 
-    const wallet = args[1] && /^0x[0-9a-fA-F]{40}$/.test(args[1])
-      ? args[1]
-      : '0x0000000000000000000000000000000000000000';
+    const wallet =
+      args[1] && /^0x[0-9a-fA-F]{40}$/.test(args[1])
+        ? args[1]
+        : '0x0000000000000000000000000000000000000000'
 
     try {
-      const vault = await forge.vaults.get(slug);
-      const report = forge.preflight(vault, wallet);
-      const text = fmtPreflightReport(report);
-      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+      const vault = await forge.vaults.get(slug)
+      const report = forge.preflight(vault, wallet)
+      const text = fmtPreflightReport(report)
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
-      await ctx.reply(`Error: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`Error: \`${escMd(String(err))}\``, {
+        parse_mode: 'MarkdownV2',
+      })
     }
-  });
+  })
 
   // /withdraw <slug> <amount>
   bot.command('withdraw', async (ctx: Context) => {
-    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? [];
-    const slug = args[0];
-    const amountStr = args[1];
+    const args = ctx.message?.text?.split(/\s+/).slice(1) ?? []
+    const slug = args[0]
+    const amountStr = args[1]
 
     if (!slug || !amountStr) {
       await ctx.reply(
         'Usage: `/withdraw <slug> <amount>`\nBuilds an unsigned redeem quote\\.',
-        { parse_mode: 'MarkdownV2' },
-      );
-      return;
+        { parse_mode: 'MarkdownV2' }
+      )
+      return
     }
 
     try {
-      const vault = await forge.vaults.get(slug);
+      const vault = await forge.vaults.get(slug)
       if (!vault.isRedeemable) {
-        await ctx.reply(
-          `Vault \`${escMd(vault.name)}\` is not redeemable\\.`,
-          { parse_mode: 'MarkdownV2' },
-        );
-        return;
+        await ctx.reply(`Vault \`${escMd(vault.name)}\` is not redeemable\\.`, {
+          parse_mode: 'MarkdownV2',
+        })
+        return
       }
 
       const result = await forge.buildRedeemQuote(vault, {
         fromAmount: amountStr,
         wallet: '0x0000000000000000000000000000000000000001',
-      });
+      })
 
       const text =
         `*Redeem Quote* \\- \`${escMd(vault.name)}\`\n\n` +
@@ -333,45 +376,48 @@ export function createBot(token: string, forge: EarnForge): Bot {
         `Receive: \`${escMd(result.quote.estimate.toAmount)}\`\n` +
         `Min: \`${escMd(result.quote.estimate.toAmountMin)}\`\n` +
         `Duration: \`${result.quote.estimate.executionDuration}s\`\n\n` +
-        `_Sign the tx in your wallet to withdraw\\._`;
+        `_Sign the tx in your wallet to withdraw\\._`
 
-      await ctx.reply(text, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(text, { parse_mode: 'MarkdownV2' })
     } catch (err) {
-      await ctx.reply(`Error: \`${escMd(String(err))}\``, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`Error: \`${escMd(String(err))}\``, {
+        parse_mode: 'MarkdownV2',
+      })
     }
-  });
+  })
 
-  return bot;
+  return bot
 }
 
 // ── Main entry point ──
 
 export async function main(): Promise<void> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) {
-    console.error('TELEGRAM_BOT_TOKEN env var is required');
-    process.exit(1);
+    console.error('TELEGRAM_BOT_TOKEN env var is required')
+    process.exit(1)
   }
 
   const forge = createEarnForge({
     composerApiKey: process.env.LIFI_API_KEY,
-  });
+  })
 
-  const bot = createBot(token, forge);
+  const bot = createBot(token, forge)
 
-  console.log('EarnForge Bot starting...');
-  bot.start();
+  // biome-ignore lint/suspicious/noConsole: bot startup message
+  console.log('EarnForge Bot starting...')
+  bot.start()
 }
 
 // Auto-start when run directly (not when imported for testing)
 const isMainModule =
   typeof process !== 'undefined' &&
   process.argv[1] &&
-  import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'));
+  import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'))
 
 if (isMainModule) {
   main().catch((err) => {
-    console.error('Fatal error:', err);
-    process.exit(1);
-  });
+    console.error('Fatal error:', err)
+    process.exit(1)
+  })
 }

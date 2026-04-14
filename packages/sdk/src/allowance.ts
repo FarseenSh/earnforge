@@ -9,21 +9,21 @@
  */
 
 export interface AllowanceResult {
-  allowance: bigint;
-  sufficient: boolean;
-  requiredAmount: bigint;
+  allowance: bigint
+  sufficient: boolean
+  requiredAmount: bigint
 }
 
 export interface ApprovalTx {
-  to: string;
-  data: string;
-  value: '0x0';
-  chainId: number;
+  to: string
+  data: string
+  value: '0x0'
+  chainId: number
 }
 
 // ERC-20 function signatures
-const ALLOWANCE_SELECTOR = '0xdd62ed3e'; // allowance(address,address)
-const APPROVE_SELECTOR = '0x095ea7b3';   // approve(address,uint256)
+const ALLOWANCE_SELECTOR = '0xdd62ed3e' // allowance(address,address)
+const APPROVE_SELECTOR = '0x095ea7b3' // approve(address,uint256)
 
 /**
  * Check the ERC-20 allowance for a token.
@@ -39,12 +39,12 @@ export async function checkAllowance(
   tokenAddress: string,
   owner: string,
   spender: string,
-  requiredAmount: bigint,
+  requiredAmount: bigint
 ): Promise<AllowanceResult> {
   // Encode allowance(owner, spender) call
-  const ownerPadded = owner.slice(2).toLowerCase().padStart(64, '0');
-  const spenderPadded = spender.slice(2).toLowerCase().padStart(64, '0');
-  const calldata = `${ALLOWANCE_SELECTOR}${ownerPadded}${spenderPadded}`;
+  const ownerPadded = owner.slice(2).toLowerCase().padStart(64, '0')
+  const spenderPadded = spender.slice(2).toLowerCase().padStart(64, '0')
+  const calldata = `${ALLOWANCE_SELECTOR}${ownerPadded}${spenderPadded}`
 
   const res = await globalThis.fetch(rpcUrl, {
     method: 'POST',
@@ -55,19 +55,22 @@ export async function checkAllowance(
       params: [{ to: tokenAddress, data: calldata }, 'latest'],
       id: 1,
     }),
-  });
+  })
 
-  const json = (await res.json()) as { result?: string; error?: { message: string } };
+  const json = (await res.json()) as {
+    result?: string
+    error?: { message: string }
+  }
   if (json.error || !json.result) {
-    return { allowance: 0n, sufficient: false, requiredAmount };
+    return { allowance: 0n, sufficient: false, requiredAmount }
   }
 
-  const allowance = BigInt(json.result);
+  const allowance = BigInt(json.result)
   return {
     allowance,
     sufficient: allowance >= requiredAmount,
     requiredAmount,
-  };
+  }
 }
 
 /**
@@ -82,19 +85,19 @@ export function buildApprovalTx(
   tokenAddress: string,
   spender: string,
   amount: bigint,
-  chainId: number,
+  chainId: number
 ): ApprovalTx {
-  const spenderPadded = spender.slice(2).toLowerCase().padStart(64, '0');
-  const amountHex = amount.toString(16).padStart(64, '0');
-  const data = `${APPROVE_SELECTOR}${spenderPadded}${amountHex}`;
+  const spenderPadded = spender.slice(2).toLowerCase().padStart(64, '0')
+  const amountHex = amount.toString(16).padStart(64, '0')
+  const data = `${APPROVE_SELECTOR}${spenderPadded}${amountHex}`
 
   return {
     to: tokenAddress,
     data,
     value: '0x0',
     chainId,
-  };
+  }
 }
 
 /** MaxUint256 for unlimited approval */
-export const MAX_UINT256 = 2n ** 256n - 1n;
+export const MAX_UINT256: bigint = 2n ** 256n - 1n

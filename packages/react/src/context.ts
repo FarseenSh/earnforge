@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createContext, useContext, createElement, type ReactNode } from 'react';
-import type { EarnForge } from '@earnforge/sdk';
+import { createContext, useContext, createElement, type ReactNode } from 'react'
+import type { EarnForge } from '@earnforge/sdk'
 
-const EarnForgeContext = createContext<EarnForge | null>(null);
+const EarnForgeContext = createContext<EarnForge | null>(null)
 
 export interface EarnForgeProviderProps {
-  sdk: EarnForge;
-  children: ReactNode;
+  sdk: EarnForge
+  children: ReactNode
 }
 
 /**
@@ -21,7 +21,7 @@ export interface EarnForgeProviderProps {
  * ```
  */
 export function EarnForgeProvider({ sdk, children }: EarnForgeProviderProps) {
-  return createElement(EarnForgeContext.Provider, { value: sdk }, children);
+  return createElement(EarnForgeContext.Provider, { value: sdk }, children)
 }
 
 /**
@@ -29,14 +29,14 @@ export function EarnForgeProvider({ sdk, children }: EarnForgeProviderProps) {
  * or throws if used outside an `EarnForgeProvider`.
  */
 export function useEarnForge(): EarnForge {
-  const ctx = useContext(EarnForgeContext);
+  const ctx = useContext(EarnForgeContext)
   if (!ctx) {
     throw new Error(
       'useEarnForge must be used within an <EarnForgeProvider>. ' +
-        'Wrap your component tree with <EarnForgeProvider sdk={forge}>.',
-    );
+        'Wrap your component tree with <EarnForgeProvider sdk={forge}>.'
+    )
   }
-  return ctx;
+  return ctx
 }
 
-export { EarnForgeContext };
+export { EarnForgeContext }

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useQuery } from '@tanstack/react-query';
-import type { SuggestResult, StrategyPreset } from '@earnforge/sdk';
-import { useEarnForge } from '../context.js';
+import { useQuery } from '@tanstack/react-query'
+import type { SuggestResult, StrategyPreset } from '@earnforge/sdk'
+import { useEarnForge } from '../context.js'
 
 export interface UseSuggestParams {
-  amount: number;
-  asset?: string;
-  maxChains?: number;
-  strategy?: StrategyPreset;
+  amount: number
+  asset?: string
+  maxChains?: number
+  strategy?: StrategyPreset
 }
 
 export interface UseSuggestReturn {
-  data: SuggestResult | undefined;
-  isLoading: boolean;
-  error: Error | null;
+  data: SuggestResult | undefined
+  isLoading: boolean
+  error: Error | null
 }
 
 /**
@@ -24,8 +24,10 @@ export interface UseSuggestReturn {
  * // data.allocations — the recommended split
  * ```
  */
-export function useSuggest(params: UseSuggestParams | undefined): UseSuggestReturn {
-  const sdk = useEarnForge();
+export function useSuggest(
+  params: UseSuggestParams | undefined
+): UseSuggestReturn {
+  const sdk = useEarnForge()
 
   const query = useQuery<SuggestResult, Error>({
     queryKey: ['earnforge', 'suggest', params],
@@ -37,11 +39,11 @@ export function useSuggest(params: UseSuggestParams | undefined): UseSuggestRetu
         strategy: params!.strategy,
       }),
     enabled: !!params && params.amount > 0,
-  });
+  })
 
   return {
     data: query.data,
     isLoading: query.isLoading,
     error: query.error,
-  };
+  }
 }

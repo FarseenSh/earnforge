@@ -1,48 +1,53 @@
 // SPDX-License-Identifier: Apache-2.0
-'use client';
+'use client'
 
-import type { Vault, RiskScore } from '@earnforge/sdk';
-import { parseTvl } from '@earnforge/sdk';
-import { RiskBadge } from './RiskBadge';
+import type { Vault, RiskScore } from '@earnforge/sdk'
+import { parseTvl } from '@earnforge/sdk'
+import { RiskBadge } from './RiskBadge'
 
 interface VaultCardProps {
-  vault: Vault;
-  risk: RiskScore;
-  isSelected: boolean;
-  onClick: () => void;
-  apyHistory?: number[];
+  vault: Vault
+  risk: RiskScore
+  isSelected: boolean
+  onClick: () => void
+  apyHistory?: number[]
 }
 
 function formatTvl(tvlUsd: number): string {
-  if (tvlUsd >= 1_000_000_000) return `$${(tvlUsd / 1_000_000_000).toFixed(2)}B`;
-  if (tvlUsd >= 1_000_000) return `$${(tvlUsd / 1_000_000).toFixed(2)}M`;
-  if (tvlUsd >= 1_000) return `$${(tvlUsd / 1_000).toFixed(2)}K`;
-  return `$${tvlUsd.toFixed(2)}`;
+  if (tvlUsd >= 1_000_000_000) return `$${(tvlUsd / 1_000_000_000).toFixed(2)}B`
+  if (tvlUsd >= 1_000_000) return `$${(tvlUsd / 1_000_000).toFixed(2)}M`
+  if (tvlUsd >= 1_000) return `$${(tvlUsd / 1_000).toFixed(2)}K`
+  return `$${tvlUsd.toFixed(2)}`
 }
 
 function formatApy(apy: number): string {
   // API returns APY as percentage already (3.84 = 3.84%)
-  return `${apy.toFixed(2)}%`;
+  return `${apy.toFixed(2)}%`
 }
 
 /** Tiny inline SVG sparkline — no chart library needed */
 function Sparkline({ data }: { data: number[] }) {
-  if (data.length < 2) return null;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const w = 80;
-  const h = 24;
+  if (data.length < 2) return null
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
+  const w = 80
+  const h = 24
   const points = data
     .map((v, i) => {
-      const x = (i / (data.length - 1)) * w;
-      const y = h - ((v - min) / range) * h;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
+      const x = (i / (data.length - 1)) * w
+      const y = h - ((v - min) / range) * h
+      return `${x.toFixed(1)},${y.toFixed(1)}`
     })
-    .join(' ');
+    .join(' ')
 
   return (
-    <svg width={w} height={h} className="inline-block opacity-60" aria-label="APY trend">
+    <svg
+      width={w}
+      height={h}
+      className="inline-block opacity-60"
+      aria-label="APY trend"
+    >
       <polyline
         points={points}
         fill="none"
@@ -53,12 +58,18 @@ function Sparkline({ data }: { data: number[] }) {
         className="text-green-400"
       />
     </svg>
-  );
+  )
 }
 
-export function VaultCard({ vault, risk, isSelected, onClick, apyHistory }: VaultCardProps) {
-  const tvl = parseTvl(vault.analytics.tvl);
-  const isStablecoin = vault.tags.includes('stablecoin');
+export function VaultCard({
+  vault,
+  risk,
+  isSelected,
+  onClick,
+  apyHistory,
+}: VaultCardProps) {
+  const tvl = parseTvl(vault.analytics.tvl)
+  const isStablecoin = vault.tags.includes('stablecoin')
 
   return (
     <button
@@ -123,5 +134,5 @@ export function VaultCard({ vault, risk, isSelected, onClick, apyHistory }: Vaul
         </p>
       )}
     </button>
-  );
+  )
 }

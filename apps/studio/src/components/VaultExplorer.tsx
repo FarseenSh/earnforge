@@ -1,126 +1,125 @@
 // SPDX-License-Identifier: Apache-2.0
-'use client';
+'use client'
 
-import type { Vault, Chain, StrategyPreset, RiskScore } from '@earnforge/sdk';
-import { riskScore, parseTvl } from '@earnforge/sdk';
-import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
-import { getEarnForge } from '@/lib/earnforge';
-import { CodeGenerator } from './CodeGenerator';
-import { StrategyPicker } from './StrategyPicker';
-import { VaultCard } from './VaultCard';
+import type { Vault, Chain, StrategyPreset, RiskScore } from '@earnforge/sdk'
+import { riskScore, parseTvl } from '@earnforge/sdk'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { getEarnForge } from '@/lib/earnforge'
+import { CodeGenerator } from './CodeGenerator'
+import { StrategyPicker } from './StrategyPicker'
+import { VaultCard } from './VaultCard'
 
 async function fetchAllVaults(): Promise<Vault[]> {
-  const forge = getEarnForge();
-  const vaults: Vault[] = [];
+  const forge = getEarnForge()
+  const vaults: Vault[] = []
   for await (const vault of forge.vaults.listAll()) {
-    vaults.push(vault);
+    vaults.push(vault)
   }
-  return vaults;
+  return vaults
 }
 
 async function fetchChains(): Promise<Chain[]> {
-  const forge = getEarnForge();
-  return forge.chains.list();
+  const forge = getEarnForge()
+  return forge.chains.list()
 }
 
 function applyStrategyFilter(
   vaults: Vault[],
   strategy: StrategyPreset,
-  scores: Map<string, RiskScore>,
+  scores: Map<string, RiskScore>
 ): Vault[] {
   switch (strategy) {
     case 'conservative':
       return vaults.filter((v) => {
-        const tvl = parseTvl(v.analytics.tvl).parsed;
-        return (
-          v.tags.includes('stablecoin') &&
-          tvl >= 50_000_000
-        );
-      });
+        const tvl = parseTvl(v.analytics.tvl).parsed
+        return v.tags.includes('stablecoin') && tvl >= 50_000_000
+      })
     case 'max-apy':
       return [...vaults].sort(
-        (a, b) => b.analytics.apy.total - a.analytics.apy.total,
-      );
+        (a, b) => b.analytics.apy.total - a.analytics.apy.total
+      )
     case 'diversified':
-      return vaults.filter((v) => parseTvl(v.analytics.tvl).parsed >= 1_000_000);
+      return vaults.filter((v) => parseTvl(v.analytics.tvl).parsed >= 1_000_000)
     case 'risk-adjusted':
       return vaults.filter((v) => {
-        const r = scores.get(v.address + v.chainId);
-        return r != null && r.score >= 7;
-      });
+        const r = scores.get(v.address + v.chainId)
+        return r != null && r.score >= 7
+      })
     default:
-      return vaults;
+      return vaults
   }
 }
 
 export function VaultExplorer() {
-  const [chainFilter, setChainFilter] = useState<number | ''>('');
-  const [assetFilter, setAssetFilter] = useState('');
-  const [strategy, setStrategy] = useState<StrategyPreset | ''>('');
-  const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
+  const [chainFilter, setChainFilter] = useState<number | ''>('')
+  const [assetFilter, setAssetFilter] = useState('')
+  const [strategy, setStrategy] = useState<StrategyPreset | ''>('')
+  const [selectedVault, setSelectedVault] = useState<Vault | null>(null)
 
-  const { data: vaults, isLoading: vaultsLoading, error: vaultsError } = useQuery({
+  const {
+    data: vaults,
+    isLoading: vaultsLoading,
+    error: vaultsError,
+  } = useQuery({
     queryKey: ['vaults'],
     queryFn: fetchAllVaults,
-  });
+  })
 
   const { data: chains } = useQuery({
     queryKey: ['chains'],
     queryFn: fetchChains,
-  });
+  })
 
   // Compute risk scores for all vaults
   const riskScores = useMemo(() => {
-    const map = new Map<string, RiskScore>();
-    if (!vaults) return map;
+    const map = new Map<string, RiskScore>()
+    if (!vaults) return map
     for (const vault of vaults) {
-      map.set(vault.address + vault.chainId, riskScore(vault));
+      map.set(vault.address + vault.chainId, riskScore(vault))
     }
-    return map;
-  }, [vaults]);
+    return map
+  }, [vaults])
 
   // Filter vaults
   const filteredVaults = useMemo(() => {
-    if (!vaults) return [];
+    if (!vaults) return []
 
-    let result = vaults;
+    let result = vaults
 
     // Chain filter
     if (chainFilter !== '') {
-      result = result.filter((v) => v.chainId === chainFilter);
+      result = result.filter((v) => v.chainId === chainFilter)
     }
 
     // Asset filter (search by name or underlying token symbol)
     if (assetFilter.trim()) {
-      const term = assetFilter.toLowerCase();
+      const term = assetFilter.toLowerCase()
       result = result.filter(
         (v) =>
           v.name.toLowerCase().includes(term) ||
-          v.underlyingTokens.some((t) =>
-            t.symbol.toLowerCase().includes(term),
-          ),
-      );
+          v.underlyingTokens.some((t) => t.symbol.toLowerCase().includes(term))
+      )
     }
 
     // Strategy filter
     if (strategy) {
-      result = applyStrategyFilter(result, strategy, riskScores);
+      result = applyStrategyFilter(result, strategy, riskScores)
     }
 
-    return result;
-  }, [vaults, chainFilter, assetFilter, strategy, riskScores]);
+    return result
+  }, [vaults, chainFilter, assetFilter, strategy, riskScores])
 
   // Stats
-  const totalVaults = vaults?.length ?? 0;
+  const totalVaults = vaults?.length ?? 0
   const uniqueChains = useMemo(() => {
-    if (!vaults) return 0;
-    return new Set(vaults.map((v) => v.chainId)).size;
-  }, [vaults]);
+    if (!vaults) return 0
+    return new Set(vaults.map((v) => v.chainId)).size
+  }, [vaults])
   const uniqueProtocols = useMemo(() => {
-    if (!vaults) return 0;
-    return new Set(vaults.map((v) => v.protocol.name)).size;
-  }, [vaults]);
+    if (!vaults) return 0
+    return new Set(vaults.map((v) => v.protocol.name)).size
+  }, [vaults])
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -130,7 +129,8 @@ export function VaultExplorer() {
           <span className="text-[var(--color-primary)]">EarnForge</span> Studio
         </h1>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Explore LI.FI Earn vaults, analyze risk, and generate integration code.
+          Explore LI.FI Earn vaults, analyze risk, and generate integration
+          code.
         </p>
       </div>
 
@@ -157,10 +157,16 @@ export function VaultExplorer() {
       </div>
 
       {/* Filters */}
-      <div data-testid="filter-controls" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div
+        data-testid="filter-controls"
+        className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3"
+      >
         {/* Chain Filter */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="chain-filter" className="text-sm font-medium text-[var(--color-text-muted)]">
+          <label
+            htmlFor="chain-filter"
+            className="text-sm font-medium text-[var(--color-text-muted)]"
+          >
             Chain
           </label>
           <select
@@ -168,7 +174,9 @@ export function VaultExplorer() {
             data-testid="chain-filter"
             value={chainFilter}
             onChange={(e) =>
-              setChainFilter(e.target.value === '' ? '' : Number(e.target.value))
+              setChainFilter(
+                e.target.value === '' ? '' : Number(e.target.value)
+              )
             }
             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
           >
@@ -183,7 +191,10 @@ export function VaultExplorer() {
 
         {/* Asset Filter */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="asset-filter" className="text-sm font-medium text-[var(--color-text-muted)]">
+          <label
+            htmlFor="asset-filter"
+            className="text-sm font-medium text-[var(--color-text-muted)]"
+          >
             Asset
           </label>
           <input
@@ -203,7 +214,10 @@ export function VaultExplorer() {
 
       {/* Loading State */}
       {vaultsLoading && (
-        <div data-testid="loading-spinner" className="flex items-center justify-center py-20">
+        <div
+          data-testid="loading-spinner"
+          className="flex items-center justify-center py-20"
+        >
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-primary)] border-t-transparent" />
           <span className="ml-3 text-sm text-[var(--color-text-muted)]">
             Loading vaults...
@@ -213,7 +227,10 @@ export function VaultExplorer() {
 
       {/* Error State */}
       {vaultsError && (
-        <div data-testid="error-message" className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+        <div
+          data-testid="error-message"
+          className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400"
+        >
           Failed to load vaults: {vaultsError.message}
         </div>
       )}
@@ -227,9 +244,12 @@ export function VaultExplorer() {
 
       {/* Vault Grid */}
       {!vaultsLoading && (
-        <div data-testid="vault-grid" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          data-testid="vault-grid"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {filteredVaults.map((vault) => {
-            const risk = riskScores.get(vault.address + vault.chainId)!;
+            const risk = riskScores.get(vault.address + vault.chainId)!
             return (
               <VaultCard
                 key={vault.address + vault.chainId}
@@ -244,11 +264,11 @@ export function VaultExplorer() {
                     selectedVault?.address === vault.address &&
                       selectedVault?.chainId === vault.chainId
                       ? null
-                      : vault,
+                      : vault
                   )
                 }
               />
-            );
+            )
           })}
         </div>
       )}
@@ -256,7 +276,8 @@ export function VaultExplorer() {
       {/* Empty state */}
       {!vaultsLoading && filteredVaults.length === 0 && vaults && (
         <div className="py-12 text-center text-sm text-[var(--color-text-muted)]">
-          No vaults match your filters. Try adjusting the chain, asset, or strategy.
+          No vaults match your filters. Try adjusting the chain, asset, or
+          strategy.
         </div>
       )}
 
@@ -268,5 +289,5 @@ export function VaultExplorer() {
         />
       )}
     </div>
-  );
+  )
 }

@@ -33,7 +33,7 @@
 }
 
 /* ═══ Light theme ═══ */
-:root[data-theme='light'] {
+:root[data-theme="light"] {
   --sl-color-accent-low: #fff7ed;
   --sl-color-accent: #ea580c;
   --sl-color-accent-high: #431407;
@@ -89,7 +89,11 @@ header.header {
   font-weight: 900 !important;
   letter-spacing: -0.03em;
   line-height: 1.1 !important;
-  background: linear-gradient(135deg, var(--ef-hero-gradient-from) 0%, var(--ef-hero-gradient-to) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--ef-hero-gradient-from) 0%,
+    var(--ef-hero-gradient-to) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -141,7 +145,7 @@ nav.sidebar {
   border-right: 1px solid var(--ef-sidebar-border) !important;
 }
 
-[data-current='true'] > a {
+[data-current="true"] > a {
   color: var(--sl-color-accent) !important;
   font-weight: 700 !important;
 }
@@ -189,7 +193,7 @@ nav.sidebar {
 }
 
 /* Table of contents active */
-starlight-toc a[aria-current='true'] {
+starlight-toc a[aria-current="true"] {
   color: var(--sl-color-accent) !important;
 }
 

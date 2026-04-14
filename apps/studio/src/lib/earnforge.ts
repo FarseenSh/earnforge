@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createEarnForge } from '@earnforge/sdk';
-import type { EarnForge } from '@earnforge/sdk';
+import { createEarnForge } from '@earnforge/sdk'
+import type { EarnForge } from '@earnforge/sdk'
 
-let instance: EarnForge | null = null;
+let instance: EarnForge | null = null
 
 /**
  * Returns a singleton EarnForge SDK instance.
@@ -20,7 +20,7 @@ export function getEarnForge(): EarnForge {
         typeof window === 'undefined'
           ? (process.env.LIFI_API_KEY ?? undefined)
           : undefined,
-    });
+    })
   }
-  return instance;
+  return instance
 }

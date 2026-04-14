@@ -1,48 +1,48 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ComposerError } from '../errors.js';
-import { withRetry, type RetryOptions } from '../retry.js';
-import { QuoteResponseSchema, type QuoteResponse } from '../schemas/index.js';
+import { ComposerError } from '../errors.js'
+import { withRetry, type RetryOptions } from '../retry.js'
+import { QuoteResponseSchema, type QuoteResponse } from '../schemas/index.js'
 
 /**
  * Composer base URL — li.quest (Pitfall #1).
  * Requires x-lifi-api-key header (Pitfall #3).
  * Endpoint is GET, not POST (Pitfall #4).
  */
-const DEFAULT_BASE_URL = 'https://li.quest';
+const DEFAULT_BASE_URL = 'https://li.quest'
 
 export interface ComposerClientOptions {
-  apiKey: string;
-  baseUrl?: string;
-  retry?: RetryOptions;
+  apiKey: string
+  baseUrl?: string
+  retry?: RetryOptions
 }
 
 export interface QuoteParams {
-  fromChain: number;
-  toChain: number;
-  fromToken: string;
-  toToken: string;
-  fromAddress: string;
-  toAddress: string;
-  fromAmount: string;
-  slippage?: number;
-  fromAmountForGas?: string;
+  fromChain: number
+  toChain: number
+  fromToken: string
+  toToken: string
+  fromAddress: string
+  toAddress: string
+  fromAmount: string
+  slippage?: number
+  fromAmountForGas?: string
 }
 
 export class ComposerClient {
-  private readonly baseUrl: string;
-  private readonly apiKey: string;
-  private readonly retryOpts: RetryOptions;
+  private readonly baseUrl: string
+  private readonly apiKey: string
+  private readonly retryOpts: RetryOptions
 
   constructor(options: ComposerClientOptions) {
     if (!options.apiKey) {
       throw new ComposerError(
         'Missing Composer API key. Set LIFI_API_KEY environment variable or pass composerApiKey to createEarnForge().',
-        401,
-      );
+        401
+      )
     }
-    this.apiKey = options.apiKey;
-    this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
-    this.retryOpts = options.retry ?? {};
+    this.apiKey = options.apiKey
+    this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
+    this.retryOpts = options.retry ?? {}
   }
 
   /**
@@ -60,16 +60,16 @@ export class ComposerClient {
         fromAddress: params.fromAddress,
         toAddress: params.toAddress,
         fromAmount: params.fromAmount,
-      });
+      })
 
       if (params.slippage !== undefined) {
-        searchParams.set('slippage', String(params.slippage));
+        searchParams.set('slippage', String(params.slippage))
       }
       if (params.fromAmountForGas) {
-        searchParams.set('fromAmountForGas', params.fromAmountForGas);
+        searchParams.set('fromAmountForGas', params.fromAmountForGas)
       }
 
-      const url = `${this.baseUrl}/v1/quote?${searchParams.toString()}`;
+      const url = `${this.baseUrl}/v1/quote?${searchParams.toString()}`
 
       // GET, not POST (Pitfall #4)
       const res = await globalThis.fetch(url, {
@@ -77,18 +77,18 @@ export class ComposerClient {
         headers: {
           'x-lifi-api-key': this.apiKey,
         },
-      });
+      })
 
       if (!res.ok) {
-        const body = await res.text().catch(() => '');
+        const body = await res.text().catch(() => '')
         throw new ComposerError(
           `Composer error: ${res.status} ${res.statusText}. ${body}`,
-          res.status,
-        );
+          res.status
+        )
       }
 
-      const json = await res.json();
-      return QuoteResponseSchema.parse(json);
-    }, this.retryOpts);
+      const json = await res.json()
+      return QuoteResponseSchema.parse(json)
+    }, this.retryOpts)
   }
 }
