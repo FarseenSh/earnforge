@@ -1,16 +1,16 @@
 {
   "name": "@earnforge/cli",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "license": "Apache-2.0",
   "description": "CLI for the LI.FI Earn API — vault discovery, risk scoring, deposit quoting, and the 18-pitfall doctor",
   "bin": {
-    "earnforge": "./dist/esm/bin.js"
+    "earnforge": "./dist/esm/bin.mjs"
   },
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/esm/index.d.ts"
+      "import": "./dist/esm/index.mjs",
+      "types": "./dist/esm/index.d.mts"
     }
   },
   "files": ["dist", "README.md", "LICENSE"],

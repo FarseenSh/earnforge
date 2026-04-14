@@ -1,17 +1,17 @@
 {
   "name": "@earnforge/mcp",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "license": "Apache-2.0",
   "description": "Earn-native MCP server for the LI.FI Earn API — 9 tools for vault discovery, risk scoring, and deposit quoting",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/esm/index.d.ts"
+      "import": "./dist/esm/index.mjs",
+      "types": "./dist/esm/index.d.mts"
     }
   },
   "bin": {
-    "earnforge-mcp": "./dist/esm/index.js"
+    "earnforge-mcp": "./dist/esm/index.mjs"
   },
   "files": ["dist", "README.md", "LICENSE"],
   "scripts": {
