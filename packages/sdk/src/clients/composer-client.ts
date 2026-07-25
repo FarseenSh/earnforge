@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ComposerError } from '../errors.js'
-import { withRetry, type RetryOptions } from '../retry.js'
-import { QuoteResponseSchema, type QuoteResponse } from '../schemas/index.js'
+import { type RetryOptions, withRetry } from '../retry.js'
+import { type QuoteResponse, QuoteResponseSchema } from '../schemas/index.js'
 
 /**
  * Composer base URL — li.quest (Pitfall #1).
