@@ -45,8 +45,10 @@ let _forge: EarnForge | undefined
 
 function getForge(): EarnForge {
   if (!_forge) {
+    // One key authenticates both the Earn Data API and Composer. Passing only
+    // composerApiKey used to be correct, back when Earn needed no auth.
     _forge = createEarnForge({
-      composerApiKey: process.env.LIFI_API_KEY,
+      apiKey: process.env.LIFI_API_KEY,
     })
   }
   return _forge
@@ -84,7 +86,7 @@ export const program = new Command()
 
 program
   .name('earnforge')
-  .version('0.1.0')
+  .version('1.0.0')
   .description('EarnForge CLI — Developer toolkit for the LI.FI Earn API')
 
 // ── list ──
@@ -226,7 +228,7 @@ program
 program
   .command('vault')
   .description('Get detailed vault info by slug')
-  .argument('<slug>', 'Vault slug (e.g. 8453-0xbeef...)')
+  .argument('<slug>', 'Vault slug (e.g. morpho:8453:_:0xee8f...)')
   .option('--json', 'Output as JSON', false)
   .action(async (slug: string, opts) => {
     const spinner = ora('Fetching vault...').start()
@@ -1015,13 +1017,18 @@ program
             start: 'next start',
           },
           dependencies: {
-            '@earnforge/sdk': '^0.1.0',
-            '@earnforge/react': '^0.1.0',
+            // 0.1.x predates the Apr 2026 Earn API rewrite and 404s on every
+            // call — scaffolding a caret range on it would hand a new project
+            // the broken version.
+            '@earnforge/sdk': '^1.0.0',
+            '@earnforge/react': '^1.0.0',
             '@tanstack/react-query': '^5.90.0',
             next: '^15.0.0',
             react: '^19.0.0',
             'react-dom': '^19.0.0',
-            wagmi: '^2.0.0',
+            // wagmi 3 to match the LI.FI ecosystem — Widget v4 and SDK v4 are
+            // wagmi 3 / React 19 only.
+            wagmi: '^3.0.0',
             viem: '^2.47.0',
           },
         },

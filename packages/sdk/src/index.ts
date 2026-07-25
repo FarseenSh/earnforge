@@ -42,7 +42,13 @@ export {
 } from './preflight.js'
 export * from './rate-limiter.js'
 export * from './retry.js'
-export { type RiskBreakdown, type RiskScore, riskScore } from './risk-scorer.js'
+export {
+  type RiskBreakdown,
+  type RiskScore,
+  rewardShareOfTotal,
+  riskLabel,
+  riskScore,
+} from './risk-scorer.js'
 // ── Re-exports ──
 export * from './schemas/index.js'
 export { getBestApy, parseTvl, type TvlParsed } from './schemas/vault.js'

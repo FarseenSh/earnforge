@@ -68,7 +68,7 @@ export function riskLabelPlain(score: number): string {
 }
 
 /** Verification badge — flagged vaults must be visible at a glance. */
-export function verificationBadge(v: Vault): string {
+function verificationBadge(v: Vault): string {
   if (v.verificationStatus !== 'flagged') {
     return chalk.green('verified')
   }

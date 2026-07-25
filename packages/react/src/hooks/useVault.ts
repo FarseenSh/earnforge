@@ -14,7 +14,7 @@ export interface UseVaultReturn {
  * Fetch a single vault by its slug.
  *
  * ```tsx
- * const { data: vault, isLoading } = useVault('aave-v3-usdc-base');
+ * const { data: vault, isLoading } = useVault('morpho:8453:_:0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61');
  * ```
  */
 export function useVault(slug: string | undefined): UseVaultReturn {

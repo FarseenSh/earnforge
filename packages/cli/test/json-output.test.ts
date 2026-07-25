@@ -156,7 +156,7 @@ describe('--json output produces valid JSON', () => {
 
   it('protocols --json produces array with name and url', async () => {
     const data = (await runJson(['protocols'])) as any[]
-    expect(data[0].name).toBe('aave-v3')
+    expect(data[0].name).toBe('aave')
     expect(data[0].url).toContain('http')
   })
 

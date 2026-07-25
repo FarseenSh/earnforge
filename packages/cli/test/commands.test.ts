@@ -159,7 +159,7 @@ describe('CLI commands', () => {
       const output = await runCommand(['list', '--json'])
       const parsed = JSON.parse(output)
       const protocols = parsed.map((v: { protocol: string }) => v.protocol)
-      expect(protocols).toContain('aave-v3')
+      expect(protocols).toContain('aave')
     })
 
     it('includes tags in output', async () => {
@@ -213,7 +213,7 @@ describe('CLI commands', () => {
     it('outputs detailed view by default', async () => {
       const output = await runCommand(['vault', '8453-0xbeef0001'])
       expect(output).toContain('Test USDC Vault')
-      expect(output).toContain('aave-v3')
+      expect(output).toContain('aave')
       expect(output).toContain('Analytics')
     })
 
@@ -518,7 +518,7 @@ describe('CLI commands', () => {
     it('outputs protocol table by default', async () => {
       const output = await runCommand(['protocols'])
       expect(output).toContain('Supported Protocols')
-      expect(output).toContain('aave-v3')
+      expect(output).toContain('aave')
     })
   })
 

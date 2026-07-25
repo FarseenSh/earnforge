@@ -9,7 +9,7 @@ export interface ApyDataPoint {
   tvlUsd: number
 }
 
-export interface DeFiLlamaPool {
+interface DeFiLlamaPool {
   pool: string
   chain: string
   project: string
@@ -103,7 +103,8 @@ async function fetchPools(): Promise<DeFiLlamaPool[]> {
  * Match a LI.FI vault to a DeFiLlama pool.
  *
  * DeFiLlama pools have UUID IDs (not addresses). Matching strategy:
- * 1. Filter by project name (LI.FI "morpho-v1" → DeFiLlama "morpho-v1")
+ * 1. Map the LI.FI protocol id to its DeFiLlama project name(s) — these
+ *    differ, e.g. "morpho" maps to "morpho-blue"
  * 2. Filter by chain name
  * 3. Filter by underlying token address (the deposit token)
  * 4. Match by symbol (vault name)

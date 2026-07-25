@@ -15,7 +15,7 @@ export function makeVault(overrides: Partial<Vault> = {}): Vault {
     name: 'Test USDC Vault',
     slug: '8453-0xbeef0001',
     network: 'base',
-    protocol: { name: 'aave-v3', url: 'https://aave.com' },
+    protocol: { id: 'aave', name: 'aave', url: 'https://aave.com' },
     provider: 'aave',
     syncedAt: '2026-04-11T00:00:00Z',
     tags: ['stablecoin'],
@@ -44,7 +44,7 @@ export function makeVault2(overrides: Partial<Vault> = {}): Vault {
     slug: '42161-0xbeef0002',
     chainId: 42161,
     network: 'arbitrum',
-    protocol: { name: 'euler-v2', url: 'https://euler.finance' },
+    protocol: { id: 'euler', name: 'euler', url: 'https://euler.finance' },
     provider: 'euler',
     tags: ['lst'],
     underlyingTokens: [{ symbol: 'WETH', address: '0xweth', decimals: 18 }],
@@ -104,16 +104,16 @@ export const MOCK_CHAINS: Chain[] = [
 ]
 
 export const MOCK_PROTOCOLS: ProtocolDetail[] = [
-  { name: 'aave-v3', url: 'https://aave.com' },
-  { name: 'euler-v2', url: 'https://euler.finance' },
-  { name: 'morpho-v1', url: 'https://morpho.xyz' },
+  { id: 'aave', name: 'aave', url: 'https://aave.com' },
+  { id: 'euler', name: 'euler', url: 'https://euler.finance' },
+  { id: 'morpho', name: 'morpho', url: 'https://morpho.xyz' },
 ]
 
 export const MOCK_PORTFOLIO: PortfolioResponse = {
   positions: [
     {
       chainId: 8453,
-      protocolName: 'aave-v3',
+      protocolName: 'aave',
       asset: {
         address: '0xusdc',
         name: 'USD Coin',
@@ -125,7 +125,7 @@ export const MOCK_PORTFOLIO: PortfolioResponse = {
     },
     {
       chainId: 42161,
-      protocolName: 'euler-v2',
+      protocolName: 'euler',
       asset: {
         address: '0xweth',
         name: 'Wrapped Ether',

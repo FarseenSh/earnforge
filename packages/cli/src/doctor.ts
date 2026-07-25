@@ -22,7 +22,7 @@ export interface DoctorReport {
 }
 
 /**
- * Run all 18 pitfall checks on a vault.
+ * Run all pitfall checks on a vault.
  * Each check is based on a real pitfall from the LI.FI Earn API.
  */
 export function runDoctorChecks(

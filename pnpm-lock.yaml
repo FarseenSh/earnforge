@@ -23,21 +23,12 @@ importers:
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.14)
       husky:
         specifier: ^9.1.7
         version: 9.1.7
       knip:
         specifier: ^6.3.1
         version: 6.4.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
-      next:
-        specifier: ^15.5.15
-        version: 15.5.15(@babel/core@7.29.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       turbo:
         specifier: ^2.5.4
         version: 2.9.6
@@ -178,6 +169,9 @@ importers:
       tsdown:
         specifier: ^0.21.7
         version: 0.21.7(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(oxc-resolver@11.19.1(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2))(typescript@5.9.3)
+      tsx:
+        specifier: ^4.23.1
+        version: 4.23.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -194,7 +188,7 @@ importers:
         specifier: ^2.47.11
         version: 2.47.12(typescript@5.9.3)(zod@4.3.6)
       wagmi:
-        specifier: '>=2.0.0'
+        specifier: '>=3.0.0'
         version: 3.6.1(@base-org/account@2.5.3(@types/react@19.2.14)(immer@9.0.21)(react@19.2.5)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.5))(zod@4.3.6))(@coinbase/wallet-sdk@4.3.7(typescript@5.9.3)(zod@4.3.6))(@metamask/connect-evm@0.9.1(@babel/runtime@7.29.2)(typescript@5.9.3))(@tanstack/query-core@5.97.0)(@tanstack/react-query@5.97.0(react@19.2.5))(@types/react@19.2.14)(immer@9.0.21)(ox@0.14.13(typescript@5.9.3)(zod@4.3.6))(react@19.2.5)(typescript@5.9.3)(viem@2.47.12(typescript@5.9.3)(zod@4.3.6))
     devDependencies:
       '@tanstack/react-query':

@@ -27,7 +27,7 @@ describe('test fixtures', () => {
     const v = makeVault2()
     expect(v.chainId).toBe(42161)
     expect(v.underlyingTokens[0]!.symbol).toBe('WETH')
-    expect(v.protocol.name).toBe('euler-v2')
+    expect(v.protocol.name).toBe('euler')
   })
 
   it('makeNonTransactionalVault is not transactional', () => {
@@ -51,7 +51,7 @@ describe('test fixtures', () => {
 
   it('MOCK_PROTOCOLS has 3 entries', () => {
     expect(MOCK_PROTOCOLS).toHaveLength(3)
-    expect(MOCK_PROTOCOLS[0]!.name).toBe('aave-v3')
+    expect(MOCK_PROTOCOLS[0]!.name).toBe('aave')
   })
 
   it('MOCK_PORTFOLIO has 2 positions', () => {

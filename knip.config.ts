@@ -19,9 +19,6 @@ const config: KnipConfig = {
     'packages/mcp': {
       entry: ['src/index.ts'],
     },
-    'packages/skill': {
-      entry: ['SKILL.md'],
-    },
     'packages/fixtures': {
       entry: ['src/index.ts'],
     },

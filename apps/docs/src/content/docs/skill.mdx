@@ -45,9 +45,10 @@ how to use them. It contains:
 ---
 name: earnforge
 description: >
-  Discovers, compares, risk-scores, and builds unsigned deposit quotes for
-  623+ DeFi yield vaults across 16 chains via the LI.FI Earn API.
-  Handles all 23 documented API pitfalls by default.
+  Discovers, compares, risk-scores, and builds unsigned deposit and withdrawal
+  quotes for DeFi yield vaults across every chain indexed by the LI.FI Earn API.
+  Surfaces LI.FI's undocumented verificationStatus signal, which flags roughly
+  9% of vaults as suspect. Handles all 23 documented API pitfalls by default.
 ---
 ```
 
@@ -117,11 +118,15 @@ The `SKILL.md` defines 9 rules that agents must follow:
 
 4. **Filter stablecoins by the `stablecoin` tag, not by token symbol.**
 
-5. **Risk score thresholds:** >= 7 is low risk, 4-6.9 is medium, < 4 is high risk.
+5. **Risk score thresholds:** >= 8 is low risk, 6-7.9 is medium, < 6 is high
+   risk. A verification-flagged vault can never reach 8.
 
-6. **TVL is a string in USD.** Parse with `parseTvl()` before comparing.
+6. **`tvl.usd` is a number** (it was a string, and the OpenAPI spec still says
+   string). Parse with `parseTvl()`, which accepts either.
 
-7. **APY fields (`apy1d`, `apy7d`, `apy30d`) can be null.** Use the fallback chain.
+7. **`apy1d`, `apy7d`, `apy30d`, `apy.base` and `apy.reward` can all be null.**
+   Use the fallback chain. APY is already a percentage — LI.FI's own spec and
+   quickstart say to multiply by 100, which overstates every yield 100x.
 
 8. **`apy.reward` is null for some protocols.** Normalize to 0 before summing.
 

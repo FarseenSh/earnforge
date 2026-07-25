@@ -37,7 +37,7 @@ function makeVault(overrides: Partial<Vault> = {}): Vault {
     name: 'Test USDC Vault',
     slug: 'test-usdc-vault',
     network: 'base',
-    protocol: { name: 'aave-v3', url: 'https://aave.com' },
+    protocol: { id: 'aave', name: 'aave', url: 'https://aave.com' },
     provider: 'lifi',
     syncedAt: '2026-04-11T00:00:00Z',
     tags: ['stablecoin'],

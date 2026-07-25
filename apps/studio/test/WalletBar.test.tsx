@@ -18,10 +18,10 @@ describe('WalletBar', () => {
     expect(screen.getByText('EarnForge Studio')).toBeInTheDocument()
   })
 
-  it('renders the subtitle about 623+ vaults', () => {
+  it('renders the subtitle', () => {
     render(<WalletBar />)
     expect(
-      screen.getByText('Explore 623+ yield vaults across 16 chains')
+      screen.getByText('Explore DeFi yield vaults with risk scoring')
     ).toBeInTheDocument()
   })
 

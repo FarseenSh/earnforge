@@ -11,7 +11,7 @@ export function WalletBar() {
           EarnForge Studio
         </h1>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Explore 623+ yield vaults across 16 chains
+          Explore DeFi yield vaults with risk scoring
         </p>
       </div>
       <ConnectButton
