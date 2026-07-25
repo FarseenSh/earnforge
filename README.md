@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-520%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-515%20passing-brightgreen)](#testing)
 [![Pitfalls](https://img.shields.io/badge/API%20pitfalls-23-red)](./PITFALLS.md)
 
 > **The judgment layer for the LI.FI Earn API.**
@@ -93,7 +93,7 @@ rate limiting, caching and retry logic are inherited rather than reimplemented.
 | [`@earnforge/sdk`](./packages/sdk) | Typed client, Zod schemas, risk scorer, strategies, quoting, drift detection |
 | [`@earnforge/cli`](./packages/cli) | 19 commands — `list`, `risk`, `suggest`, `doctor`, `compare`, all with `--json` |
 | [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query — `useVaults`, `useRiskScore`, `useEarnDeposit` |
-| [`@earnforge/mcp`](./packages/mcp) | 11 MCP tools, including the six LI.FI's hosted server doesn't offer |
+| [`@earnforge/mcp`](./packages/mcp) | 12 MCP tools with structured output; hostable on Cloudflare; serves the skill over MCP |
 | [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec |
 | [`earnforge-studio`](./apps/studio) | Next.js dashboard — explorer, sparklines, risk badges, code generator |
 
@@ -156,11 +156,10 @@ coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor
 |---|---|
 | SDK (incl. 23 pitfall regressions) | 251 |
 | CLI | 106 |
+| MCP (incl. protocol + Worker surface) | 56 |
 | Studio | 56 |
 | React | 46 |
-| MCP | 38 |
-| Bot | 23 |
-| **Total** | **520** |
+| **Total** | **515** |
 | Live API integration | **32** |
 
 ```bash
