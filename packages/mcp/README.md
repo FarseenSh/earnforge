@@ -1,7 +1,13 @@
 # @earnforge/mcp
 
 MCP server for the [LI.FI Earn API](https://docs.li.fi/earn/overview) — vault
-discovery, risk scoring, allocation, and diagnostics as agent-callable tools.
+discovery, risk scoring, allocation, diagnostics, and API drift detection as
+agent-callable tools.
+
+Also serves the EarnForge Agent Skill over the same connection, so a host gets
+both the tools and the workflow instructions from one endpoint.
+
+## Local (stdio)
 
 ```bash
 npm i -g @earnforge/mcp
@@ -18,26 +24,93 @@ npm i -g @earnforge/mcp
 }
 ```
 
-## Relationship to LI.FI's own MCP server
+The Earn Data API returns `401` without a key — create one at
+[portal.li.fi](https://portal.li.fi).
 
-LI.FI hosts an MCP server at `https://mcp.li.quest/mcp` with five `get-earn-*`
-tools. This package overlaps on those and adds the judgment layer LI.FI does not
-provide:
+## Hosted (Cloudflare Worker)
 
-| Tool | LI.FI hosted | EarnForge |
+The server is stateless by design: a fresh transport per request, no session id.
+That makes a Worker the natural host — no sticky routing, no shared session
+store, nothing to rebuild on a cold start. It also matches where the protocol is
+going, since the `2026-07-28` revision removes the `initialize` handshake and
+`Mcp-Session-Id` entirely.
+
+```bash
+pnpm --filter @earnforge/mcp build
+wrangler secret put LIFI_API_KEY
+wrangler deploy
+```
+
+```json
+{
+  "mcpServers": {
+    "earnforge": { "type": "http", "url": "https://your-worker/mcp" }
+  }
+}
+```
+
+Callers may pass their own `x-lifi-api-key` header to spend their own rate-limit
+budget instead of the Worker's. `GET /health` is an unauthenticated liveness
+probe.
+
+## Tools
+
+12 tools, all read-only — nothing signs or broadcasts. Quote tools return
+unsigned `transactionRequest` objects for the caller's wallet.
+
+| Tool | LI.FI's hosted server | Here |
 |---|---|---|
-| `get-earn-vaults` / `-vault` / `-chains` / `-protocols` / `-portfolio` | yes | yes |
-| `get-vault-risk` | — | yes |
-| `suggest-allocation` | — | yes |
-| `run-doctor` | — | yes |
-| `check-allowance` | — | yes |
-| `quote-vault-redeem` | — | yes |
+| `get-earn-vaults` | ✓ | ✓ |
+| `get-earn-vault` | ✓ | ✓ |
+| `get-earn-chains` | ✓ | ✓ |
+| `get-earn-protocols` | ✓ | ✓ |
+| `get-earn-portfolio` | ✓ | ✓ |
+| `get-vault-risk` | — | ✓ |
+| `suggest-allocation` | — | ✓ |
+| `run-doctor` | — | ✓ |
+| `check-allowance` | — | ✓ |
+| `quote-vault-deposit` | ✓ (via `get-quote`) | ✓ |
+| `quote-vault-redeem` | — | ✓ |
+| `check-api-drift` | — | ✓ |
 
-Two differences worth knowing: LI.FI's tool descriptions still advertise
-versioned protocol slugs (`morpho-v1`, `aave-v3`) which return zero results
-against the current API, and they do not expose `verificationStatus`, the
-undocumented field that flags ~9% of vaults as suspect. This server surfaces it
-on every vault result.
+### Where this differs on quality
+
+**Structured output on every tool.** Each declares an `outputSchema`, so results
+arrive as validated `structuredContent` rather than JSON an agent has to parse
+out of a text block and guess at.
+
+**Tool annotations.** All twelve are marked `readOnlyHint` and
+`destructiveHint: false`, so a host can auto-approve them instead of prompting on
+every call.
+
+**`verificationStatus` is surfaced.** LI.FI flags roughly 9% of vaults as suspect
+through a field that appears in no spec or changelog — and their own MCP server
+does not expose it. Every vault result here carries the status and its reasons,
+flagged vaults are excluded from allocations by default, and a flagged vault can
+never score as low risk.
+
+**Correct protocol ids.** LI.FI's tool descriptions still advertise `morpho-v1`,
+`aave-v3` and `euler-v2`. Those return HTTP 200 with zero results — an agent
+following them gets silence, not an error.
+
+**Correct APY scale.** Tool descriptions state that APY is already a percentage.
+LI.FI's OpenAPI spec and quickstart say to multiply by 100, which overstates
+every yield 100×.
+
+## Skill over MCP (SEP-2640)
+
+The Agent Skill is served as MCP Resources under a `skill://` URI scheme,
+following [SEP-2640](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640):
+
+```
+skill://earnforge/index.json          discovery index
+skill://earnforge/SKILL.md            entry point
+skill://earnforge/references/*.md     loaded only when a task needs them
+```
+
+One connection gives a host the tools it can call *and* the instructions
+describing when to call them — previously two separate packages, one of which had
+to be installed by hand.
 
 ## License
 

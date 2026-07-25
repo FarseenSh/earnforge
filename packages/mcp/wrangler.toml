@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Cloudflare Worker deployment for the EarnForge MCP server.
+#
+# The server is stateless by design — a fresh transport per request, no session
+# id — which is what makes a Worker the right host. No sticky routing, no shared
+# session store, nothing to rebuild on a cold start. That also aligns with where
+# the protocol is going: the 2026-07-28 revision removes the initialize
+# handshake and Mcp-Session-Id entirely.
+#
+# Deploy:
+#   pnpm --filter @earnforge/mcp build
+#   wrangler secret put LIFI_API_KEY
+#   wrangler deploy
+#
+# Then point any MCP client at https://<your-worker>/mcp
+
+name = "earnforge-mcp"
+main = "dist/esm/worker.mjs"
+compatibility_date = "2026-07-01"
+
+# nodejs_compat is required: the SDK reaches for node: builtins, and the
+# EarnForge SDK reads process.env for the API-key fallback.
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[vars]
+# Non-secret defaults only. The API key is a secret — set it with
+# `wrangler secret put LIFI_API_KEY`, never here, or it lands in version control.
+
+[[routes]]
+# Replace with your own hostname, or delete this block to use the
+# *.workers.dev subdomain.
+pattern = "earnforge-mcp.example.com"
+custom_domain = true

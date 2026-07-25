@@ -10,11 +10,10 @@ const FIXTURE_VAULT = {
   address: '0xbeef0e0834849acc03f0089f01f4f1eeb06873c9',
   chainId: 8453,
   name: 'STEAKUSDC',
-  slug: '8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9',
+  slug: 'morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9',
   network: 'Base',
   description: 'A Morpho vault',
-  protocol: { name: 'morpho-v1', url: 'https://app.morpho.org' },
-  provider: 'DEFILLAMA_PRO',
+  protocol: { id: 'morpho', name: 'morpho', url: 'https://app.morpho.org' },
   syncedAt: '2026-04-11T08:12:09.113Z',
   tags: ['stablecoin', 'single'],
   underlyingTokens: [
@@ -22,12 +21,12 @@ const FIXTURE_VAULT = {
       symbol: 'USDC',
       address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
       decimals: 6,
+      priceUsd: '0.999765',
     },
   ],
-  lpTokens: [],
   analytics: {
     apy: { base: 3.84705, total: 3.84705, reward: 0 },
-    tvl: { usd: '33833688' },
+    tvl: { usd: 33833688 },
     apy1d: 4.18039,
     apy7d: 3.72156,
     apy30d: 3.80036,
@@ -37,6 +36,8 @@ const FIXTURE_VAULT = {
   isRedeemable: true,
   depositPacks: [{ name: 'morpho-zaps', stepsType: 'instant' }],
   redeemPacks: [{ name: 'morpho-zaps', stepsType: 'instant' }],
+  verificationStatus: 'none',
+  verificationStatusBreakdown: [{ reason: 'none', result: 'none' }],
 }
 
 const FIXTURE_CHAIN = {
@@ -44,12 +45,12 @@ const FIXTURE_CHAIN = {
   name: 'Base',
   networkCaip: 'eip155:8453',
 }
-const FIXTURE_PROTOCOL = { name: 'morpho-v1', url: 'https://app.morpho.org' }
+const FIXTURE_PROTOCOL = { name: 'morpho', url: 'https://app.morpho.org' }
 const FIXTURE_PORTFOLIO = {
   positions: [
     {
       chainId: 8453,
-      protocolName: 'morpho-v1',
+      protocolName: 'morpho',
       asset: {
         address: '0xbeef',
         name: 'STEAKUSDC',
@@ -85,39 +86,23 @@ const mockForge = {
   composerClient: null,
 }
 
-vi.mock('@earnforge/sdk', () => ({
-  createEarnForge: () => mockForge,
-  STRATEGIES: {
-    conservative: {
-      name: 'conservative',
-      description: 'test',
-      filters: {},
-      sort: 'apy',
-      sortDirection: 'desc',
-    },
-    'max-apy': {
-      name: 'max-apy',
-      description: 'test',
-      filters: {},
-      sort: 'apy',
-      sortDirection: 'desc',
-    },
-    diversified: {
-      name: 'diversified',
-      description: 'test',
-      filters: {},
-      sort: 'apy',
-      sortDirection: 'desc',
-    },
-    'risk-adjusted': {
-      name: 'risk-adjusted',
-      description: 'test',
-      filters: {},
-      sort: 'apy',
-      sortDirection: 'desc',
-    },
-  },
-}))
+// Only the factory is mocked. The pure helpers — parseTvl, isFlagged,
+// flagReasons, positionBalanceUsd, totalPortfolioUsd, detectDrift — keep their
+// real implementations, so a change in how the server derives a summary is
+// caught here rather than hidden behind a stub.
+vi.mock('@earnforge/sdk', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@earnforge/sdk')>()
+  return {
+    ...actual,
+    createEarnForge: () => mockForge,
+    detectDrift: vi.fn(async () => ({
+      ok: true,
+      checkedVaults: 100,
+      specFetched: true,
+      findings: [],
+    })),
+  }
+})
 
 // ── Client/Server setup ─────────────────────────────────────────────
 
@@ -286,9 +271,10 @@ describe('EarnForge MCP Server', () => {
 
       expect(vault.chainId).toBe(8453)
       expect(vault.network).toBe('Base')
-      expect(vault.protocol).toBe('morpho-v1')
+      expect(vault.protocol).toBe('morpho')
       expect(vault.tags).toEqual(['stablecoin', 'single'])
-      expect(vault.tvlUsd).toBe('33833688')
+      // parseTvl normalises tvl.usd, so the tool emits a number
+      expect(vault.tvlUsd).toBe(33833688)
       expect(vault.underlyingTokens).toEqual(['USDC'])
       expect(vault.isTransactional).toBe(true)
       expect(vault.isRedeemable).toBe(true)
@@ -374,7 +360,7 @@ describe('EarnForge MCP Server', () => {
       const data = parseText(result)
 
       expect(data.count).toBe(1)
-      expect(data.protocols[0].name).toBe('morpho-v1')
+      expect(data.protocols[0].name).toBe('morpho')
     })
 
     it('returns error on failure', async () => {
@@ -406,8 +392,9 @@ describe('EarnForge MCP Server', () => {
       const data = parseText(result)
 
       expect(data.positions).toHaveLength(1)
-      expect(data.positions[0].protocolName).toBe('morpho-v1')
-      expect(data.positions[0].balanceUsd).toBe('1000.00')
+      expect(data.positions[0].protocolName).toBe('morpho')
+      // positionBalanceUsd parses the nullable string into a number
+      expect(data.positions[0].balanceUsd).toBe(1000)
     })
 
     it('passes wallet address to SDK', async () => {
@@ -443,15 +430,18 @@ describe('EarnForge MCP Server', () => {
     it('returns risk score with breakdown', async () => {
       mockForge.vaults.get.mockResolvedValue(FIXTURE_VAULT)
       mockForge.riskScore.mockReturnValue({
-        score: 8.2,
+        score: 8.4,
         label: 'low',
         breakdown: {
-          tvl: 8,
-          apyStability: 9,
+          tvl: 9,
+          apyStability: 8,
           protocol: 9,
           redeemability: 10,
           assetType: 9,
+          verification: 10,
+          rewardDependency: 10,
         },
+        flags: [],
       })
 
       const result = await client.callTool({
@@ -462,10 +452,14 @@ describe('EarnForge MCP Server', () => {
 
       expect(data.slug).toBe(FIXTURE_VAULT.slug)
       expect(data.name).toBe('STEAKUSDC')
-      expect(data.score).toBe(8.2)
+      expect(data.score).toBe(8.4)
       expect(data.label).toBe('low')
-      expect(data.breakdown.tvl).toBe(8)
+      expect(data.breakdown.tvl).toBe(9)
       expect(data.breakdown.protocol).toBe(9)
+      // The two dimensions added in risk scorer v2 must reach the client
+      expect(data.breakdown.verification).toBe(10)
+      expect(data.breakdown.rewardDependency).toBe(10)
+      expect(Array.isArray(data.flags)).toBe(true)
     })
 
     it('returns error when vault not found', async () => {

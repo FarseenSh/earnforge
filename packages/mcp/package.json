@@ -8,6 +8,10 @@
     ".": {
       "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.mts"
+    },
+    "./worker": {
+      "import": "./dist/esm/worker.mjs",
+      "types": "./dist/esm/worker.d.mts"
     }
   },
   "bin": {
@@ -19,7 +23,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsdown src/index.ts --format esm --dts --out-dir dist/esm",
+    "generate": "tsx scripts/generate-skill-content.ts",
+    "build": "pnpm generate && tsdown src/index.ts src/worker.ts --format esm --dts --out-dir dist/esm",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
@@ -27,12 +32,13 @@
   },
   "dependencies": {
     "@earnforge/sdk": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^3.25.0 || ^4.0.0"
   },
   "devDependencies": {
     "tsdown": "^0.21.7",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "tsx": "^4.23.1"
   }
 }
