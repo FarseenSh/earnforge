@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { ComposerClient, QuoteParams } from './clients/index.js'
-import type { Vault, QuoteResponse } from './schemas/index.js'
 import { EarnForgeError } from './errors.js'
+import type { QuoteResponse, Vault } from './schemas/index.js'
 
 export interface DepositQuoteOptions {
   fromAmount: string
@@ -142,7 +142,9 @@ export function toSmallestUnit(amount: string, decimals: number): string {
  * Convert smallest unit to human-readable amount.
  */
 export function fromSmallestUnit(rawAmount: string, decimals: number): string {
-  if (decimals === 0) return rawAmount
+  if (decimals === 0) {
+    return rawAmount
+  }
   const padded = rawAmount.padStart(decimals + 1, '0')
   const whole = padded.slice(0, padded.length - decimals)
   const fractional = padded.slice(padded.length - decimals).replace(/0+$/, '')

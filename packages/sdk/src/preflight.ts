@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Vault } from './schemas/index.js'
-import type { PreflightIssue } from './errors.js'
+
 import { toSmallestUnit } from './build-deposit-quote.js'
+import type { PreflightIssue } from './errors.js'
+import type { Vault } from './schemas/index.js'
 
 export interface PreflightReport {
   ok: boolean

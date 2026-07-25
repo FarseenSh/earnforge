@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { ComposerClient, QuoteParams } from './clients/index.js'
-import type { Vault, QuoteResponse } from './schemas/index.js'
-import { EarnForgeError } from './errors.js'
+
 import { toSmallestUnit } from './build-deposit-quote.js'
+import type { ComposerClient, QuoteParams } from './clients/index.js'
+import { EarnForgeError } from './errors.js'
+import type { QuoteResponse, Vault } from './schemas/index.js'
 
 export interface RedeemQuoteOptions {
   /** Amount of vault tokens to redeem (human-readable) */

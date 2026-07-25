@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { ComposerClient } from './clients/index.js'
-import type { Vault, QuoteResponse } from './schemas/index.js'
+
 import { toSmallestUnit } from './build-deposit-quote.js'
+import type { ComposerClient } from './clients/index.js'
+import type { QuoteResponse, Vault } from './schemas/index.js'
 
 export interface GasRoute {
   fromChain: number
@@ -60,7 +61,9 @@ export async function optimizeGasRoutes(
   const defaultFromToken =
     options.fromToken ?? vault.underlyingTokens[0]?.address
 
-  if (!defaultFromToken && !options.fromTokens) return []
+  if (!defaultFromToken && !options.fromTokens) {
+    return []
+  }
 
   const routePromises = fromChains.map(
     async (fromChain): Promise<GasRoute | null> => {
@@ -70,7 +73,9 @@ export async function optimizeGasRoutes(
           options.fromTokens?.[fromChain] ??
           (fromChain === vault.chainId ? defaultFromToken : undefined)
 
-        if (!fromToken) return null // Skip chains without a known fromToken
+        if (!fromToken) {
+          return null // Skip chains without a known fromToken
+        }
 
         const quote = await composer.getQuote({
           fromChain,

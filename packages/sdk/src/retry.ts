@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { EarnApiError, ComposerError } from './errors.js'
+import { ComposerError, EarnApiError } from './errors.js'
 
 export interface RetryOptions {
   maxRetries?: number
@@ -28,8 +28,12 @@ export async function withRetry<T>(
       return await fn()
     } catch (error: unknown) {
       lastError = error
-      if (attempt === opts.maxRetries) break
-      if (!isRetryable(error)) throw error
+      if (attempt === opts.maxRetries) {
+        break
+      }
+      if (!isRetryable(error)) {
+        throw error
+      }
 
       const delay = Math.min(
         opts.baseDelay * 2 ** attempt + Math.random() * 200,
@@ -52,7 +56,9 @@ export function isRetryable(error: unknown): boolean {
   }
   if (error instanceof Error) {
     const msg = error.message.toLowerCase()
-    if (msg.includes('rate limit') || msg.includes('429')) return true
+    if (msg.includes('rate limit') || msg.includes('429')) {
+      return true
+    }
     if (
       msg.includes('network') ||
       msg.includes('fetch') ||

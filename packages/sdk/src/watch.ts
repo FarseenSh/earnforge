@@ -43,10 +43,14 @@ export async function* watch(
 
   while (true) {
     // Check abort signal
-    if (options.signal?.aborted) return
+    if (options.signal?.aborted) {
+      return
+    }
 
     // Check max iterations
-    if (maxIter > 0 && iteration >= maxIter) return
+    if (maxIter > 0 && iteration >= maxIter) {
+      return
+    }
     iteration++
 
     const vault = await client.getVaultBySlug(vaultSlug)
@@ -98,7 +102,9 @@ export async function* watch(
     previous = current
 
     // Abortable sleep
-    if (options.signal?.aborted) return
+    if (options.signal?.aborted) {
+      return
+    }
     await new Promise<void>((resolve) => {
       const timer = setTimeout(resolve, interval)
       options.signal?.addEventListener(

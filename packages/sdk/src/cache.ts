@@ -21,7 +21,9 @@ export class LRUCache<T> {
 
   get(key: string): T | undefined {
     const entry = this.map.get(key)
-    if (!entry) return undefined
+    if (!entry) {
+      return undefined
+    }
     if (Date.now() > entry.expiresAt) {
       this.map.delete(key)
       return undefined
