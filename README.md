@@ -73,15 +73,12 @@ Full detail, with a test for each: **[PITFALLS.md](./PITFALLS.md)**
 ## Architecture
 
 ```
-                    @earnforge/sdk
-                          |
-     +--------+-----------+-----------+--------+
-     |        |           |           |        |
-    CLI     React        MCP        Skill     Bot
- (terminal) (hooks)   (AI tools)   (agent)  (Telegram)
-     |
-   Studio
-  (Next.js)
+                 @earnforge/sdk
+                       |
+     +--------+--------+--------+--------+
+     |        |        |        |        |
+    CLI     React     MCP     Skill   Studio
+ (terminal) (hooks) (agents) (agents) (Next.js)
 ```
 
 Every surface imports the SDK, so all pitfall mitigations, Zod-validated types,
@@ -98,7 +95,6 @@ rate limiting, caching and retry logic are inherited rather than reimplemented.
 | [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query — `useVaults`, `useRiskScore`, `useEarnDeposit` |
 | [`@earnforge/mcp`](./packages/mcp) | 11 MCP tools, including the six LI.FI's hosted server doesn't offer |
 | [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec |
-| [`@earnforge/bot`](./packages/bot) | Telegram bot via grammY |
 | [`earnforge-studio`](./apps/studio) | Next.js dashboard — explorer, sparklines, risk badges, code generator |
 
 ---
