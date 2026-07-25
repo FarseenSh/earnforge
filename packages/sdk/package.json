@@ -1,9 +1,9 @@
 {
   "name": "@earnforge/sdk",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "type": "module",
   "license": "Apache-2.0",
-  "description": "Typed SDK for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposit quoting with all 18 pitfalls handled by default",
+  "description": "Typed SDK for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposit quoting, with every documented and undocumented API quirk handled by default",
   "keywords": [
     "lifi",
     "earn",
@@ -32,9 +32,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --exclude '**/*.live.test.ts'",
     "test:unit": "vitest run --exclude '**/*.live.test.ts'",
-    "test:live": "vitest run --include '**/*.live.test.ts'",
+    "test:live": "vitest run test/live",
     "circular": "madge --circular --extensions ts src/",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rm -rf dist .turbo",
+    "drift": "tsx scripts/drift.ts"
   },
   "dependencies": {
     "zod": "^3.24.4"
@@ -46,6 +47,7 @@
     "msw": "^2.13.2",
     "tsdown": "^0.21.7",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "tsx": "^4.23.1"
   }
 }
