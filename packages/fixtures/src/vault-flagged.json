@@ -1,0 +1,59 @@
+{
+  "name": "OSETH",
+  "slug": "aave:1:_:0x927709711794f3de5ddbf1d176bee2d55ba13c21",
+  "tags": [
+    "single"
+  ],
+  "address": "0x927709711794f3de5ddbf1d176bee2d55ba13c21",
+  "chainId": 1,
+  "network": "Ethereum",
+  "protocol": {
+    "id": "aave",
+    "url": "https://aave.com",
+    "name": "aave"
+  },
+  "syncedAt": "2026-07-25T09:20:24.439Z",
+  "analytics": {
+    "apy": {
+      "base": 0,
+      "total": 0,
+      "reward": null
+    },
+    "tvl": {
+      "usd": 222832854
+    },
+    "apy1d": 0,
+    "apy7d": 0,
+    "apy30d": 0,
+    "updatedAt": "2026-07-25T08:01:05.450Z"
+  },
+  "redeemPacks": [
+    {
+      "name": "aave",
+      "stepsType": "instant"
+    }
+  ],
+  "depositPacks": [
+    {
+      "name": "aave",
+      "stepsType": "instant"
+    }
+  ],
+  "isRedeemable": true,
+  "isTransactional": true,
+  "underlyingTokens": [
+    {
+      "symbol": "osETH",
+      "address": "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38",
+      "decimals": 18,
+      "priceUsd": "2332.88"
+    }
+  ],
+  "verificationStatus": "flagged",
+  "verificationStatusBreakdown": [
+    {
+      "reason": "zero_apy",
+      "result": "flagged"
+    }
+  ]
+}

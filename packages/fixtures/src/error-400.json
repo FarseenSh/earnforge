@@ -1,0 +1,13 @@
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "code": "invalid_type",
+      "message": "Invalid input: expected number, received NaN",
+      "path": [
+        "chainId"
+      ]
+    }
+  ]
+}

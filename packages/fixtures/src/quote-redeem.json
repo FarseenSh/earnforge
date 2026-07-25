@@ -1,14 +1,33 @@
 {
   "type": "lifi",
-  "id": "def3e2bb-5bf3-4d3d-a1b8-da466522939b:0",
-  "tool": "fly",
+  "id": "a7b23f4f-8784-4ba7-8223-88503ce733e3:0",
+  "tool": "okx",
   "toolDetails": {
-    "key": "fly",
-    "name": "Fly",
-    "logoURI": "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/exchanges/fly.svg"
+    "key": "okx",
+    "name": "OKX Dex Aggregator",
+    "logoURI": "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/exchanges/okx.svg"
   },
   "action": {
     "fromToken": {
+      "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
+      "chainId": 8453,
+      "symbol": "gtUSDCp",
+      "decimals": 18,
+      "name": "Gauntlet USDC Prime",
+      "coinKey": "gtUSDCp",
+      "priceUSD": "1.10",
+      "tags": [],
+      "verificationStatus": "verified",
+      "verificationStatusBreakdown": [
+        {
+          "provider": "hypernative",
+          "result": "verified",
+          "providerResult": "accept"
+        }
+      ]
+    },
+    "fromAmount": "1000000000000000000",
+    "toToken": {
       "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "chainId": 8453,
       "symbol": "USDC",
@@ -29,25 +48,6 @@
         }
       ]
     },
-    "fromAmount": "1000000",
-    "toToken": {
-      "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
-      "chainId": 8453,
-      "symbol": "gtUSDCp",
-      "decimals": 18,
-      "name": "Gauntlet USDC Prime",
-      "coinKey": "gtUSDCp",
-      "priceUSD": "1.10",
-      "tags": [],
-      "verificationStatus": "verified",
-      "verificationStatusBreakdown": [
-        {
-          "provider": "hypernative",
-          "result": "verified",
-          "providerResult": "accept"
-        }
-      ]
-    },
     "fromChainId": 8453,
     "toChainId": 8453,
     "slippage": 0.005,
@@ -55,27 +55,24 @@
     "toAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
   },
   "estimate": {
-    "tool": "fly",
+    "tool": "okx",
     "approvalAddress": "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
-    "toAmountMin": "898527596722396840",
-    "toAmount": "903042810776278231",
-    "fromAmount": "1000000",
+    "toAmountMin": "1096328",
+    "toAmount": "1101837",
+    "fromAmount": "1000000000000000000",
     "feeCosts": [
       {
         "name": "LIFI Fixed Fee",
         "description": "Fixed LIFI fee, independent of any other fee",
         "token": {
-          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
           "chainId": 8453,
-          "symbol": "USDC",
-          "decimals": 6,
-          "name": "USD Coin",
-          "coinKey": "USDC",
-          "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
-          "priceUSD": "0.9951525063",
-          "tags": [
-            "stablecoin"
-          ],
+          "symbol": "gtUSDCp",
+          "decimals": 18,
+          "name": "Gauntlet USDC Prime",
+          "coinKey": "gtUSDCp",
+          "priceUSD": "1.10",
+          "tags": [],
           "verificationStatus": "verified",
           "verificationStatusBreakdown": [
             {
@@ -85,18 +82,18 @@
             }
           ]
         },
-        "amount": "2500",
-        "amountUSD": "0.0025",
+        "amount": "2500000000000000",
+        "amountUSD": "0.0028",
         "percentage": "0.0025",
         "included": true,
         "feeSplit": {
-          "lifiFee": "2500",
+          "lifiFee": "2500000000000000",
           "integratorFee": "0",
           "recipients": [
             {
               "name": "lifi",
               "type": "FIXED",
-              "fee": "2500"
+              "fee": "2500000000000000"
             }
           ]
         }
@@ -106,10 +103,10 @@
       {
         "type": "SEND",
         "price": "5928955",
-        "estimate": "954866",
-        "limit": "1641326",
-        "amount": "5661357545030",
-        "amountUSD": "0.0105",
+        "estimate": "943400",
+        "limit": "1626420",
+        "amount": "5593376147000",
+        "amountUSD": "0.0104",
         "token": {
           "address": "0x0000000000000000000000000000000000000000",
           "chainId": 8453,
@@ -132,28 +129,25 @@
       }
     ],
     "executionDuration": 0,
-    "fromAmountUSD": "0.9952",
-    "toAmountUSD": "0.9933"
+    "fromAmountUSD": "1.1000",
+    "toAmountUSD": "1.0965"
   },
   "includedSteps": [
     {
-      "id": "74f372e7-b660-48cf-8296-223efe161c8e",
+      "id": "28e3fb8b-7095-4b54-a005-914043b89954",
       "type": "protocol",
       "action": {
         "fromChainId": 8453,
-        "fromAmount": "1000000",
+        "fromAmount": "1000000000000000000",
         "fromToken": {
-          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
           "chainId": 8453,
-          "symbol": "USDC",
-          "decimals": 6,
-          "name": "USD Coin",
-          "coinKey": "USDC",
-          "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
-          "priceUSD": "0.9951525063",
-          "tags": [
-            "stablecoin"
-          ],
+          "symbol": "gtUSDCp",
+          "decimals": 18,
+          "name": "Gauntlet USDC Prime",
+          "coinKey": "gtUSDCp",
+          "priceUSD": "1.10",
+          "tags": [],
           "verificationStatus": "verified",
           "verificationStatusBreakdown": [
             {
@@ -165,17 +159,14 @@
         },
         "toChainId": 8453,
         "toToken": {
-          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
           "chainId": 8453,
-          "symbol": "USDC",
-          "decimals": 6,
-          "name": "USD Coin",
-          "coinKey": "USDC",
-          "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
-          "priceUSD": "0.9951525063",
-          "tags": [
-            "stablecoin"
-          ],
+          "symbol": "gtUSDCp",
+          "decimals": 18,
+          "name": "Gauntlet USDC Prime",
+          "coinKey": "gtUSDCp",
+          "priceUSD": "1.10",
+          "tags": [],
           "verificationStatus": "verified",
           "verificationStatusBreakdown": [
             {
@@ -192,16 +183,16 @@
           "feePercent": 0.0025,
           "sourceAmount": {
             "s": 1,
-            "e": 6,
+            "e": 18,
             "c": [
-              1000000
+              10000
             ]
           },
           "totalFee": {
             "s": 1,
-            "e": 3,
+            "e": 15,
             "c": [
-              2500
+              25
             ]
           },
           "recipients": [
@@ -210,9 +201,9 @@
               "type": "FIXED",
               "fee": {
                 "s": 1,
-                "e": 3,
+                "e": 15,
                 "c": [
-                  2500
+                  25
                 ]
               }
             }
@@ -220,9 +211,9 @@
         }
       },
       "estimate": {
-        "fromAmount": "1000000",
-        "toAmount": "997500",
-        "toAmountMin": "997500",
+        "fromAmount": "1000000000000000000",
+        "toAmount": "997500000000000000",
+        "toAmountMin": "997500000000000000",
         "tool": "feeCollection",
         "approvalAddress": "0xC18D9E84b8687A2645447A61e52c455Dac1675e1",
         "gasCosts": [
@@ -259,17 +250,14 @@
             "name": "LIFI Fixed Fee",
             "description": "Fixed LIFI fee, independent of any other fee",
             "token": {
-              "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
               "chainId": 8453,
-              "symbol": "USDC",
-              "decimals": 6,
-              "name": "USD Coin",
-              "coinKey": "USDC",
-              "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
-              "priceUSD": "0.9951525063",
-              "tags": [
-                "stablecoin"
-              ],
+              "symbol": "gtUSDCp",
+              "decimals": 18,
+              "name": "Gauntlet USDC Prime",
+              "coinKey": "gtUSDCp",
+              "priceUSD": "1.10",
+              "tags": [],
               "verificationStatus": "verified",
               "verificationStatusBreakdown": [
                 {
@@ -279,18 +267,18 @@
                 }
               ]
             },
-            "amount": "2500",
-            "amountUSD": "0.0025",
+            "amount": "2500000000000000",
+            "amountUSD": "0.0028",
             "percentage": "0.0025",
             "included": true,
             "feeSplit": {
-              "lifiFee": "2500",
+              "lifiFee": "2500000000000000",
               "integratorFee": "0",
               "recipients": [
                 {
                   "name": "lifi",
                   "type": "FIXED",
-                  "fee": "2500"
+                  "fee": "2500000000000000"
                 }
               ]
             }
@@ -306,12 +294,31 @@
       }
     },
     {
-      "id": "05ec5faf-62b4-4675-a73c-1b7a033bf608",
+      "id": "00f51256-d8de-4b5c-8094-750201f9a008",
       "type": "swap",
       "action": {
         "fromChainId": 8453,
-        "fromAmount": "997500",
+        "fromAmount": "997500000000000000",
         "fromToken": {
+          "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
+          "chainId": 8453,
+          "symbol": "gtUSDCp",
+          "decimals": 18,
+          "name": "Gauntlet USDC Prime",
+          "coinKey": "gtUSDCp",
+          "priceUSD": "1.10",
+          "tags": [],
+          "verificationStatus": "verified",
+          "verificationStatusBreakdown": [
+            {
+              "provider": "hypernative",
+              "result": "verified",
+              "providerResult": "accept"
+            }
+          ]
+        },
+        "toChainId": 8453,
+        "toToken": {
           "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
           "chainId": 8453,
           "symbol": "USDC",
@@ -332,25 +339,6 @@
             }
           ]
         },
-        "toChainId": 8453,
-        "toToken": {
-          "address": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61",
-          "chainId": 8453,
-          "symbol": "gtUSDCp",
-          "decimals": 18,
-          "name": "Gauntlet USDC Prime",
-          "coinKey": "gtUSDCp",
-          "priceUSD": "1.10",
-          "tags": [],
-          "verificationStatus": "verified",
-          "verificationStatusBreakdown": [
-            {
-              "provider": "hypernative",
-              "result": "verified",
-              "providerResult": "accept"
-            }
-          ]
-        },
         "fromAddress": "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
         "toAddress": "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
         "jitoBundle": false,
@@ -358,16 +346,16 @@
           "feePercent": 0.0025,
           "sourceAmount": {
             "s": 1,
-            "e": 6,
+            "e": 18,
             "c": [
-              1000000
+              10000
             ]
           },
           "totalFee": {
             "s": 1,
-            "e": 3,
+            "e": 15,
             "c": [
-              2500
+              25
             ]
           },
           "recipients": [
@@ -376,9 +364,9 @@
               "type": "FIXED",
               "fee": {
                 "s": 1,
-                "e": 3,
+                "e": 15,
                 "c": [
-                  2500
+                  25
                 ]
               }
             }
@@ -386,21 +374,21 @@
         }
       },
       "estimate": {
-        "tool": "fly",
-        "fromAmount": "997500",
-        "toAmount": "903042810776278231",
-        "toAmountMin": "898527596722396840",
-        "approvalAddress": "0x20f6ee51340adeed01a59b0e65cb3703f3dc860c",
+        "tool": "okx",
+        "fromAmount": "997500000000000000",
+        "toAmount": "1101837",
+        "toAmountMin": "1096328",
+        "approvalAddress": "0x57df6092665eb6058DE53939612413ff4B09114E",
         "executionDuration": 0,
         "feeCosts": [],
         "gasCosts": [
           {
             "type": "SEND",
             "price": "5928955",
-            "estimate": "481866",
-            "limit": "1026426",
-            "amount": "2856961830030",
-            "amountUSD": "0.0053",
+            "estimate": "470400",
+            "limit": "1011520",
+            "amount": "2788980432000",
+            "amountUSD": "0.0052",
             "token": {
               "address": "0x0000000000000000000000000000000000000000",
               "chainId": 8453,
@@ -423,11 +411,11 @@
           }
         ]
       },
-      "tool": "fly",
+      "tool": "okx",
       "toolDetails": {
-        "key": "fly",
-        "name": "Fly",
-        "logoURI": "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/exchanges/fly.svg"
+        "key": "okx",
+        "name": "OKX Dex Aggregator",
+        "logoURI": "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/exchanges/okx.svg"
       }
     }
   ],
@@ -435,11 +423,11 @@
   "transactionRequest": {
     "value": "0x0",
     "to": "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
-    "data": "0x5fd9ae2e31b19879cda433a2dd5b9791fe750630b960648f85fc5a71664090b53e45fdda00000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa960450000000000000000000000000000000000000000000000000c783616af861ea8000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000086c6966692d617069000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a30783030303030303030303030303030303030303030303030303030303030303030303030303030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000200000000000000000000000000c18d9e84b8687a2645447a61e52c455dac1675e1000000000000000000000000c18d9e84b8687a2645447a61e52c455dac1675e1000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda02913000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda0291300000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a4332d746b000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda0291300000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c06ebbefd94032b85424d51906e2a335efae264b00000000000000000000000000000000000000000000000000000000000009c40000000000000000000000000000000000000000000000000000000000000000000000000000000020f6ee51340adeed01a59b0e65cb3703f3dc860c00000000000000000000000020f6ee51340adeed01a59b0e65cb3703f3dc860c000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda02913000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b6100000000000000000000000000000000000000000000000000000000000f387c00000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001a446ec278a00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000144011e00201231deb6f5749ef6ce6943a275a1d3e7486f4eae833589fcd6edb6e08f4c7c32d4f71b54bda02913ee8f4ec5672f09119b96ab6fb59c27e1b7e44b6100000000000000000000000000000000000000000000000000000000000f387ce00114c00119c001223da224c61fe6e7a9632ef750abddce55f7a3f9b3ee65968bc71a16f2f917f01df0012b00faf81438e16230f388956135900df2bd711537abb053d7bb82e698ded2a1d6d85fb8172bf6c752306391005c337167e6f6b84b36b4c27de2d30470cf8435ada11c00e06a648179c00c783616af861ea8c00c8840a6e14a54d7f02710833589fcd6edb6e08f4c7c32d4f71b54bda02913e80f387c02012d0200700e014101416e553f650101500e0141014106020070070500000100000145015000000000000154015d00700600200148014b0000030000015d016400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "data": "0x5fd9ae2e58bfd3399f635d93d5b8ca8493f661e0c2527857badd983590a27688d388c36100000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045000000000000000000000000000000000000000000000000000000000010ba88000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000086c6966692d617069000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a30783030303030303030303030303030303030303030303030303030303030303030303030303030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000200000000000000000000000000c18d9e84b8687a2645447a61e52c455dac1675e1000000000000000000000000c18d9e84b8687a2645447a61e52c455dac1675e1000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b61000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b610000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a4332d746b000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b6100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c06ebbefd94032b85424d51906e2a335efae264b0000000000000000000000000000000000000000000000000008e1bc9bf0400000000000000000000000000000000000000000000000000000000000000000000000000000000000c8f6b8ba0dc0f175b568b99440b0867f69a2926500000000000000000000000057df6092665eb6058de53939612413ff4b09114e000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b61000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda029130000000000000000000000000000000000000000000000000dd7d4f70b73c00000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003240c307f76000000000000000000000000000000000000000000000000000000003baaf6b40000000000000000000000001231deb6f5749ef6ce6943a275a1d3e7486f4eae000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b61000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda029130000000000000000000000000000000000000000000000000dd7d4f70b73c000000000000000000000000000000000000000000000000000000000000010ba87000000000000000000000000000000000000000000000000000000006a648e6a00000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000ee8f4ec5672f09119b96ab6fb59c27e1b7e44b61000000000000000000000000000000000000000000000000000000000000000100000000000000000000000071b3e980475f5aa93e04c7a2586c2263a29c62c6000000000000000000000000000000000000000000000000000000000000000100000000000000000000000071b3e980475f5aa93e04c7a2586c2263a29c62c60000000000000000000000000000000000000000000000000000000000000001800000000000000000012710ee8f4ec5672f09119b96ab6fb59c27e1b7e44b61000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     "chainId": 8453,
     "gasPrice": "0x5a77fb",
-    "gasLimit": "0x190b6e",
+    "gasLimit": "0x18d134",
     "from": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
   },
-  "transactionId": "0x31b19879cda433a2dd5b9791fe750630b960648f85fc5a71664090b53e45fdda"
+  "transactionId": "0x58bfd3399f635d93d5b8ca8493f661e0c2527857badd983590a27688d388c361"
 }

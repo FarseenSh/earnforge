@@ -1,0 +1,2085 @@
+{
+  "data": [
+    {
+      "address": "0xbeef086b8807dc5e5a1740c5e3a7c4c366ea6ab5",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xbeef086b8807dc5e5a1740c5e3a7c4c366ea6ab5",
+      "name": "STEAKEURC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+          "symbol": "EURC",
+          "decimals": 6,
+          "priceUsd": "1.17"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 3.06989,
+          "reward": 0,
+          "total": 3.06989
+        },
+        "apy1d": 3.70977,
+        "apy7d": 4.57827,
+        "apy30d": 4.4042,
+        "tvl": {
+          "usd": 498621
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.450Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0xe7d0dbe3493830e2ab62619211a2bff0fc60db42",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xe7d0dbe3493830e2ab62619211a2bff0fc60db42",
+      "name": "YOG-USDC-V2",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "multi",
+        "il-risk"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 5.44154,
+          "reward": 0,
+          "total": 5.44154
+        },
+        "apy1d": 5.399109999999999,
+        "apy7d": 5.01089,
+        "apy30d": 5.34317,
+        "tvl": {
+          "usd": 498064
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.461Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x8bf41ad2b816f7c220b22f4bcd63fc2a35ab4247",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "euler:8453:_:0x8bf41ad2b816f7c220b22f4bcd63fc2a35ab4247",
+      "name": "USDC",
+      "description": "Clearstar Earn USDC",
+      "protocol": {
+        "id": "euler",
+        "name": "euler",
+        "url": "https://euler.finance"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0,
+          "reward": null,
+          "total": 0
+        },
+        "apy1d": 0,
+        "apy7d": 0.0295,
+        "apy30d": 0.24802,
+        "tvl": {
+          "usd": 463954
+        },
+        "updatedAt": "2026-07-25T09:03:02.608Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.450Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "euler",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "euler",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "flagged",
+      "verificationStatusBreakdown": [
+        {
+          "result": "flagged",
+          "reason": "zero_apy"
+        }
+      ]
+    },
+    {
+      "address": "0xe34d43ca9152d198b60654868c8cd197196a492f",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xe34d43ca9152d198b60654868c8cd197196a492f",
+      "name": "AVGUSDCCONSB",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 4.01295,
+          "reward": 0,
+          "total": 4.01295
+        },
+        "apy1d": 4.09292,
+        "apy7d": 3.8323,
+        "apy30d": 3.89137,
+        "tvl": {
+          "usd": 420606
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.465Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x5435bc53f2c61298167cdb11cdf0db2bfa259ca0",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x5435bc53f2c61298167cdb11cdf0db2bfa259ca0",
+      "name": "EDGEUSDC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 5.34829,
+          "reward": 0,
+          "total": 5.34829
+        },
+        "apy1d": 5.345160000000001,
+        "apy7d": 6.17558,
+        "apy30d": 6.656,
+        "tvl": {
+          "usd": 415467
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.451Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x87244f834fc4f74266f6e1c247c7f0dfc8b21d81",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "pendle:8453:_:0x87244f834fc4f74266f6e1c247c7f0dfc8b21d81",
+      "name": "SKAITO",
+      "description": "For buying PT-sKAITO-30JUL2026",
+      "protocol": {
+        "id": "pendle",
+        "name": "pendle",
+        "url": "https://pendle.finance"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x548d3b444da39686d1a6f1544781d154e7cd1ef7",
+          "symbol": "sKAITO",
+          "decimals": 18,
+          "priceUsd": "0.3187734625"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 29.19701,
+          "reward": null,
+          "total": 29.19701
+        },
+        "apy1d": 29.19297,
+        "apy7d": 18.34024,
+        "apy30d": 19.88624,
+        "tvl": {
+          "usd": 400735
+        },
+        "updatedAt": "2026-07-25T09:03:45.799Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.451Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        },
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0xdba76bc542bb07538e046b40f2e8a215b409f7a8",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xdba76bc542bb07538e046b40f2e8a215b409f7a8",
+      "name": "MWCBBTC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+          "symbol": "cbBTC",
+          "decimals": 8,
+          "priceUsd": "71384"
+        }
+      ],
+      "rewardTokens": [
+        {
+          "address": "0xa88594d404727625a9437c3f886c7643872296ae",
+          "symbol": "WELL",
+          "decimals": 18,
+          "priceUsd": "0.00460774"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.01066,
+          "reward": 0.28429,
+          "total": 0.29495
+        },
+        "apy1d": 0.29488,
+        "apy7d": 0.327,
+        "apy30d": 0.28383,
+        "tvl": {
+          "usd": 399381
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.458Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0xbcffb4b3beadc989bd1458740952af6ec8fbe431",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "aave:8453:_:0xbcffb4b3beadc989bd1458740952af6ec8fbe431",
+      "name": "TBTC",
+      "protocol": {
+        "id": "aave",
+        "name": "aave",
+        "url": "https://aave.com"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
+          "symbol": "tBTC",
+          "decimals": 18,
+          "priceUsd": "71251"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.13158,
+          "reward": null,
+          "total": 0.13158
+        },
+        "apy1d": 0.13165,
+        "apy7d": 0.13233,
+        "apy30d": 0.13334,
+        "tvl": {
+          "usd": 377398
+        },
+        "updatedAt": "2026-07-25T09:01:09.433Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.458Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x6b13c060f13af1fdb319f52315bbbf3fb1d88844",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x6b13c060f13af1fdb319f52315bbbf3fb1d88844",
+      "name": "GTWETHC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x4200000000000000000000000000000000000006",
+          "symbol": "WETH",
+          "decimals": 18,
+          "priceUsd": "2191.49"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 1.56461,
+          "reward": 0,
+          "total": 1.56461
+        },
+        "apy1d": 1.56787,
+        "apy7d": 1.60236,
+        "apy30d": 1.46609,
+        "tvl": {
+          "usd": 375632
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.457Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0xbca4e2e24a7cfa776e4282cc8eb06f04738b71da",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xbca4e2e24a7cfa776e4282cc8eb06f04738b71da",
+      "name": "CSCOREETH",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x4200000000000000000000000000000000000006",
+          "symbol": "WETH",
+          "decimals": 18,
+          "priceUsd": "2191.49"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 1.60542,
+          "reward": 0,
+          "total": 1.60542
+        },
+        "apy1d": 1.60609,
+        "apy7d": 1.70815,
+        "apy30d": 1.77039,
+        "tvl": {
+          "usd": 359157
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.451Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x67eaf2bee4384a2f84da9eb8105c661c123736ba",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "aave:8453:_:0x67eaf2bee4384a2f84da9eb8105c661c123736ba",
+      "name": "AAVE",
+      "protocol": {
+        "id": "aave",
+        "name": "aave",
+        "url": "https://aave.com"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
+          "symbol": "AAVE",
+          "decimals": 18,
+          "priceUsd": "90.08"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0,
+          "reward": null,
+          "total": 0
+        },
+        "apy1d": 0,
+        "apy7d": 0,
+        "apy30d": 0,
+        "tvl": {
+          "usd": 350390
+        },
+        "updatedAt": "2026-07-25T09:01:09.433Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.460Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "flagged",
+      "verificationStatusBreakdown": [
+        {
+          "result": "flagged",
+          "reason": "zero_apy"
+        }
+      ]
+    },
+    {
+      "address": "0xbeef00fc6e87de086a0e29169a2f6e25cf5c11a9",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xbeef00fc6e87de086a0e29169a2f6e25cf5c11a9",
+      "name": "STEAKUSDCFARCASTER",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 4.46738,
+          "reward": 0,
+          "total": 4.46738
+        },
+        "apy1d": 4.56343,
+        "apy7d": 4.2687,
+        "apy30d": 4.33399,
+        "tvl": {
+          "usd": 326921
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.451Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x94af495de1f56aa5576deb17986bdcee5dd9778d",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x94af495de1f56aa5576deb17986bdcee5dd9778d",
+      "name": "GTEURCB",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+          "symbol": "EURC",
+          "decimals": 6,
+          "priceUsd": "1.17"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 3.3455,
+          "reward": 0,
+          "total": 3.3455
+        },
+        "apy1d": 3.9599599999999997,
+        "apy7d": 5.29364,
+        "apy30d": 4.62037,
+        "tvl": {
+          "usd": 300848
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.466Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x6770216ac60f634483ec073cbabc4011c94307cb",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x6770216ac60f634483ec073cbabc4011c94307cb",
+      "name": "GTCBBTCC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+          "symbol": "cbBTC",
+          "decimals": 8,
+          "priceUsd": "71384"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.02875,
+          "reward": 0,
+          "total": 0.02875
+        },
+        "apy1d": 0.02934,
+        "apy7d": 0.028810000000000002,
+        "apy30d": 0.0263,
+        "tvl": {
+          "usd": 249983
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.458Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x6e6fcac197ee06d0164c0fba218c7bcb878f9b5c",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x6e6fcac197ee06d0164c0fba218c7bcb878f9b5c",
+      "name": "APVCHF",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x1fca74d9ef54a6ac80ffe7d3b14e76c4330fd5d8",
+          "symbol": "VCHF",
+          "decimals": 18,
+          "priceUsd": "1.27"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.0782,
+          "reward": 0,
+          "total": 0.0782
+        },
+        "apy1d": 0.06818,
+        "apy7d": 0.06053,
+        "apy30d": 0.06129,
+        "tvl": {
+          "usd": 244698
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.458Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x08cc279532f159bdb450ebc0baf6562f585ded58",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x08cc279532f159bdb450ebc0baf6562f585ded58",
+      "name": "BITMXNBP",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xf197ffc28c23e0309b5559e7a166f2c6164c80aa",
+          "symbol": "MXNB",
+          "decimals": 6,
+          "priceUsd": "0.0000000001"
+        }
+      ],
+      "rewardTokens": [
+        {
+          "address": "0xf197ffc28c23e0309b5559e7a166f2c6164c80aa",
+          "symbol": "MXNB",
+          "decimals": 6,
+          "priceUsd": "0.0000000001"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 5.06394,
+          "reward": 2.75899,
+          "total": 7.82293
+        },
+        "apy1d": 8.80939,
+        "apy7d": 10.918800000000001,
+        "apy30d": 9.54032,
+        "tvl": {
+          "usd": 221994
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.460Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x236919f11ff9ea9550a4287696c2fc9e18e6e890",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x236919f11ff9ea9550a4287696c2fc9e18e6e890",
+      "name": "GTUSDCF",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 5.70416,
+          "reward": 0,
+          "total": 5.70416
+        },
+        "apy1d": 5.39683,
+        "apy7d": 5.2730999999999995,
+        "apy30d": 5.68695,
+        "tvl": {
+          "usd": 199067
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.466Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x45099d137c7a1f5b28bdc4443fdfecd842e1ddee",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "pendle:8453:_:0x45099d137c7a1f5b28bdc4443fdfecd842e1ddee",
+      "name": "APXUSD",
+      "description": "For buying PT-apxUSD-05NOV2026",
+      "protocol": {
+        "id": "pendle",
+        "name": "pendle",
+        "url": "https://pendle.finance"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xd993935e13851dd7517af10687ec7e5022127228",
+          "symbol": "apxUSD",
+          "decimals": 18,
+          "priceUsd": "1.001"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 6.67347,
+          "reward": null,
+          "total": 6.67347
+        },
+        "apy1d": 6.60284,
+        "apy7d": 7.03137,
+        "apy30d": 7.58514,
+        "tvl": {
+          "usd": 164461
+        },
+        "updatedAt": "2026-07-25T09:03:45.799Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.460Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x067ae75628177fd257c2b1e500993e1a0babcbd1",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "aave:8453:_:0x067ae75628177fd257c2b1e500993e1a0babcbd1",
+      "name": "GHO",
+      "protocol": {
+        "id": "aave",
+        "name": "aave",
+        "url": "https://aave.com"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x6bb7a212910682dcfdbd5bcbb3e28fb4e8da10ee",
+          "symbol": "GHO",
+          "decimals": 18,
+          "priceUsd": "0.998956"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 3.60912,
+          "reward": null,
+          "total": 3.60912
+        },
+        "apy1d": 5.43293,
+        "apy7d": 3.55149,
+        "apy30d": 5.2756,
+        "tvl": {
+          "usd": 157533
+        },
+        "updatedAt": "2026-07-25T09:01:09.433Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.463Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x5e03f8965e2957291b3c6990c6cb9023c36d3d30",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x5e03f8965e2957291b3c6990c6cb9023c36d3d30",
+      "name": "PRIMEUSDC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 4.46761,
+          "reward": 0,
+          "total": 4.46761
+        },
+        "apy1d": 4.556889999999999,
+        "apy7d": null,
+        "apy30d": 4.47082,
+        "tvl": {
+          "usd": 141227
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.458Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x3623567972ad7f44242ec354a38bdbacfc73aa42",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "pendle:8453:_:0x3623567972ad7f44242ec354a38bdbacfc73aa42",
+      "name": "40ACRESUSDC",
+      "description": "For buying PT-40acresUSDC-27AUG2026",
+      "protocol": {
+        "id": "pendle",
+        "name": "pendle",
+        "url": "https://pendle.finance"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xcd7079e32bf53093f60bf973c28e5d72937c12f2",
+          "symbol": "VAULT-scaled18",
+          "decimals": 18,
+          "priceUsd": "0.0000000001"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 10.84802,
+          "reward": null,
+          "total": 10.84802
+        },
+        "apy1d": 10.80541,
+        "apy7d": 11.17212,
+        "apy30d": 11.84342,
+        "tvl": {
+          "usd": 119303
+        },
+        "updatedAt": "2026-07-25T09:03:45.799Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.467Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        },
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        },
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0xbeef050a7485865a7a8d8ca0cc5f7536b7a3443e",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0xbeef050a7485865a7a8d8ca0cc5f7536b7a3443e",
+      "name": "STEAKETH",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x4200000000000000000000000000000000000006",
+          "symbol": "WETH",
+          "decimals": 18,
+          "priceUsd": "2191.49"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0,
+          "reward": 0,
+          "total": 0
+        },
+        "apy1d": 0,
+        "apy7d": 0,
+        "apy30d": 0.96448,
+        "tvl": {
+          "usd": 107695
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.459Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "flagged",
+      "verificationStatusBreakdown": [
+        {
+          "result": "flagged",
+          "reason": "zero_apy"
+        }
+      ]
+    },
+    {
+      "address": "0x9272d6153133175175bc276512b2336be3931ce9",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "fluid:8453:_:0x9272d6153133175175bc276512b2336be3931ce9",
+      "name": "WETH",
+      "protocol": {
+        "id": "fluid",
+        "name": "fluid",
+        "url": "https://fluid.instadapp.io"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x4200000000000000000000000000000000000006",
+          "symbol": "WETH",
+          "decimals": 18,
+          "priceUsd": "2191.49"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.87,
+          "reward": null,
+          "total": 0.87
+        },
+        "apy1d": 0.84,
+        "apy7d": 0.59,
+        "apy30d": 0.66817,
+        "tvl": {
+          "usd": 106357
+        },
+        "updatedAt": "2026-07-25T09:01:42.058Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.462Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "fluid",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "fluid",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x09832347586e238841f49149c84d121bc2191c53",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x09832347586e238841f49149c84d121bc2191c53",
+      "name": "CSETH",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x4200000000000000000000000000000000000006",
+          "symbol": "WETH",
+          "decimals": 18,
+          "priceUsd": "2191.49"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 1.44542,
+          "reward": 0,
+          "total": 1.44542
+        },
+        "apy1d": 1.45255,
+        "apy7d": 1.64317,
+        "apy30d": 1.43746,
+        "tvl": {
+          "usd": 105407
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.462Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x116e1a65717a534b73ecb7d4f6543c65dbcd0e46",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x116e1a65717a534b73ecb7d4f6543c65dbcd0e46",
+      "name": "CSCOREUSDC",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 4.01258,
+          "reward": 0,
+          "total": 4.01258
+        },
+        "apy1d": 4.09294,
+        "apy7d": 3.8335999999999997,
+        "apy30d": 1.89283,
+        "tvl": {
+          "usd": 103063
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.462Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x85dfbe8c834ae0451613e58604e6e165abb5c4db",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x85dfbe8c834ae0451613e58604e6e165abb5c4db",
+      "name": "AIFXUSD",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x55380fe7a1910dff29a47b622057ab4139da42c5",
+          "symbol": "FXUSD",
+          "decimals": 18,
+          "priceUsd": "1.002"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 3.08767,
+          "reward": 0,
+          "total": 3.08767
+        },
+        "apy1d": 2.9794300000000002,
+        "apy7d": 10.819749999999999,
+        "apy30d": 6.98015,
+        "tvl": {
+          "usd": 98334
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.451Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x896e39f0e9af61eca9dd2938e14543506ef2c2b5",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "fluid:8453:_:0x896e39f0e9af61eca9dd2938e14543506ef2c2b5",
+      "name": "WSTETH",
+      "protocol": {
+        "id": "fluid",
+        "name": "fluid",
+        "url": "https://fluid.instadapp.io"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
+          "symbol": "wstETH",
+          "decimals": 18,
+          "priceUsd": "2688.13"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.06,
+          "reward": null,
+          "total": 0.06
+        },
+        "apy1d": 0.06,
+        "apy7d": 0.08,
+        "apy30d": 0.0672,
+        "tvl": {
+          "usd": 90960
+        },
+        "updatedAt": "2026-07-25T09:01:42.058Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.467Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "fluid",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "fluid",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x1fec97ca2817da87f266fd1741bba61caf7cde29",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "pendle:8453:_:0x1fec97ca2817da87f266fd1741bba61caf7cde29",
+      "name": "YOUSD",
+      "description": "For buying PT-yoUSD-24SEPT2026",
+      "protocol": {
+        "id": "pendle",
+        "name": "pendle",
+        "url": "https://pendle.finance"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x0000000f2eb9f69274678c76222b35eec7588a65",
+          "symbol": "yoUSD",
+          "decimals": 6,
+          "priceUsd": "1.08"
+        }
+      ],
+      "rewardTokens": [
+        {
+          "address": "0x1925450f5e5fb974b0aae1f3408cf5286fbd1a72",
+          "symbol": "YO",
+          "decimals": 18,
+          "priceUsd": "0.0000000001"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 8.34568,
+          "reward": 2.67736,
+          "total": 11.02304
+        },
+        "apy1d": 11.02157,
+        "apy7d": 9.40675,
+        "apy30d": 9.8533,
+        "tvl": {
+          "usd": 83716
+        },
+        "updatedAt": "2026-07-25T09:03:45.799Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.462Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        },
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x0d18b7bab00988a442e31065e76286844809dc9a",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "pendle:8453:_:0x0d18b7bab00988a442e31065e76286844809dc9a",
+      "name": "USDC(MORPHOCBBTC-USDC)",
+      "description": "For buying PT-USDC (Morpho cbBTC/USDC)-17SEPT2026",
+      "protocol": {
+        "id": "pendle",
+        "name": "pendle",
+        "url": "https://pendle.finance"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x665062e427d53f3f1b851c12f26e4ccfabf8636b",
+          "symbol": "Morpho-cbBTC-USDC-wrapper",
+          "decimals": 6,
+          "priceUsd": "0.0000000001"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "multi"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 4.47567,
+          "reward": null,
+          "total": 4.47567
+        },
+        "apy1d": 4.4758700000000005,
+        "apy7d": 4.8,
+        "apy30d": 4.57071,
+        "tvl": {
+          "usd": 70800
+        },
+        "updatedAt": "2026-07-25T09:03:45.799Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.462Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "pendle",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x0a1d576f3efef75b330424287a95a366e8281d54",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "aave:8453:_:0x0a1d576f3efef75b330424287a95a366e8281d54",
+      "name": "USDBC",
+      "protocol": {
+        "id": "aave",
+        "name": "aave",
+        "url": "https://aave.com"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+          "symbol": "USDbC",
+          "decimals": 6,
+          "priceUsd": "1.001"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 2.92023,
+          "reward": null,
+          "total": 2.92023
+        },
+        "apy1d": 2.9282,
+        "apy7d": 3.05383,
+        "apy30d": 3.20015,
+        "tvl": {
+          "usd": 47790
+        },
+        "updatedAt": "2026-07-25T09:01:09.433Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.464Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x4d3ceba4349adb06d2de8ebd2f9320a61303ad81",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "yearn:8453:_:0x4d3ceba4349adb06d2de8ebd2f9320a61303ad81",
+      "name": "VAMM-HYUSD-EUSD",
+      "protocol": {
+        "id": "yearn",
+        "name": "yearn",
+        "url": "https://yearn.fi"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0xcc7ff230365bd730ee4b352cc2492cedac49383e",
+          "symbol": "hyUSD",
+          "decimals": 18,
+          "priceUsd": "1.14"
+        },
+        {
+          "address": "0xcfa3ef56d303ae4faaba0592388f19d7c3399fb4",
+          "symbol": "eUSD",
+          "decimals": 18,
+          "priceUsd": "0.999083"
+        }
+      ],
+      "tags": [
+        "multi",
+        "il-risk"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0.30756,
+          "reward": 0,
+          "total": 0.30756
+        },
+        "apy1d": 0.31971,
+        "apy7d": 0.08413000000000001,
+        "apy30d": 0.36126,
+        "tvl": {
+          "usd": 38504
+        },
+        "updatedAt": "2026-07-25T09:01:50.391Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.464Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "yearn",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "yearn",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x1e9e47583f15d45a10df48c0b1846e0492c795d7",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "morpho:8453:_:0x1e9e47583f15d45a10df48c0b1846e0492c795d7",
+      "name": "GUSDCQ",
+      "protocol": {
+        "id": "morpho",
+        "name": "morpho",
+        "url": "https://morpho.org"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "symbol": "USDC",
+          "decimals": 6,
+          "priceUsd": "0.999765"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 4.25887,
+          "reward": 0,
+          "total": 4.25887
+        },
+        "apy1d": 4.34797,
+        "apy7d": 4.0581,
+        "apy30d": 4.12407,
+        "tvl": {
+          "usd": 26449
+        },
+        "updatedAt": "2026-07-25T09:02:07.876Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.465Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "morpho",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0x0de119f5790c4ecf6eed80aac7c25d2dcad10f0f",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "yearn:8453:_:0x0de119f5790c4ecf6eed80aac7c25d2dcad10f0f",
+      "name": "EURC",
+      "protocol": {
+        "id": "yearn",
+        "name": "yearn",
+        "url": "https://yearn.fi"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+          "symbol": "EURC",
+          "decimals": 6,
+          "priceUsd": "1.17"
+        }
+      ],
+      "tags": [
+        "stablecoin",
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 2.30746,
+          "reward": 0,
+          "total": 2.30746
+        },
+        "apy1d": 2.28922,
+        "apy7d": 2.20675,
+        "apy30d": 2.09238,
+        "tvl": {
+          "usd": 19535
+        },
+        "updatedAt": "2026-07-25T09:01:50.391Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.466Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "yearn",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "yearn",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "none",
+      "verificationStatusBreakdown": [
+        {
+          "result": "none",
+          "reason": "none"
+        }
+      ]
+    },
+    {
+      "address": "0xdd5745756c2de109183c6b5bb886f9207bef114d",
+      "network": "Base",
+      "chainId": 8453,
+      "slug": "aave:8453:_:0xdd5745756c2de109183c6b5bb886f9207bef114d",
+      "name": "EZETH",
+      "protocol": {
+        "id": "aave",
+        "name": "aave",
+        "url": "https://aave.com"
+      },
+      "underlyingTokens": [
+        {
+          "address": "0x2416092f143378750bb29b79ed961ab195cceea5",
+          "symbol": "ezETH",
+          "decimals": 18,
+          "priceUsd": "2340.55"
+        }
+      ],
+      "tags": [
+        "single"
+      ],
+      "analytics": {
+        "apy": {
+          "base": 0,
+          "reward": null,
+          "total": 0
+        },
+        "apy1d": 0,
+        "apy7d": 0,
+        "apy30d": 0,
+        "tvl": {
+          "usd": 15543
+        },
+        "updatedAt": "2026-07-25T09:01:09.433Z"
+      },
+      "syncedAt": "2026-07-25T09:40:24.455Z",
+      "isTransactional": true,
+      "isRedeemable": true,
+      "depositPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "redeemPacks": [
+        {
+          "name": "aave",
+          "stepsType": "instant"
+        }
+      ],
+      "verificationStatus": "flagged",
+      "verificationStatusBreakdown": [
+        {
+          "result": "flagged",
+          "reason": "zero_apy"
+        }
+      ]
+    }
+  ],
+  "total": 84,
+  "normalizedAt": "2026-07-25T09:40:24.479Z"
+}
