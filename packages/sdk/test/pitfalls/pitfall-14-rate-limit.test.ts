@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { TokenBucketRateLimiter } from '../../src/rate-limiter.js'
+import { describe, expect, it } from 'vitest'
 import { RateLimitError } from '../../src/errors.js'
+import { TokenBucketRateLimiter } from '../../src/rate-limiter.js'
 
 describe('Pitfall #14: Hitting rate limit', () => {
   it('rate limiter starts with 100 tokens', () => {
@@ -24,7 +24,9 @@ describe('Pitfall #14: Hitting rate limit', () => {
 
   it('tokens refill over time', async () => {
     const limiter = new TokenBucketRateLimiter(100)
-    for (let i = 0; i < 10; i++) limiter.acquire()
+    for (let i = 0; i < 10; i++) {
+      limiter.acquire()
+    }
     const after = limiter.remaining
     await new Promise((r) => setTimeout(r, 700))
     expect(limiter.remaining).toBeGreaterThan(after)

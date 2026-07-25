@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { suggest } from '../src/suggest.js'
-import { VaultListResponseSchema, type Vault } from '../src/schemas/index.js'
+import { describe, expect, it } from 'vitest'
 import vaultsBase from '../../fixtures/src/vaults-base.json'
+import { VaultListResponseSchema } from '../src/schemas/index.js'
+import { suggest } from '../src/suggest.js'
 
 const baseVaults = VaultListResponseSchema.parse(vaultsBase).data
 
@@ -82,10 +82,30 @@ describe('suggest — portfolio allocation engine', () => {
   })
 
   it('handles single vault available', () => {
-    const single = baseVaults.filter((v) => v.name === 'STEAKUSDC')
-    if (single.length > 0) {
-      const result = suggest(single, { amount: 10000 })
-      expect(result.allocations.length).toBeLessThanOrEqual(1)
+    // Vault names are not unique across the fleet, so take exactly one.
+    const single = baseVaults.filter((v) => v.isTransactional).slice(0, 1)
+    expect(single).toHaveLength(1)
+    const result = suggest(single, { amount: 10000 })
+    expect(result.allocations.length).toBeLessThanOrEqual(1)
+  })
+
+  it('never allocates into a verification-flagged vault by default', () => {
+    const flagged = baseVaults.filter(
+      (v) => v.verificationStatus === 'flagged' && v.isTransactional
+    )
+    if (flagged.length > 0) {
+      const result = suggest(flagged, { amount: 10000 })
+      expect(result.allocations).toHaveLength(0)
+    }
+  })
+
+  it('allocates into flagged vaults only when explicitly opted in', () => {
+    const flagged = baseVaults.filter(
+      (v) => v.verificationStatus === 'flagged' && v.isTransactional
+    )
+    if (flagged.length > 0) {
+      const result = suggest(flagged, { amount: 10000, includeFlagged: true })
+      expect(result.allocations.length).toBeGreaterThan(0)
     }
   })
 })

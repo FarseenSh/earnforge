@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ComposerClient } from '../../src/clients/index.js'
 
 describe('Pitfall #4: POST instead of GET on /v1/quote', () => {

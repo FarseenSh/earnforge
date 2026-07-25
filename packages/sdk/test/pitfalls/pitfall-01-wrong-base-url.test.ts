@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { EarnDataClient } from '../../src/clients/index.js'
 
 describe('Pitfall #1: Wrong base URL', () => {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { TokenBucketRateLimiter } from '../src/rate-limiter.js'
+import { describe, expect, it } from 'vitest'
 import { RateLimitError } from '../src/errors.js'
+import { TokenBucketRateLimiter } from '../src/rate-limiter.js'
 
 describe('TokenBucketRateLimiter', () => {
   it('initializes with max tokens', () => {
@@ -25,7 +25,9 @@ describe('TokenBucketRateLimiter', () => {
   it('acquireAsync waits when needed', async () => {
     // Use high rate so wait is minimal: 6000/min = 100/sec → wait ~10ms
     const limiter = new TokenBucketRateLimiter(6000)
-    for (let i = 0; i < 6000; i++) limiter.acquire()
+    for (let i = 0; i < 6000; i++) {
+      limiter.acquire()
+    }
     // Should wait briefly and then succeed
     await limiter.acquireAsync()
     expect(true).toBe(true)

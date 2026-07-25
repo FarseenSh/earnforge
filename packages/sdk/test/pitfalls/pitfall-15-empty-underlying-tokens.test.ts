@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { buildDepositQuote } from '../../src/build-deposit-quote.js'
-import { preflight } from '../../src/preflight.js'
-import { ComposerClient } from '../../src/clients/index.js'
-import { VaultSchema, type Vault } from '../../src/schemas/index.js'
-import { EarnForgeError } from '../../src/errors.js'
+import { describe, expect, it } from 'vitest'
 import vaultSingle from '../../../fixtures/src/vault-single.json'
+import { buildDepositQuote } from '../../src/build-deposit-quote.js'
+import type { ComposerClient } from '../../src/clients/index.js'
+import { EarnForgeError } from '../../src/errors.js'
+import { preflight } from '../../src/preflight.js'
+import { type Vault, VaultSchema } from '../../src/schemas/index.js'
 
 describe('Pitfall #15: Empty underlyingTokens array', () => {
   const vault = VaultSchema.parse(vaultSingle)

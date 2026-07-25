@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import protocols from '../../fixtures/src/protocols.json'
 import {
-  STRATEGIES,
   getStrategy,
+  STRATEGIES,
   type StrategyPreset,
 } from '../src/strategies.js'
 
@@ -16,8 +17,11 @@ describe('Strategy presets', () => {
     expect(s.name).toBe('conservative')
     expect(s.filters.tags).toContain('stablecoin')
     expect(s.filters.minTvlUsd).toBe(50_000_000)
-    expect(s.filters.protocols).toContain('aave-v3')
-    expect(s.filters.protocols).toContain('morpho-v1')
+    // Unversioned ids — `?protocol=morpho-v1` matches nothing since Apr 2026.
+    expect(s.filters.protocols).toContain('aave')
+    expect(s.filters.protocols).toContain('morpho')
+    expect(s.filters.excludeFlagged).toBe(true)
+    expect(s.filters.excludeTags).toContain('il-risk')
   })
 
   it('max-apy has no TVL floor', () => {
@@ -56,9 +60,28 @@ describe('Strategy presets', () => {
   it('conservative only includes known blue-chip protocols', () => {
     const s = getStrategy('conservative')
     for (const p of s.filters.protocols!) {
-      expect(['aave-v3', 'morpho-v1', 'euler-v2', 'pendle', 'maple']).toContain(
-        p
+      expect(['aave', 'morpho', 'euler', 'pendle', 'yearn']).toContain(p)
+    }
+  })
+
+  it('every strategy protocol id exists in the live protocol list', () => {
+    // A stale slug returns an empty result set with a 200, so this is the only
+    // thing standing between a typo and a silently empty strategy.
+    const liveIds = new Set(
+      (protocols as Array<{ id?: string; name: string }>).map(
+        (p) => p.id ?? p.name
       )
+    )
+    for (const preset of Object.values(STRATEGIES)) {
+      for (const p of preset.filters.protocols ?? []) {
+        expect(liveIds).toContain(p)
+      }
+    }
+  })
+
+  it('every strategy excludes verification-flagged vaults', () => {
+    for (const preset of Object.values(STRATEGIES)) {
+      expect(preset.filters.excludeFlagged).toBe(true)
     }
   })
 

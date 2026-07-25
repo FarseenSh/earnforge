@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { toSmallestUnit, fromSmallestUnit } from '../src/build-deposit-quote.js'
+import { describe, expect, it } from 'vitest'
+import { fromSmallestUnit, toSmallestUnit } from '../src/build-deposit-quote.js'
 
 describe('toSmallestUnit (Pitfall #9 — decimal mismatch)', () => {
   it('converts 1 USDC (6 decimals) to 1000000', () => {

@@ -1,191 +1,306 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Live integration tests that hit the real earn.li.fi API.
- * No auth required. Rate limit: 100 req/min.
+ * Live integration tests against the real LI.FI Earn Data API.
  *
- * Run with: pnpm test:live
+ * These exist because the mocked suite cannot catch the failure that actually
+ * happened: LI.FI moved every path, made auth mandatory, removed two fields and
+ * flipped the type of a third, and 474 green tests noticed none of it. Fixtures
+ * only ever prove that we still agree with a snapshot of the past.
+ *
+ * Excluded from the default run. Run with:
+ *   LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live
+ *
+ * Assertions are structural rather than exact wherever the fleet moves on its
+ * own — counts drift as LI.FI indexes new protocols, and a test that fails
+ * every time a vault is added trains people to ignore it.
  */
-import { describe, it, expect } from 'vitest'
-import { EarnDataClient } from '../../src/clients/earn-data-client.js'
-import {
-  VaultSchema,
-  VaultListResponseSchema,
-  ChainListResponseSchema,
-  ProtocolListResponseSchema,
-} from '../../src/schemas/index.js'
+import { describe, expect, it } from 'vitest'
+import { EarnDataClient } from '../../src/clients/index.js'
 import { riskScore } from '../../src/risk-scorer.js'
-import { parseTvl } from '../../src/schemas/vault.js'
+import { VaultSchema } from '../../src/schemas/index.js'
+import { isFlagged, parseTvl, parseVaultSlug } from '../../src/schemas/vault.js'
 
 const client = new EarnDataClient()
+const KEY = process.env.LIFI_API_KEY ?? ''
+
+describe('Live API — Auth', () => {
+  it('rejects a request with no API key', async () => {
+    const res = await fetch('https://earn.li.fi/v1/chains')
+    expect(res.status).toBe(401)
+  })
+
+  it('rejects a request with a bogus API key', async () => {
+    // Proves the header is validated, not merely required.
+    const res = await fetch('https://earn.li.fi/v1/chains', {
+      headers: { 'x-lifi-api-key': 'not-a-real-key' },
+    })
+    expect(res.status).toBe(401)
+  })
+
+  it('rejects the pre-Apr-2026 /v1/earn/* paths', async () => {
+    const res = await fetch('https://earn.li.fi/v1/earn/vaults?chainId=8453', {
+      headers: { 'x-lifi-api-key': KEY },
+    })
+    expect(res.status).toBe(404)
+  })
+})
 
 describe('Live API — Chains', () => {
-  it('returns 16 chains', async () => {
+  it('returns a non-empty chain list', async () => {
     const chains = await client.listChains()
-    expect(chains.length).toBe(16)
+    expect(chains.length).toBeGreaterThan(10)
   })
 
   it('includes Ethereum, Base, Arbitrum', async () => {
     const chains = await client.listChains()
-    const names = chains.map((c) => c.name)
-    expect(names).toContain('Ethereum')
-    expect(names).toContain('Base')
-    expect(names).toContain('Arbitrum')
+    const ids = chains.map((c) => c.chainId)
+    expect(ids).toContain(1)
+    expect(ids).toContain(8453)
+    expect(ids).toContain(42161)
   })
 
   it('every chain has numeric chainId and CAIP format', async () => {
     const chains = await client.listChains()
-    for (const chain of chains) {
-      expect(chain.chainId).toBeTypeOf('number')
-      expect(chain.networkCaip).toMatch(/^eip155:\d+$/)
+    for (const c of chains) {
+      expect(typeof c.chainId).toBe('number')
+      expect(c.networkCaip).toMatch(/^eip155:\d+$/)
     }
   })
 })
 
 describe('Live API — Protocols', () => {
-  it('returns 11 protocols', async () => {
+  it('returns a non-empty protocol list', async () => {
     const protocols = await client.listProtocols()
-    expect(protocols.length).toBe(11)
+    expect(protocols.length).toBeGreaterThan(5)
   })
 
-  it('includes aave-v3, morpho-v1, euler-v2', async () => {
+  it('includes aave, morpho and euler under unversioned ids', async () => {
     const protocols = await client.listProtocols()
-    const names = protocols.map((p) => p.name)
-    expect(names).toContain('aave-v3')
-    expect(names).toContain('morpho-v1')
-    expect(names).toContain('euler-v2')
+    const ids = protocols.map((p) => p.id ?? p.name)
+    expect(ids).toContain('aave')
+    expect(ids).toContain('morpho')
+    expect(ids).toContain('euler')
+  })
+
+  it('exposes no versioned protocol ids', async () => {
+    const protocols = await client.listProtocols()
+    for (const p of protocols) {
+      expect(p.id ?? p.name).not.toMatch(/-v\d+$/)
+    }
+  })
+
+  it('a versioned slug silently returns zero results, not an error', async () => {
+    // The trap: no 400, no signal — just a 200 with nothing in it, so a stale
+    // hardcoded slug is indistinguishable from "no vaults exist".
+    const stale = await client.listVaults({ protocol: 'morpho-v1', limit: 1 })
+    expect(stale.total).toBe(0)
+
+    const current = await client.listVaults({ protocol: 'morpho', limit: 1 })
+    expect(current.total).toBeGreaterThan(0)
   })
 })
 
 describe('Live API — Vault List', () => {
-  it('returns page of 50 vaults for Base', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    expect(response.data.length).toBe(50)
-    expect(response.total).toBeGreaterThan(50)
-    expect(response.nextCursor).toBeTruthy()
+  it('returns a page of vaults for Base', async () => {
+    const page = await client.listVaults({ chainId: 8453 })
+    expect(page.data.length).toBeGreaterThan(0)
+    expect(page.total).toBeGreaterThan(0)
   })
 
-  it('every vault in page parses through VaultSchema', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    for (const vault of response.data) {
+  it('every vault in the page parses through VaultSchema', async () => {
+    const page = await client.listVaults({ chainId: 8453 })
+    for (const vault of page.data) {
       expect(() => VaultSchema.parse(vault)).not.toThrow()
     }
   })
 
-  it('tvl.usd is always a string (Pitfall #8)', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    for (const vault of response.data) {
-      expect(typeof vault.analytics.tvl.usd).toBe('string')
-      const tvl = parseTvl(vault.analytics.tvl)
-      expect(tvl.parsed).toBeGreaterThanOrEqual(0)
+  it('has no provider or lpTokens field', async () => {
+    // Both were removed in Apr 2026 and both were required in our schema,
+    // which is what made every parse throw.
+    const page = await client.listVaults({ chainId: 8453, limit: 5 })
+    for (const vault of page.data) {
+      expect('provider' in vault).toBe(false)
+      expect('lpTokens' in vault).toBe(false)
     }
   })
 
-  it('apy.reward is always a number after parsing (Pitfall #17)', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    for (const vault of response.data) {
-      expect(typeof vault.analytics.apy.reward).toBe('number')
+  it('tvl.usd is a number, despite the spec documenting a string', async () => {
+    const page = await client.listVaults({ chainId: 8453, limit: 5 })
+    for (const vault of page.data) {
+      expect(typeof vault.analytics.tvl.usd).toBe('number')
+      expect(parseTvl(vault.analytics.tvl).parsed).toBeGreaterThanOrEqual(0)
     }
   })
 
-  it('some vaults have no description (Pitfall #16)', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    const withoutDesc = response.data.filter((v) => v.description === undefined)
-    expect(withoutDesc.length).toBeGreaterThan(0)
+  it('APY is a percentage, not a decimal fraction', async () => {
+    // The OpenAPI spec, the quickstart and how-it-works all say decimal. They
+    // are wrong: a top-of-fleet APY above 1 is only coherent as a percentage.
+    const page = await client.listVaults({ sortBy: 'apy', limit: 20 })
+    const top = page.data[0]
+    expect(top).toBeDefined()
+    expect(top!.analytics.apy.total).toBeGreaterThan(1)
   })
 
-  it('pagination works via nextCursor (Pitfall #6)', async () => {
-    const page1 = await client.listVaults({ chainId: 8453 })
-    expect(page1.nextCursor).toBeTruthy()
+  it('apy.reward appears as null somewhere in the fleet', async () => {
+    const page = await client.listVaults({ limit: 100 })
+    const rewards = page.data.map((v) => v.analytics.apy.reward)
+    expect(rewards.some((r) => r === null)).toBe(true)
+  })
 
-    const page2 = await client.listVaults({
+  it('some vaults have no description', async () => {
+    const page = await client.listVaults({ limit: 100 })
+    expect(page.data.some((v) => v.description === undefined)).toBe(true)
+  })
+
+  it('exposes verificationStatus on every vault', async () => {
+    const page = await client.listVaults({ limit: 100 })
+    for (const vault of page.data) {
+      expect(typeof vault.verificationStatus).toBe('string')
+    }
+  })
+
+  it('flags a meaningful minority of vaults', async () => {
+    // Around 9% of the fleet is flagged. If this hits zero, either LI.FI stopped
+    // emitting the field or we stopped reading it — both worth knowing.
+    const page = await client.listVaults({ limit: 100 })
+    const flagged = page.data.filter(isFlagged)
+    expect(flagged.length).toBeGreaterThan(0)
+    expect(flagged.length).toBeLessThan(page.data.length)
+  })
+
+  it('minTvlUsd actually filters, unlike the minTvl we used to send', async () => {
+    // An unknown query param is silently ignored rather than rejected, so the
+    // old `minTvl` returned the entire fleet while appearing to work.
+    const all = await client.listVaults({ limit: 1 })
+    const filtered = await client.listVaults({ limit: 1, minTvl: 100_000_000 })
+    expect(filtered.total).toBeGreaterThan(0)
+    expect(filtered.total).toBeLessThan(all.total)
+  })
+
+  it('accepts a page size of 100', async () => {
+    const page = await client.listVaults({ limit: 100 })
+    expect(page.data.length).toBeLessThanOrEqual(100)
+    expect(page.data.length).toBeGreaterThan(50)
+  })
+
+  it('pagination works via nextCursor and omits it on the last page', async () => {
+    const first = await client.listVaults({ chainId: 8453, limit: 50 })
+    expect(first.nextCursor).toBeTruthy()
+
+    const second = await client.listVaults({
       chainId: 8453,
-      cursor: page1.nextCursor!,
+      limit: 50,
+      cursor: first.nextCursor ?? undefined,
     })
-    expect(page2.data.length).toBeGreaterThan(0)
+    expect(second.data.length).toBeGreaterThan(0)
+    // Base fits in two pages, so the second omits the cursor entirely.
+    expect(second.nextCursor ?? undefined).toBeUndefined()
+    expect(first.data.length + second.data.length).toBe(first.total)
+  })
 
-    // Pages should have different vaults
-    const slugs1 = new Set(page1.data.map((v) => v.slug))
-    const slugs2 = new Set(page2.data.map((v) => v.slug))
-    const overlap = [...slugs1].filter((s) => slugs2.has(s))
-    expect(overlap.length).toBe(0)
+  it('the capability filters narrow the result set', async () => {
+    const all = await client.listVaults({ limit: 1 })
+    const transactional = await client.listVaults({
+      limit: 1,
+      isTransactional: true,
+    })
+    expect(transactional.total).toBeLessThanOrEqual(all.total)
   })
 })
 
 describe('Live API — Single Vault', () => {
-  it('fetches STEAKUSDC on Base by chainId + address', async () => {
-    // Not all listed vaults are individually fetchable (some return 404).
-    // Try several until one works.
-    const response = await client.listVaults({ chainId: 8453 })
-    let found = false
-    for (const candidate of response.data.slice(0, 10)) {
-      try {
-        const vault = await client.getVault(
-          candidate.chainId,
-          candidate.address
-        )
-        expect(vault.name).toBe(candidate.name)
-        expect(vault.chainId).toBe(8453)
-        found = true
-        break
-      } catch {
-        // Some vaults return 404 on individual fetch — real API behavior
-      }
-    }
-    expect(found).toBe(true)
+  it('fetches a vault by chainId + address', async () => {
+    const page = await client.listVaults({ chainId: 8453, limit: 1 })
+    const target = page.data[0]
+    expect(target).toBeDefined()
+
+    const vault = await client.getVault(target!.chainId, target!.address)
+    expect(vault.address.toLowerCase()).toBe(target!.address.toLowerCase())
+    expect(vault.chainId).toBe(8453)
   })
 
-  it('fetches vault by slug', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    let found = false
-    for (const candidate of response.data.slice(0, 10)) {
-      try {
-        const vault = await client.getVaultBySlug(candidate.slug)
-        expect(vault.slug).toBe(candidate.slug)
-        found = true
-        break
-      } catch {
-        // Try next
-      }
+  it('fetches the same vault by its live slug', async () => {
+    const page = await client.listVaults({ chainId: 8453, limit: 1 })
+    const target = page.data[0]!
+    // Slug format is protocol:chainId:_:address as of Apr 2026.
+    expect(parseVaultSlug(target.slug)).not.toBeNull()
+
+    const vault = await client.getVaultBySlug(target.slug)
+    expect(vault.address.toLowerCase()).toBe(target.address.toLowerCase())
+  })
+
+  it('404s on an unknown vault with no errors[] array', async () => {
+    // The changelog announced structured 400s and 404s. Only 400 got one.
+    await expect(
+      client.getVault(8453, '0x0000000000000000000000000000000000000000')
+    ).rejects.toMatchObject({ status: 404, fieldErrors: [] })
+  })
+
+  it('returns a structured errors[] array on a 400', async () => {
+    const res = await fetch('https://earn.li.fi/v1/vaults?chainId=notanumber', {
+      headers: { 'x-lifi-api-key': KEY },
+    })
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as {
+      errors?: Array<{ code: string; path: string[] }>
     }
-    expect(found).toBe(true)
+    expect(Array.isArray(body.errors)).toBe(true)
+    expect(body.errors?.[0]?.path).toContain('chainId')
+  })
+})
+
+describe('Live API — Portfolio', () => {
+  it('returns positions for a known address', async () => {
+    const portfolio = await client.getPortfolio(
+      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    )
+    expect(Array.isArray(portfolio.positions)).toBe(true)
+    for (const p of portfolio.positions) {
+      // protocolName and balanceUsd are nullable as of Apr 2026.
+      expect(p.chainId).toBeTypeOf('number')
+      expect(p.asset.symbol).toBeTruthy()
+    }
   })
 })
 
 describe('Live API — Risk Score', () => {
-  it('computes risk score for real vaults', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    for (const vault of response.data.slice(0, 10)) {
-      const risk = riskScore(vault)
-      expect(risk.score).toBeGreaterThanOrEqual(0)
-      expect(risk.score).toBeLessThanOrEqual(10)
-      expect(['low', 'medium', 'high']).toContain(risk.label)
+  it('computes a risk score for real vaults', async () => {
+    const page = await client.listVaults({ chainId: 8453, limit: 20 })
+    for (const vault of page.data) {
+      const score = riskScore(vault)
+      expect(score.score).toBeGreaterThanOrEqual(0)
+      expect(score.score).toBeLessThanOrEqual(10)
+      expect(['low', 'medium', 'high']).toContain(score.label)
     }
   })
 
-  it('stablecoin vaults tend to score higher', async () => {
-    const response = await client.listVaults({ chainId: 8453 })
-    const stable = response.data.filter((v) => v.tags.includes('stablecoin'))
-    const nonStable = response.data.filter(
-      (v) => !v.tags.includes('stablecoin')
-    )
+  it('never labels a flagged vault as low risk', async () => {
+    const page = await client.listVaults({ limit: 100 })
+    for (const vault of page.data.filter(isFlagged)) {
+      expect(riskScore(vault).label).not.toBe('low')
+    }
+  })
 
-    if (stable.length > 0 && nonStable.length > 0) {
-      const avgStable =
-        stable.reduce((s, v) => s + riskScore(v).score, 0) / stable.length
-      const avgNonStable =
-        nonStable.reduce((s, v) => s + riskScore(v).score, 0) / nonStable.length
-      expect(avgStable).toBeGreaterThan(avgNonStable)
+  it('scores a large blue-chip vault as low risk', async () => {
+    const page = await client.listVaults({
+      protocol: 'aave',
+      sortBy: 'tvl',
+      limit: 5,
+    })
+    const biggest = page.data.find((v) => !isFlagged(v))
+    if (biggest) {
+      expect(riskScore(biggest).score).toBeGreaterThan(7)
     }
   })
 })
 
 describe('Live API — Async Iterator', () => {
-  it('listAllVaults yields more than 50 vaults for Base (proves pagination works)', async () => {
+  it('listAllVaults walks every page for Base', async () => {
+    const page = await client.listVaults({ chainId: 8453, limit: 50 })
     let count = 0
-    for await (const vault of client.listAllVaults({ chainId: 8453 })) {
+    for await (const _vault of client.listAllVaults({ chainId: 8453 })) {
       count++
-      if (count > 55) break // Just need to prove we cross the page boundary
     }
-    expect(count).toBeGreaterThan(50)
+    expect(count).toBe(page.total)
   })
 })

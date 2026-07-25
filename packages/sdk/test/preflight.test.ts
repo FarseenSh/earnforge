@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { preflight } from '../src/preflight.js'
-import { VaultSchema, type Vault } from '../src/schemas/index.js'
+import { describe, expect, it } from 'vitest'
 import vaultSingle from '../../fixtures/src/vault-single.json'
+import { preflight } from '../src/preflight.js'
+import { type Vault, VaultSchema } from '../src/schemas/index.js'
 
 const vault = VaultSchema.parse(vaultSingle)
 const wallet = '0x1234567890abcdef1234567890abcdef12345678'

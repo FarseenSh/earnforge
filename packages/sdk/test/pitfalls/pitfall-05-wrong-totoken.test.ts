@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest'
-import { buildDepositQuote } from '../../src/build-deposit-quote.js'
-import { ComposerClient } from '../../src/clients/index.js'
-import { VaultSchema } from '../../src/schemas/index.js'
-import vaultSingle from '../../../fixtures/src/vault-single.json'
+import { describe, expect, it, vi } from 'vitest'
 import quoteComposer from '../../../fixtures/src/quote-composer.json'
+import vaultSingle from '../../../fixtures/src/vault-single.json'
+import { buildDepositQuote } from '../../src/build-deposit-quote.js'
+import type { ComposerClient } from '../../src/clients/index.js'
+import { VaultSchema } from '../../src/schemas/index.js'
 
 describe('Pitfall #5: Wrong toToken for deposits', () => {
   it('buildDepositQuote sets toToken to vault.address, not underlyingToken', async () => {

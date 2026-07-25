@@ -1,41 +1,53 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import {
-  VaultSchema,
-  VaultListResponseSchema,
-  parseTvl,
-  getBestApy,
-  AnalyticsSchema,
-} from '../src/schemas/index.js'
-import { riskScore } from '../src/risk-scorer.js'
-import { preflight } from '../src/preflight.js'
-import { toSmallestUnit, fromSmallestUnit } from '../src/build-deposit-quote.js'
+import { describe, expect, it } from 'vitest'
 import vaultsBase from '../../fixtures/src/vaults-base.json'
 import vaultsEthereum from '../../fixtures/src/vaults-ethereum.json'
+import { fromSmallestUnit, toSmallestUnit } from '../src/build-deposit-quote.js'
+import { preflight } from '../src/preflight.js'
+import { riskScore } from '../src/risk-scorer.js'
+import {
+  parseTvl,
+  VaultListResponseSchema,
+  VaultSchema,
+} from '../src/schemas/index.js'
 
 describe('Edge cases — comprehensive', () => {
   const baseParsed = VaultListResponseSchema.parse(vaultsBase)
   const ethParsed = VaultListResponseSchema.parse(vaultsEthereum)
 
-  describe('UNIBTC vault — empty underlyingTokens', () => {
-    const unibtc = baseParsed.data.find((v) => v.name === 'UNIBTC')
-
-    it('exists in Base vaults', () => {
-      expect(unibtc).toBeDefined()
+  /**
+   * Pitfall #15 was discovered via a UNIBTC vault that reported no underlying
+   * tokens. That vault is gone and zero of 609 live vaults now have an empty
+   * array, so the guard can no longer be driven from a fixture. It is still
+   * worth holding: the shape is legal, and LI.FI has reintroduced dropped
+   * shapes before. So the case is constructed rather than found.
+   */
+  describe('empty underlyingTokens — synthesised, no longer occurs live', () => {
+    const template = baseParsed.data[0]!
+    const noTokens = VaultSchema.parse({
+      ...template,
+      underlyingTokens: [],
     })
 
-    it('has empty underlyingTokens array', () => {
-      expect(unibtc!.underlyingTokens).toHaveLength(0)
+    it('no live vault has an empty underlyingTokens array any more', () => {
+      const found = baseParsed.data.filter(
+        (v) => v.underlyingTokens.length === 0
+      )
+      expect(found).toHaveLength(0)
+    })
+
+    it('the schema still accepts an empty array', () => {
+      expect(noTokens.underlyingTokens).toHaveLength(0)
     })
 
     it('risk score still computes', () => {
-      const score = riskScore(unibtc!)
+      const score = riskScore(noTokens)
       expect(score.score).toBeGreaterThanOrEqual(0)
       expect(score.score).toBeLessThanOrEqual(10)
     })
 
     it('preflight warns about missing tokens', () => {
-      const report = preflight(unibtc!, '0x1')
+      const report = preflight(noTokens, '0x1')
       expect(report.issues.some((i) => i.code === 'NO_UNDERLYING_TOKENS')).toBe(
         true
       )
@@ -68,8 +80,10 @@ describe('Edge cases — comprehensive', () => {
 
   describe('Cross-fixture consistency', () => {
     it('both Base and ETH fixtures have valid vault data', () => {
-      expect(baseParsed.data.length).toBe(50)
-      expect(ethParsed.data.length).toBe(50)
+      expect(baseParsed.data.length).toBeGreaterThan(0)
+      expect(ethParsed.data.length).toBeGreaterThan(0)
+      expect(baseParsed.total).toBeGreaterThanOrEqual(baseParsed.data.length)
+      expect(ethParsed.total).toBeGreaterThanOrEqual(ethParsed.data.length)
     })
 
     it('Base vaults all have chainId 8453', () => {

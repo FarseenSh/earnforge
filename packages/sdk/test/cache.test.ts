@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { LRUCache } from '../src/cache.js'
 
 describe('LRU Cache', () => {

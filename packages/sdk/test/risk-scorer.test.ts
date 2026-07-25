@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import { riskScore } from '../src/risk-scorer.js'
-import { VaultSchema } from '../src/schemas/index.js'
+import { describe, expect, it } from 'vitest'
 import vaultSingle from '../../fixtures/src/vault-single.json'
 import vaultsBase from '../../fixtures/src/vaults-base.json'
+import { riskScore } from '../src/risk-scorer.js'
+import { VaultSchema } from '../src/schemas/index.js'
 
 const steakusdc = VaultSchema.parse(vaultSingle)
 const baseVaults = vaultsBase.data.map((v: unknown) => VaultSchema.parse(v))
@@ -75,11 +75,43 @@ describe('riskScore', () => {
   })
 
   it('label is consistent with score', () => {
+    // Thresholds are 8 / 6, recalibrated against the live fleet: scores span
+    // 4.1–9.7 with a median of 7.9, so the previous 7 / 4 cuts put 80% of
+    // vaults in "low" and made "high" unreachable.
     for (const vault of baseVaults) {
       const result = riskScore(vault)
-      if (result.score >= 7) expect(result.label).toBe('low')
-      else if (result.score >= 4) expect(result.label).toBe('medium')
-      else expect(result.label).toBe('high')
+      if (result.score >= 8) {
+        expect(result.label).toBe('low')
+      } else if (result.score >= 6) {
+        expect(result.label).toBe('medium')
+      } else {
+        expect(result.label).toBe('high')
+      }
+    }
+  })
+
+  it('no verification-flagged vault can be labelled low risk', () => {
+    // Structural invariant: verification is weighted 0.22, so a flagged vault
+    // caps at 7.96 even scoring perfectly on every other dimension.
+    for (const vault of baseVaults) {
+      const result = riskScore(vault)
+      if (vault.verificationStatus === 'flagged') {
+        expect(result.score).toBeLessThan(8)
+        expect(result.label).not.toBe('low')
+      }
+    }
+  })
+
+  it('reports flags for anything a caller should know about', () => {
+    for (const vault of baseVaults) {
+      const result = riskScore(vault)
+      expect(Array.isArray(result.flags)).toBe(true)
+      if (vault.verificationStatus === 'flagged') {
+        expect(result.flags.some((f) => f.includes('flagged'))).toBe(true)
+      }
+      if (!vault.isRedeemable) {
+        expect(result.flags.some((f) => f.includes('withdrawals'))).toBe(true)
+      }
     }
   })
 

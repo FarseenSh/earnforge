@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest'
-import { watch } from '../src/watch.js'
+import { describe, expect, it, vi } from 'vitest'
+import vaultSingle from '../../fixtures/src/vault-single.json'
 import type { EarnDataClient } from '../src/clients/index.js'
 import { VaultSchema } from '../src/schemas/index.js'
-import vaultSingle from '../../fixtures/src/vault-single.json'
+import { watch } from '../src/watch.js'
 
 const baseVault = VaultSchema.parse(vaultSingle)
 

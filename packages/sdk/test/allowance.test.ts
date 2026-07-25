@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
-  checkAllowance,
   buildApprovalTx,
+  checkAllowance,
   MAX_UINT256,
 } from '../src/allowance.js'
 
@@ -84,7 +84,7 @@ describe('checkAllowance', () => {
 
   it('encodes the correct ERC-20 allowance calldata', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
-      json: () => Promise.resolve({ result: '0x' + '0'.repeat(64) }),
+      json: () => Promise.resolve({ result: `0x${'0'.repeat(64)}` }),
     })
     vi.stubGlobal('fetch', mockFetch)
 

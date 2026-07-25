@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { AnalyticsSchema, getBestApy } from '../../src/schemas/vault.js'
 
 describe('Pitfall #18: apy1d null when apy7d exists', () => {

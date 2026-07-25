@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest'
-import { withRetry, isRetryable } from '../src/retry.js'
-import { EarnApiError, ComposerError } from '../src/errors.js'
+import { describe, expect, it, vi } from 'vitest'
+import { ComposerError, EarnApiError } from '../src/errors.js'
+import { isRetryable, withRetry } from '../src/retry.js'
 
 describe('withRetry', () => {
   it('returns result on first success', async () => {

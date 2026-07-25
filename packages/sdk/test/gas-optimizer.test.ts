@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi } from 'vitest'
-import { optimizeGasRoutes } from '../src/gas-optimizer.js'
-import type { ComposerClient } from '../src/clients/index.js'
-import { VaultSchema, type QuoteResponse } from '../src/schemas/index.js'
+import { describe, expect, it, vi } from 'vitest'
 import vaultSingle from '../../fixtures/src/vault-single.json'
+import type { ComposerClient } from '../src/clients/index.js'
+import { optimizeGasRoutes } from '../src/gas-optimizer.js'
+import { type QuoteResponse, VaultSchema } from '../src/schemas/index.js'
 
 const vault = VaultSchema.parse(vaultSingle)
 

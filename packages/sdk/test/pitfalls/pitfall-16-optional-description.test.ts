@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect } from 'vitest'
-import {
-  VaultSchema,
-  VaultListResponseSchema,
-} from '../../src/schemas/index.js'
+import { describe, expect, it } from 'vitest'
 import vaultsBase from '../../../fixtures/src/vaults-base.json'
+import {
+  VaultListResponseSchema,
+  VaultSchema,
+} from '../../src/schemas/index.js'
 
 describe('Pitfall #16: Optional description field', () => {
   it('Zod schema marks description as optional', () => {
