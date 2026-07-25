@@ -10,7 +10,7 @@
 |--------|-------|
 | Tags | `stablecoin` |
 | Min TVL | $50,000,000 |
-| Protocols | aave-v3, morpho-v1, euler-v2, pendle, maple |
+| Protocols | aave, morpho, euler, pendle, yearn |
 | Sort | APY descending |
 
 **Best for:** Capital preservation. Large allocations where safety is the priority. Institutional deposits.

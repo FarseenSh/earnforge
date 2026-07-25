@@ -2,12 +2,46 @@
 name: earnforge
 description: >
   Discovers, compares, risk-scores, and builds unsigned deposit and withdrawal
-  quotes for 623+ DeFi yield vaults across 16 chains via the LI.FI Earn API.
-  Includes ERC-20 allowance checking, risk scoring (0-10), yield strategy
-  presets, portfolio allocation, and all 18 known API pitfalls handled.
+  quotes for DeFi yield vaults across every chain indexed by the LI.FI Earn API.
+  Surfaces LI.FI's undocumented verificationStatus signal, which flags roughly
+  9% of vaults as suspect. Includes ERC-20 allowance checking, a 0-10 composite
+  risk score, yield strategy presets, portfolio allocation, and 23 documented
+  API pitfalls handled by default. Use when working with DeFi yield, vault APY,
+  lending deposits, or the LI.FI Earn API.
+license: Apache-2.0
+compatibility: >
+  Requires the earnforge CLI (npm i -g @earnforge/cli), Node.js 20+, network
+  access, and a LI.FI API key in LIFI_API_KEY.
+allowed-tools: Bash(earnforge:*) Read
+metadata:
+  openclaw:
+    primaryEnv: LIFI_API_KEY
+    homepage: https://github.com/FarseenSh/earnforge
+    emoji: 🌾
+    requires:
+      env:
+        - LIFI_API_KEY
+      bins:
+        - earnforge
+    envVars:
+      - name: LIFI_API_KEY
+        required: true
+        description: >
+          LI.FI API key from https://portal.li.fi. Mandatory — the Earn Data API
+          returns 401 without it.
 ---
 
 # EarnForge Agent Skill
+
+## Setup
+
+The Earn Data API requires an API key. Every command fails with a clear error
+without one:
+
+```bash
+npm i -g @earnforge/cli
+export LIFI_API_KEY=...   # https://portal.li.fi
+```
 
 ## Commands
 
@@ -27,8 +61,10 @@ All commands accept `--json` for machine-readable output.
 ### Comparison & Analysis
 
 - `earnforge risk <slug> [--json]`
-  Full risk score breakdown (0-10 scale): TVL magnitude, APY stability,
-  protocol maturity, redeemability, asset type.
+  Full risk score breakdown (0-10 scale) across seven dimensions: TVL magnitude,
+  APY stability, protocol maturity, redeemability, asset type, LI.FI's
+  verification status, and reward dependency. Also returns a `flags` array of
+  plain-language concerns — always relay these, not just the number.
 
 - `earnforge apy-history <slug> [--json]`
   30-day APY history from DeFiLlama yields API.
@@ -65,7 +101,7 @@ All commands accept `--json` for machine-readable output.
   token balance, redeemability.
 
 - `earnforge doctor --vault <slug> [--env] [--json]`
-  Run all 18 pitfall checks on a vault.
+  Run all 23 pitfall checks on a vault.
 
 - `earnforge watch --vault <slug> [--apy-drop 20] [--tvl-drop 30] [--json]`
   Monitor a vault for APY/TVL drops. Streams events.
@@ -75,8 +111,8 @@ All commands accept `--json` for machine-readable output.
 
 ### Reference Data
 
-- `earnforge chains [--json]` — 16 supported chains with chainIds
-- `earnforge protocols [--json]` — 11 protocols with URLs
+- `earnforge chains [--json]` — chains with at least one indexed vault
+- `earnforge protocols [--json]` — protocols with unversioned ids and URLs
 - `earnforge init <name>` — Scaffold a new project with EarnForge wired up
 
 ## Rules
@@ -98,21 +134,34 @@ All commands accept `--json` for machine-readable output.
 
 6. **Filter stablecoins by the `stablecoin` tag, not by token symbol.**
 
-7. **Risk score thresholds:** >= 7 is low risk, 4-6.9 is medium, < 4 is
-   high risk. Always show score alongside APY.
+7. **Risk score thresholds:** >= 8 is low risk, 6-7.9 is medium, < 6 is high
+   risk. Always show the score and its flags alongside APY.
 
-8. **APY values are already percentages** (3.84 = 3.84%). Do NOT multiply
-   by 100. `apy1d/apy7d/apy30d` can be null — use the fallback chain.
+8. **Never recommend a verification-flagged vault without saying so.** LI.FI
+   flags roughly 9% of vaults — usually `zero_apy`, sometimes `apy_outlier`.
+   `earnforge risk` reports it. A flagged vault can never score >= 8, so it can
+   never be low risk, and `suggest` excludes them by default.
 
-9. **Cross-chain deposits require explicit `--from-token`.** The vault's
-   underlying token address is on the vault's chain, not the source chain.
+9. **APY values are already percentages** (3.84 = 3.84%). Do NOT multiply by 100
+   — LI.FI's own OpenAPI spec and quickstart say to, and they are wrong; doing so
+   overstates every yield 100x. `apy1d/apy7d/apy30d` can be null, and so can
+   `apy.base` and `apy.reward` — use the fallback chain.
 
-10. **Use chainId (number), not chain name, in all API paths.**
+10. **Never hardcode a protocol slug.** Ids are unversioned (`morpho`, not
+    `morpho-v1`) and a stale slug returns HTTP 200 with zero results rather than
+    an error, so the failure is silent. Resolve via `earnforge protocols`.
+
+11. **Cross-chain deposits require explicit `--from-token`.** The vault's
+    underlying token address is on the vault's chain, not the source chain. And
+    cross-chain flows are not atomic — a bridge can succeed while the destination
+    deposit fails, so always poll status and handle the failed case.
+
+12. **Use chainId (number), not chain name, in all API paths.**
 
 ## References
 
-- [references/pitfalls.md](references/pitfalls.md) — All 18 API pitfalls
-- [references/protocols.md](references/protocols.md) — 11 protocols with risk tiers
-- [references/chains.md](references/chains.md) — 16 chains with chainIds
+- [references/pitfalls.md](references/pitfalls.md) — All 23 API pitfalls
+- [references/protocols.md](references/protocols.md) — protocols with risk tiers
+- [references/chains.md](references/chains.md) — chains with chainIds
 - [references/examples.md](references/examples.md) — Worked examples
 - [references/strategies.md](references/strategies.md) — 4 yield strategy presets

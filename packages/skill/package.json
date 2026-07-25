@@ -1,9 +1,9 @@
 {
   "name": "@earnforge/skill",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "type": "module",
   "license": "Apache-2.0",
-  "description": "Agent Skill for LI.FI Earn — vault discovery, risk scoring, and deposit quoting via CLI",
+  "description": "Agent Skill for the LI.FI Earn API — vault discovery, risk scoring, and deposit quoting via the earnforge CLI",
   "files": [
     "SKILL.md",
     "references",
@@ -11,6 +11,8 @@
     "LICENSE"
   ],
   "scripts": {
+    "prepack": "cp -R ../../skills/earnforge/SKILL.md ../../skills/earnforge/references .",
+    "postpack": "rm -rf SKILL.md references",
     "test": "echo 'Skill package has no tests — content only'"
   }
 }
