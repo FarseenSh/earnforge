@@ -81,17 +81,17 @@ and TVL across the DeFi ecosystem.
 
 | Protocol | Score |
 |----------|-------|
-| aave-v3 | 9 |
-| morpho-v1 | 9 |
-| euler-v2 | 7 |
+| aave | 9 |
+| morpho | 9 |
+| euler | 7 |
 | pendle | 7 |
 | maple | 6 |
-| ethena-usde | 7 |
+| ethena | 7 |
 | ether.fi-liquid | 7 |
-| ether.fi-stake | 7 |
+| etherfi-staking | 7 |
 | upshift | 5 |
 | neverland | 4 |
-| yo-protocol | 4 |
+| yo | 4 |
 | Unknown | 3 |
 
 Unknown protocols default to 3 (high risk) since there is no track record to evaluate.
@@ -143,7 +143,7 @@ score = (tvl * 0.25) + (apyStability * 0.20) + (protocol * 0.25)
 Consider an Aave V3 USDC vault on Base with:
 - TVL: $120M
 - APY: 5.23% (30d avg: 5.10%)
-- Protocol: aave-v3
+- Protocol: aave
 - Redeemable: true
 - Tags: `['stablecoin']`
 
@@ -151,7 +151,7 @@ Consider an Aave V3 USDC vault on Base with:
 |-----------|-----------|--------|----------|
 | TVL ($120M >= $100M) | 10 | 0.25 | 2.50 |
 | APY Stability (divergence = 2.5%) | 10 | 0.20 | 2.00 |
-| Protocol (aave-v3) | 9 | 0.25 | 2.25 |
+| Protocol (aave) | 9 | 0.25 | 2.25 |
 | Redeemability (true) | 10 | 0.15 | 1.50 |
 | Asset Type (stablecoin) | 9 | 0.15 | 1.35 |
 | **Total** | | | **9.6** |
@@ -168,7 +168,7 @@ Label: **low** risk (green)
 import { createEarnForge } from '@earnforge/sdk';
 
 const forge = createEarnForge();
-const vault = await forge.vaults.get('8453-0xbeef...');
+const vault = await forge.vaults.get('morpho:8453:_:0xbeef...');
 const risk = forge.riskScore(vault);
 
 console.log(risk.score);      // 9.6
@@ -179,7 +179,7 @@ console.log(risk.breakdown);  // { tvl: 10, apyStability: 10, protocol: 9, redee
 ### CLI
 
 ```bash
-earnforge risk 8453-0xbeef...
+earnforge risk morpho:8453:_:0xbeef...
 ```
 
 ### React
@@ -195,7 +195,7 @@ function RiskDisplay({ vault }) {
 
 ### MCP
 
-Prompt: "What's the risk score for vault 8453-0xbeef...?"
+Prompt: "What's the risk score for vault morpho:8453:_:0xbeef...?"
 
 The `get-vault-risk` MCP tool returns the full breakdown.
 

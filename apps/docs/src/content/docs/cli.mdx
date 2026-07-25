@@ -63,9 +63,9 @@ earnforge list --strategy conservative --json
 ```
   Slug                    Name                APY      TVL         Protocol   Chain
   ----                    ----                ---      ---         --------   -----
-  8453-0xbeef...          USDC Base Vault     5.23%    $120.5M     aave-v3    8453
-  1-0xdead...             USDC Morpho         4.87%    $89.2M      morpho-v1  1
-  42161-0xcafe...         USDC Arbitrum       4.12%    $45.0M      euler-v2   42161
+  morpho:8453:_:0xbeef...          USDC Base Vault     5.23%    $120.5M     aave    8453
+  morpho:1:_:0xdead...             USDC Morpho         4.87%    $89.2M      morpho  1
+  euler:42161:_:0xcafe...         USDC Arbitrum       4.12%    $45.0M      euler   42161
 
   Showing 3 vaults
 ```
@@ -122,9 +122,9 @@ Shows all active Earn positions with chain, protocol, asset, USD balance, and na
 Build a deposit quote for a vault.
 
 ```bash
-earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour...
-earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour... --optimize-gas
-earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0xYour... --from-chain 1 --json
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0xYour...
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0xYour... --optimize-gas
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0xYour... --from-chain 1 --json
 ```
 
 | Flag | Type | Default | Description |
@@ -175,9 +175,9 @@ Without it, you will get a `ComposerError`.
 Run 18-pitfall diagnostics on a vault or environment.
 
 ```bash
-earnforge doctor --vault 8453-0xbeef...
+earnforge doctor --vault morpho:8453:_:0xbeef...
 earnforge doctor --env
-earnforge doctor --vault 8453-0xbeef... --json
+earnforge doctor --vault morpho:8453:_:0xbeef... --json
 ```
 
 | Flag | Type | Default | Description |
@@ -272,9 +272,9 @@ Allocation Suggestion -- $10,000.00 in USDC
 
   Vault                  Chain    Protocol   APY     Risk     %       Amount
   -----                  -----    --------   ---     ----     -       ------
-  USDC Base Vault        8453     aave-v3    5.23%   8.9/10   35.2%   $3,520.00
-  USDC Morpho ETH        1        morpho-v1  4.87%   8.5/10   28.1%   $2,810.00
-  USDC Euler ARB         42161    euler-v2   4.12%   7.2/10   20.3%   $2,030.00
+  USDC Base Vault        8453     aave    5.23%   8.9/10   35.2%   $3,520.00
+  USDC Morpho ETH        1        morpho  4.87%   8.5/10   28.1%   $2,810.00
+  USDC Euler ARB         42161    euler   4.12%   7.2/10   20.3%   $2,030.00
   USDC Pendle OP         10       pendle     4.65%   7.0/10   16.4%   $1,640.00
 ```
 
@@ -285,8 +285,8 @@ Allocation Suggestion -- $10,000.00 in USDC
 Watch a vault for APY/TVL changes in real time.
 
 ```bash
-earnforge watch --vault 8453-0xbeef... --apy-drop 20 --tvl-drop 30
-earnforge watch --vault 8453-0xbeef... --json
+earnforge watch --vault morpho:8453:_:0xbeef... --apy-drop 20 --tvl-drop 30
+earnforge watch --vault morpho:8453:_:0xbeef... --json
 ```
 
 | Flag | Type | Default | Description |
@@ -301,7 +301,7 @@ Press `Ctrl+C` to stop watching.
 **Example output:**
 
 ```
-Watching 8453-0xbeef... (Ctrl+C to stop)...
+Watching morpho:8453:_:0xbeef... (Ctrl+C to stop)...
 [2026-04-11T14:30:00.000Z] TICK APY: 5.23% (prev: 5.23%) TVL: $120.5M (prev: $120.5M)
 [2026-04-11T14:31:00.000Z] APY-DROP APY: 4.10% (prev: 5.23%) TVL: $120.5M (prev: $120.5M)
 ```
@@ -360,17 +360,17 @@ Supported Protocols
 
   Protocol            URL
   --------            ---
-  aave-v3             https://aave.com
-  morpho-v1           https://morpho.org
-  euler-v2            https://euler.finance
+  aave             https://aave.com
+  morpho           https://morpho.org
+  euler            https://euler.finance
   pendle              https://pendle.finance
   maple               https://maple.finance
-  ethena-usde         https://ethena.fi
+  ethena         https://ethena.fi
   ether.fi-liquid     https://ether.fi
-  ether.fi-stake      https://ether.fi
+  etherfi-staking      https://ether.fi
   upshift             https://upshift.finance
   neverland           https://neverland.finance
-  yo-protocol         https://yo.finance
+  yo         https://yo.finance
 ```
 
 ---
@@ -382,5 +382,5 @@ This is designed for piping into other tools, scripts, or CI pipelines.
 
 ```bash
 earnforge top --asset USDC --limit 3 --json | jq '.[0].apy'
-earnforge doctor --vault 8453-0xbeef... --json | jq '.checks | map(select(.status == "FAIL"))'
+earnforge doctor --vault morpho:8453:_:0xbeef... --json | jq '.checks | map(select(.status == "FAIL"))'
 ```

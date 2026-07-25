@@ -5,20 +5,21 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-474%20passing-brightgreen)](#)
-[![Vaults](https://img.shields.io/badge/vaults-623%2B-blueviolet)](#)
-[![Chains](https://img.shields.io/badge/chains-16-blue)](#)
-[![Pitfalls](https://img.shields.io/badge/pitfall%20guards-18-red)](#)
+[![Tests](https://img.shields.io/badge/tests-520%20passing-brightgreen)](#testing)
+[![Pitfalls](https://img.shields.io/badge/API%20pitfalls-23-red)](./PITFALLS.md)
 
-> **1 SDK. 7 surfaces. 18 pitfalls defeated.**
+> **The judgment layer for the LI.FI Earn API.**
 
-Developer toolkit for the LI.FI Earn API. One SDK eliminates 18 integration
-pitfalls; seven surfaces put it in your terminal, your React app, your
-AI agent, and your Telegram group.
+LI.FI tells you which vaults exist. EarnForge tells you which one to pick, and
+whether your integration is actually correct.
 
-**[Studio](https://earnforge-studio.vercel.app)** | **[Docs](https://earnforge-docs.vercel.app)** | **[npm](https://www.npmjs.com/org/earnforge)**
+**[Studio](https://earnforge-studio.vercel.app)** ·
+**[Docs](https://earnforge-docs.vercel.app)** ·
+**[npm](https://www.npmjs.com/org/earnforge)** ·
+**[Pitfalls](./PITFALLS.md)** ·
+**[Migrating from 0.1.x](./MIGRATING.md)**
 
-```
+```bash
 npm i @earnforge/sdk
 ```
 
@@ -26,141 +27,165 @@ npm i @earnforge/sdk
 
 ## Quick start
 
-```ts
-import { createEarnForge, riskScore } from "@earnforge/sdk";
+The Earn Data API requires a key as of April 2026 — create one at
+[portal.li.fi](https://portal.li.fi).
 
-const forge = createEarnForge();
+```ts
+import { createEarnForge, riskScore, isFlagged } from '@earnforge/sdk'
+
+const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY })
+
 for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
-  const risk = riskScore(vault);
-  console.log(vault.name, vault.analytics.apy.total, risk.label);
+  if (isFlagged(vault)) continue // LI.FI flags ~9% of vaults as suspect
+  const { score, label, flags } = riskScore(vault)
+  console.log(vault.name, vault.analytics.apy.total, label, flags)
 }
 ```
 
-Five lines. Auto-pagination, null-safe APY, string TVL parsing, rate
-limiting, and retry logic are handled for you.
+Auto-pagination, mandatory auth, rate limiting, retry, caching and all 23
+documented API quirks are handled for you.
+
+---
+
+## Why this exists
+
+The Earn API is easy to get wrong, and several of its behaviours contradict
+LI.FI's own documentation. Verified against 609 live vaults:
+
+| What LI.FI documents | What the API does |
+|---|---|
+| APY is a decimal (`0.0534` = 5.34%) | already a percentage — the quickstart's `* 100` overstates every yield **100×** |
+| `tvl.usd` is a string | a number |
+| `caps`, `timeLock`, `kyc`, `lpTokens` exist | sent by **zero** vaults |
+| Structured errors on `400` and `404` | only `400` carries `errors[]` |
+| Analytics refresh every 15 minutes | observed floor **87 minutes**, median 90 |
+| "No API key required" | `earn.li.fi` hard-`401`s |
+| *(undocumented)* | `verificationStatus` flags **9% of the fleet** |
+
+Plus the silent ones: a stale protocol slug (`morpho-v1`) returns `200` with zero
+results rather than an error, and an unknown query param is dropped — so
+`minTvl` instead of `minTvlUsd` returns the entire unfiltered fleet.
+
+Full detail, with a test for each: **[PITFALLS.md](./PITFALLS.md)**
 
 ---
 
 ## Architecture
 
 ```
-                        @earnforge/sdk
-                              |
-       +----------+----------+----------+----------+
-       |          |          |          |          |
-     CLI       React       MCP       Skill      Bot
-  (terminal)  (hooks)   (AI tools) (agent)   (Telegram)
-       |
-     Studio
-   (Next.js)
+                    @earnforge/sdk
+                          |
+     +--------+-----------+-----------+--------+
+     |        |           |           |        |
+    CLI     React        MCP        Skill     Bot
+ (terminal) (hooks)   (AI tools)   (agent)  (Telegram)
+     |
+   Studio
+  (Next.js)
 ```
 
-**1 SDK -> 7 surfaces.** Every surface imports `@earnforge/sdk` and
-inherits all 18 pitfall mitigations, Zod-validated types, rate limiting,
-caching, and retry logic.
+Every surface imports the SDK, so all pitfall mitigations, Zod-validated types,
+rate limiting, caching and retry logic are inherited rather than reimplemented.
 
 ---
 
 ## Packages
 
-| Package | npm | Description |
-|---------|-----|-------------|
-| `@earnforge/sdk` | [![npm](https://img.shields.io/npm/v/@earnforge/sdk?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/sdk) | Typed client, Zod schemas, risk scorer, strategy engine, deposit quoting, preflight checks |
-| `@earnforge/cli` | [![npm](https://img.shields.io/npm/v/@earnforge/cli?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/cli) | Terminal interface -- `earnforge list`, `earnforge doctor`, `earnforge quote`, `earnforge compare` |
-| `@earnforge/react` | [![npm](https://img.shields.io/npm/v/@earnforge/react?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/react) | React hooks with TanStack Query -- `useVaults`, `useRiskScore`, `useEarnDeposit` |
-| `@earnforge/mcp` | [![npm](https://img.shields.io/npm/v/@earnforge/mcp?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/mcp) | MCP server -- 11 tools for vault discovery, risk scoring, deposit quoting |
-| `@earnforge/skill` | [![npm](https://img.shields.io/npm/v/@earnforge/skill?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/skill) | Agent Skill -- SKILL.md + reference docs for Claude Code / Cursor integration |
-| `@earnforge/bot` | [![npm](https://img.shields.io/npm/v/@earnforge/bot?color=f97316&label=)](https://www.npmjs.com/package/@earnforge/bot) | Telegram bot -- yield queries, risk checks, portfolio suggestions via grammY |
-| `earnforge-studio` | [Live](https://earnforge-studio.vercel.app) | Next.js dashboard -- vault explorer, DeFiLlama sparklines, risk badges, code generator |
+| Package | Description |
+|---------|-------------|
+| [`@earnforge/sdk`](./packages/sdk) | Typed client, Zod schemas, risk scorer, strategies, quoting, drift detection |
+| [`@earnforge/cli`](./packages/cli) | 19 commands — `list`, `risk`, `suggest`, `doctor`, `compare`, all with `--json` |
+| [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query — `useVaults`, `useRiskScore`, `useEarnDeposit` |
+| [`@earnforge/mcp`](./packages/mcp) | 11 MCP tools, including the six LI.FI's hosted server doesn't offer |
+| [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec |
+| [`@earnforge/bot`](./packages/bot) | Telegram bot via grammY |
+| [`earnforge-studio`](./apps/studio) | Next.js dashboard — explorer, sparklines, risk badges, code generator |
 
 ---
 
-## Key features
+## What you get beyond a typed client
 
-- **Risk scoring** -- composite 0-10 score across 5 dimensions (TVL, APY stability, protocol maturity, redeemability, asset type)
-- **Strategy presets** -- conservative, max-apy, diversified, risk-adjusted filters
-- **Portfolio suggestions** -- risk-adjusted allocation engine with chain diversification
-- **Gas optimization** -- compare deposit routes across multiple chains
-- **DeFiLlama integration** -- 30-day APY history sparklines with intelligent pool matching
-- **Deposit + withdraw quoting** -- full Composer integration with ERC-20 allowance checks
-- **`earnforge doctor`** -- run all 18 pitfall checks against any vault in 10 seconds
-- **`earnforge compare`** -- side-by-side vault comparison
+### Risk scoring
 
----
+A composite 0–10 score across seven dimensions — TVL, APY stability, protocol
+maturity, redeemability, asset type, LI.FI's `verificationStatus`, and reward
+dependency — plus a `flags[]` array of plain-language concerns.
 
-## 18 Pitfalls -- Handled
-
-Every pitfall has a dedicated test under `packages/sdk/test/pitfalls/`.
-
-| # | Pitfall | SDK fix |
-|---|---------|---------|
-| 1 | Wrong base URL | Two typed clients with correct defaults |
-| 2 | Auth on Earn Data API | No auth headers on `EarnDataClient` |
-| 3 | Missing Composer API key | Constructor validation + `requireComposer()` gate |
-| 4 | POST instead of GET | Hard-coded `GET` in `ComposerClient.getQuote()` |
-| 5 | Wrong `toToken` | `buildDepositQuote()` wires `vault.address` |
-| 6 | Ignoring pagination | Async iterator via `nextCursor` |
-| 7 | Null APY values | Nullable types + `getBestApy()` fallback chain |
-| 8 | TVL is a string | `parseTvl()` returns `{ raw, parsed, bigint }` |
-| 9 | Decimal mismatch | `toSmallestUnit()` / `fromSmallestUnit()` |
-| 10 | Stale quote | LRU cache with TTL; quotes excluded from cache |
-| 11 | No gas token | `preflight()` balance check |
-| 12 | Chain mismatch | `preflight()` chain ID comparison |
-| 13 | Non-transactional vault | `isTransactional` guard in `buildDepositQuote()` + `preflight()` |
-| 14 | Rate limit | Token bucket -- 100 req/min with async backpressure |
-| 15 | Empty `underlyingTokens` | Null-safe array; explicit `fromToken` required when empty |
-| 16 | Optional `description` | `z.string().optional()` in `VaultSchema` |
-| 17 | `apy.reward` null vs 0 | `.nullable().transform(v => v ?? 0)` |
-| 18 | `apy1d` null | Extended fallback chain in `getBestApy()` |
-
-Full details with root causes and test paths: [`PITFALLS.md`](./PITFALLS.md)
-
----
-
-## CLI commands
-
-```
-earnforge list            # list vaults with filters
-earnforge top             # top vaults by APY for an asset
-earnforge vault <slug>    # detailed vault info
-earnforge compare         # side-by-side vault comparison
-earnforge portfolio <wal> # portfolio positions
-earnforge quote           # build a deposit quote
-earnforge withdraw        # build a withdrawal quote
-earnforge allowance       # check ERC-20 token allowance
-earnforge approve         # build approval transaction
-earnforge risk <slug>     # risk score breakdown
-earnforge suggest         # portfolio allocation suggestions
-earnforge watch           # live APY/TVL monitoring
-earnforge apy-history     # 30-day DeFiLlama APY chart
-earnforge preflight       # pre-deposit validation
-earnforge simulate        # eth_call dry-run
-earnforge doctor          # 18-pitfall diagnostics
-earnforge chains          # supported chains
-earnforge protocols       # supported protocols
-earnforge init <name>     # scaffold a new project
+```ts
+const { score, label, flags } = riskScore(vault)
+// 4.5, 'high'
+// ['flagged by LI.FI verification: zero_apy', 'withdrawals unavailable via Composer']
 ```
 
-Every command supports `--json` for machine-readable output.
+Calibrated against the live fleet, whose scores span 4.1–9.7. The `8` boundary is
+deliberate: verification carries 0.22 of the weight, so a flagged vault caps at
+7.96 — **no flagged vault can ever be labelled low risk.**
+
+### Reward sustainability
+
+`apy.reward` is three-valued — null, zero, or positive — and the split varies
+*within* a protocol. Preserving that distinction is what makes
+`rewardShareOfTotal()` meaningful: a vault earning 87% of its yield from token
+incentives is a different proposition from one earning it from lending fees.
+
+### Drift detection
+
+Born from this project shipping broken for three months. `detectDrift()` compares
+the live API, LI.FI's OpenAPI spec, and our schema — reporting *which pair*
+disagrees, so a vendor documentation bug is distinguishable from ours.
+
+```bash
+$ pnpm --filter @earnforge/sdk drift
+
+WARNING (2)
+  [live-vs-spec] analytics.apy
+    The spec states APY is "expressed as a decimal", but live values exceed 1...
+
+No breaking drift — our schema still matches the live API.
+```
+
+CI runs it daily.
+
+### Also included
+
+Strategy presets (all excluding flagged vaults), a risk-adjusted allocation
+engine, gas-optimised cross-chain routing, DeFiLlama APY history at 97% fleet
+coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor`.
+
+---
+
+## Testing
+
+| Suite | Count |
+|---|---|
+| SDK (incl. 23 pitfall regressions) | 251 |
+| CLI | 106 |
+| Studio | 56 |
+| React | 46 |
+| MCP | 38 |
+| Bot | 23 |
+| **Total** | **520** |
+| Live API integration | **32** |
+
+```bash
+pnpm turbo test                                    # mocked
+LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live
+LIFI_API_KEY=... pnpm --filter @earnforge/sdk drift
+```
+
+CI gates on build, typecheck, lint, the mocked suite, the live suite, and drift —
+plus a daily scheduled drift run. The previous release gated only on build and
+test, which is how it shipped broken.
 
 ---
 
 ## Stack
 
-| Layer | Tool | Version |
-|-------|------|---------|
-| Language | TypeScript | 5.9 |
-| Package manager | pnpm | 10 |
-| Monorepo | Turborepo | 2.5 |
-| Bundler | tsdown | 0.21 |
-| Linter + formatter | Biome | 2.4 |
-| Test runner | Vitest | 4.1 |
-| Schema validation | Zod | 3.24 |
-| EVM types | viem | 2.47 |
-| React query | TanStack Query | 5.90 |
-| MCP | @modelcontextprotocol/sdk | 1.12 |
-| Bot framework | grammY | 1.35 |
-| Web framework | Next.js | 15.3 |
+TypeScript 5.9 · pnpm 10 · Turborepo 2.5 · tsdown · Biome 2.4 · Vitest 4 ·
+Zod 3 · viem 2.47 · TanStack Query 5 · MCP SDK 1.12 · grammY 1.35 · Next.js 15
+
+Zod is a deliberate divergence from LI.FI's own stack — runtime validation is
+what surfaces the discrepancies in the table above.
 
 ---
 
@@ -170,12 +195,6 @@ Every command supports `--json` for machine-readable output.
 pnpm install
 pnpm turbo build
 pnpm turbo test
-```
-
-Run live integration tests against the real API:
-
-```bash
-pnpm --filter @earnforge/sdk test:live
 ```
 
 ---

@@ -91,7 +91,7 @@ console.log(`Found ${vaults.length} vaults on Base`);
 ```
 
 <Aside>
-This is the correct way to see all 623+ vaults. A single `list()` call returns at most 50.
+This is the correct way to see all the full vault set. A single `list()` call returns at most 50.
 See [Pitfall #6](/pitfalls/) for why this matters.
 </Aside>
 
@@ -145,7 +145,7 @@ Returns all 11 supported protocols.
 
 ```ts
 const protocols = await forge.protocols.list();
-// [{ name: 'aave-v3', url: '...' }, { name: 'morpho-v1', url: '...' }, ...]
+// [{ name: 'aave', url: '...' }, { name: 'morpho', url: '...' }, ...]
 ```
 
 ### portfolio.get()
@@ -274,7 +274,7 @@ Four built-in presets for common yield strategies:
 
 | Preset | Description | TVL Floor | Protocols | Tags |
 |--------|-------------|-----------|-----------|------|
-| `conservative` | Stablecoin, blue-chip, high TVL | $50M | aave-v3, morpho-v1, euler-v2, pendle, maple | `stablecoin` |
+| `conservative` | Stablecoin, blue-chip, high TVL | $50M | aave, morpho, euler, pendle, yearn | `stablecoin` |
 | `max-apy` | Highest APY, no restrictions | none | all | all |
 | `diversified` | Multi-chain, multi-protocol spread | $1M | all | all |
 | `risk-adjusted` | Risk score >= 7, then sort by APY | none | all | all |
@@ -317,7 +317,7 @@ for (const route of routes) {
 Watch a vault for APY and TVL changes. Returns an async generator of events.
 
 ```ts
-const watcher = forge.watch('8453-0xbeef...', {
+const watcher = forge.watch('morpho:8453:_:0xbeef...', {
   apyDropPercent: 20,   // Alert when APY drops 20%+
   tvlDropPercent: 30,   // Alert when TVL drops 30%+
 });

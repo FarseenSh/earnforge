@@ -24,7 +24,7 @@ Response shape:
 {
   "data": [ ...vaults ],
   "nextCursor": "abc123" | null,
-  "total": 623
+  "total": 609
 }
 ```
 
@@ -36,7 +36,7 @@ Get a single vault. chainId MUST be a number (e.g. 8453), not a chain name
 ### GET /v1/earn/chains
 
 List all supported chains. Returns an array of objects with chainId (number),
-name (string), networkCaip (string). Currently 16 chains.
+name (string), networkCaip (string). Chain coverage changes; read the endpoint.
 
 ### GET /v1/earn/protocols
 
@@ -50,7 +50,7 @@ Get earn positions for a wallet address. Returns:
   "positions": [
     {
       "chainId": 8453,
-      "protocolName": "aave-v3",
+      "protocolName": "aave",
       "asset": { "address": "0x...", "name": "...", "symbol": "...", "decimals": 6 },
       "balanceUsd": "1234.56",
       "balanceNative": "1234560000"
@@ -171,15 +171,15 @@ All commands support --json for machine-readable output.
 ```
 earnforge list --chain 8453 --asset USDC --min-apy 0.05 --json
 earnforge top --asset USDC --limit 5 --json
-earnforge vault 8453-0xbeef... --json
+earnforge vault morpho:8453:_:0xbeef... --json
 earnforge portfolio 0xwallet... --json
-earnforge quote --vault 8453-0xbeef... --amount 100 --wallet 0x... --json
-earnforge risk 8453-0xbeef... --json
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0x... --json
+earnforge risk morpho:8453:_:0xbeef... --json
 earnforge suggest --amount 10000 --asset USDC --strategy conservative --json
-earnforge watch --vault 8453-0xbeef... --json
+earnforge watch --vault morpho:8453:_:0xbeef... --json
 earnforge chains --json
 earnforge protocols --json
-earnforge doctor --vault 8453-0xbeef... --json
+earnforge doctor --vault morpho:8453:_:0xbeef... --json
 earnforge doctor --env --json
 ```
 
