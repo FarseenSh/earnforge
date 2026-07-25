@@ -1045,23 +1045,40 @@ program
     fs.writeFileSync(
       path.join(dir, 'src', 'page.tsx'),
       `// SPDX-License-Identifier: Apache-2.0
-import { createEarnForge } from '@earnforge/sdk';
+//
+// Server Component — this runs on the server, which is the only safe place for
+// the API key. The Earn Data API requires one, so calling it from the browser
+// would mean shipping the key where anyone can read it out of the network tab.
+// For client-side vault data, proxy through a route handler instead.
+import { createEarnForge, isFlagged } from '@earnforge/sdk';
 
+// One key authenticates both the Earn Data API and Composer.
 const forge = createEarnForge({
-  composerApiKey: process.env.LIFI_API_KEY,
+  apiKey: process.env.LIFI_API_KEY,
 });
 
 export default async function Home() {
-  const top = await forge.vaults.top({ asset: 'USDC', limit: 5 });
+  const vaults = await forge.vaults.top({ asset: 'USDC', limit: 10 });
+
+  // LI.FI flags roughly 9% of vaults as suspect via an undocumented
+  // verificationStatus field. Showing them unlabelled is how a broken or
+  // outlier vault ends up looking like a recommendation.
+  const safe = vaults.filter((v) => !isFlagged(v)).slice(0, 5);
+
   return (
     <main>
       <h1>Top USDC Vaults</h1>
       <ul>
-        {top.map((v) => (
-          <li key={v.slug}>
-            {v.name} — {v.analytics.apy.total.toFixed(2)}% APY
-          </li>
-        ))}
+        {safe.map((v) => {
+          const risk = forge.riskScore(v);
+          return (
+            <li key={v.slug}>
+              {/* APY is already a percentage — do not multiply by 100. */}
+              {v.name} — {v.analytics.apy.total.toFixed(2)}% APY
+              {' · '}risk {risk.score}/10 ({risk.label})
+            </li>
+          );
+        })}
       </ul>
     </main>
   );
