@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 'use client'
 
-import type { Vault, RiskScore } from '@earnforge/sdk'
+import type { RiskScore, Vault } from '@earnforge/sdk'
 import { parseTvl } from '@earnforge/sdk'
 import { RiskBadge } from './RiskBadge'
 
@@ -14,9 +14,15 @@ interface VaultCardProps {
 }
 
 function formatTvl(tvlUsd: number): string {
-  if (tvlUsd >= 1_000_000_000) return `$${(tvlUsd / 1_000_000_000).toFixed(2)}B`
-  if (tvlUsd >= 1_000_000) return `$${(tvlUsd / 1_000_000).toFixed(2)}M`
-  if (tvlUsd >= 1_000) return `$${(tvlUsd / 1_000).toFixed(2)}K`
+  if (tvlUsd >= 1_000_000_000) {
+    return `$${(tvlUsd / 1_000_000_000).toFixed(2)}B`
+  }
+  if (tvlUsd >= 1_000_000) {
+    return `$${(tvlUsd / 1_000_000).toFixed(2)}M`
+  }
+  if (tvlUsd >= 1_000) {
+    return `$${(tvlUsd / 1_000).toFixed(2)}K`
+  }
   return `$${tvlUsd.toFixed(2)}`
 }
 
@@ -27,7 +33,9 @@ function formatApy(apy: number): string {
 
 /** Tiny inline SVG sparkline — no chart library needed */
 function Sparkline({ data }: { data: number[] }) {
-  if (data.length < 2) return null
+  if (data.length < 2) {
+    return null
+  }
   const min = Math.min(...data)
   const max = Math.max(...data)
   const range = max - min || 1

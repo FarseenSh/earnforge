@@ -100,7 +100,7 @@ function generateCurl(vault: Vault): string {
   const underlying = vault.underlyingTokens[0]
   const fromToken = underlying?.address ?? '0x_FROM_TOKEN'
   const decimals = underlying?.decimals ?? 18
-  const fromAmount = '1' + '0'.repeat(decimals) // 1 token in smallest unit
+  const fromAmount = `1${'0'.repeat(decimals)}` // 1 token in smallest unit
   return `# Get vault details (Earn Data API — no auth needed)
 curl -s "https://earn.li.fi/v1/earn/vaults/${vault.chainId}/${vault.address}" | jq '.'
 
@@ -202,6 +202,7 @@ export function CodeGenerator({ vault, onClose }: CodeGeneratorProps) {
           Code for {vault.name}
         </h3>
         <button
+          type="button"
           onClick={onClose}
           data-testid="code-generator-close"
           className="rounded-lg px-2 py-1 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
@@ -213,6 +214,7 @@ export function CodeGenerator({ vault, onClose }: CodeGeneratorProps) {
       <div className="mb-3 flex gap-1">
         {TABS.map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             data-testid={`code-tab-${tab.id}`}
@@ -232,6 +234,7 @@ export function CodeGenerator({ vault, onClose }: CodeGeneratorProps) {
           <code>{code}</code>
         </pre>
         <button
+          type="button"
           onClick={handleCopy}
           data-testid="code-copy-button"
           className="absolute right-2 top-2 rounded-md bg-[var(--color-card)] px-2 py-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"

@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 'use client'
 
-import { useState, useCallback } from 'react'
-import {
-  type SuggestResult,
-  type StrategyPreset,
-  type Vault,
-} from '@earnforge/sdk'
+import type { StrategyPreset, SuggestResult, Vault } from '@earnforge/sdk'
+import { useCallback, useState } from 'react'
 import { getEarnForge } from '@/lib/earnforge'
 import { RiskBadge } from './RiskBadge'
 
@@ -85,11 +81,15 @@ export function PortfolioSuggestion() {
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs text-[var(--color-text-muted)]">
+          <label
+            htmlFor="suggest-amount"
+            className="mb-1 block text-xs text-[var(--color-text-muted)]"
+          >
             Amount (USD)
           </label>
           <input
             type="number"
+            id="suggest-amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="10000"
@@ -97,11 +97,15 @@ export function PortfolioSuggestion() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-[var(--color-text-muted)]">
+          <label
+            htmlFor="suggest-asset"
+            className="mb-1 block text-xs text-[var(--color-text-muted)]"
+          >
             Asset
           </label>
           <input
             type="text"
+            id="suggest-asset"
             value={asset}
             onChange={(e) => setAsset(e.target.value)}
             placeholder="USDC"
@@ -109,11 +113,15 @@ export function PortfolioSuggestion() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-[var(--color-text-muted)]">
+          <label
+            htmlFor="suggest-strategy"
+            className="mb-1 block text-xs text-[var(--color-text-muted)]"
+          >
             Strategy
           </label>
           <select
             value={strategy}
+            id="suggest-strategy"
             onChange={(e) => setStrategy(e.target.value as StrategyPreset | '')}
             className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)]"
           >
@@ -125,11 +133,15 @@ export function PortfolioSuggestion() {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-[var(--color-text-muted)]">
+          <label
+            htmlFor="suggest-max-chains"
+            className="mb-1 block text-xs text-[var(--color-text-muted)]"
+          >
             Max Chains
           </label>
           <input
             type="number"
+            id="suggest-max-chains"
             value={maxChains}
             onChange={(e) => setMaxChains(e.target.value)}
             min="1"

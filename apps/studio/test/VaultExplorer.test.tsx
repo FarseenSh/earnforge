@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { mockVault, mockHighRiskVault } from './helpers'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock the earnforge module
 vi.mock('@/lib/earnforge', () => {
-  const vaults = [
+  const _vaults = [
     // We need to import helpers inside the factory since it runs before imports
   ]
   return {

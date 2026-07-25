@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 'use client'
 
+import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, createConfig, http } from 'wagmi'
-import { base, mainnet, arbitrum, optimism, polygon } from 'wagmi/chains'
-import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { WagmiProvider } from 'wagmi'
+import { arbitrum, base, mainnet, optimism, polygon } from 'wagmi/chains'
 import '@rainbow-me/rainbowkit/styles.css'
 import { type ReactNode, useState } from 'react'
 

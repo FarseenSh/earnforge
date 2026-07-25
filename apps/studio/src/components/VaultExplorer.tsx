@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 'use client'
 
-import type { Vault, Chain, StrategyPreset, RiskScore } from '@earnforge/sdk'
-import { riskScore, parseTvl } from '@earnforge/sdk'
+import type { Chain, RiskScore, StrategyPreset, Vault } from '@earnforge/sdk'
+import { parseTvl, riskScore } from '@earnforge/sdk'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { getEarnForge } from '@/lib/earnforge'
@@ -74,7 +74,9 @@ export function VaultExplorer() {
   // Compute risk scores for all vaults
   const riskScores = useMemo(() => {
     const map = new Map<string, RiskScore>()
-    if (!vaults) return map
+    if (!vaults) {
+      return map
+    }
     for (const vault of vaults) {
       map.set(vault.address + vault.chainId, riskScore(vault))
     }
@@ -83,7 +85,9 @@ export function VaultExplorer() {
 
   // Filter vaults
   const filteredVaults = useMemo(() => {
-    if (!vaults) return []
+    if (!vaults) {
+      return []
+    }
 
     let result = vaults
 
@@ -113,11 +117,15 @@ export function VaultExplorer() {
   // Stats
   const totalVaults = vaults?.length ?? 0
   const uniqueChains = useMemo(() => {
-    if (!vaults) return 0
+    if (!vaults) {
+      return 0
+    }
     return new Set(vaults.map((v) => v.chainId)).size
   }, [vaults])
   const uniqueProtocols = useMemo(() => {
-    if (!vaults) return 0
+    if (!vaults) {
+      return 0
+    }
     return new Set(vaults.map((v) => v.protocol.name)).size
   }, [vaults])
 

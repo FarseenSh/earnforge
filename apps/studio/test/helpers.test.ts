@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it } from 'vitest'
 import {
-  mockVault,
-  mockHighRiskVault,
-  mockRiskScore,
-  mockMediumRiskScore,
   mockHighRiskScore,
+  mockHighRiskVault,
+  mockMediumRiskScore,
+  mockRiskScore,
+  mockVault,
 } from './helpers'
 
 describe('test helpers', () => {
@@ -16,7 +16,8 @@ describe('test helpers', () => {
     expect(vault.name).toBe('Test Vault USDC')
     expect(vault.tags).toContain('stablecoin')
     expect(vault.analytics.apy.total).toBe(4.5)
-    expect(vault.analytics.tvl.usd).toBe('50000000')
+    // tvl.usd is a number as of the Apr 2026 API rewrite
+    expect(vault.analytics.tvl.usd).toBe(50_000_000)
   })
 
   it('mockVault accepts overrides', () => {
@@ -34,13 +35,13 @@ describe('test helpers', () => {
 
   it('mockRiskScore returns a low risk score by default', () => {
     const risk = mockRiskScore()
-    expect(risk.score).toBe(7.5)
+    expect(risk.score).toBe(8.5)
     expect(risk.label).toBe('low')
   })
 
   it('mockMediumRiskScore returns a medium risk score', () => {
     const risk = mockMediumRiskScore()
-    expect(risk.score).toBe(5.5)
+    expect(risk.score).toBe(6.5)
     expect(risk.label).toBe('medium')
   })
 

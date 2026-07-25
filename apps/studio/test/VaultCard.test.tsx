@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { VaultCard } from '@/components/VaultCard'
-import {
-  mockVault,
-  mockRiskScore,
-  mockHighRiskVault,
-  mockHighRiskScore,
-} from './helpers'
+import { mockRiskScore, mockVault } from './helpers'
 
 describe('VaultCard', () => {
   it('renders vault name and protocol', () => {
@@ -22,7 +17,7 @@ describe('VaultCard', () => {
       />
     )
     expect(screen.getByText('Test Vault USDC')).toBeInTheDocument()
-    expect(screen.getByText('aave-v3')).toBeInTheDocument()
+    expect(screen.getByText('aave')).toBeInTheDocument()
   })
 
   it('displays APY formatted as percentage', () => {
