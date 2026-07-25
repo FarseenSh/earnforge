@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ── Fixture data ────────────────────────────────────────────────────
 
@@ -146,7 +146,9 @@ function parseText(result: {
   content?: Array<{ type: string; text?: string }>
 }) {
   const textItem = result.content?.find((c) => c.type === 'text' && c.text)
-  if (!textItem || !textItem.text) throw new Error('No text content in result')
+  if (!textItem?.text) {
+    throw new Error('No text content in result')
+  }
   return JSON.parse(textItem.text)
 }
 

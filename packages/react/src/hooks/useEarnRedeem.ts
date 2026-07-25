@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useCallback, useRef } from 'react'
-import type { Vault, PreflightReport, RedeemQuoteResult } from '@earnforge/sdk'
+
+import type { PreflightReport, RedeemQuoteResult, Vault } from '@earnforge/sdk'
+import { useCallback, useRef, useState } from 'react'
 import { useEarnForge } from '../context.js'
 
 /**
@@ -114,7 +115,9 @@ export function useEarnRedeem(
       setState({ ...INITIAL_STATE, phase: 'preflight' })
 
       const report = sdk.preflight(params.vault, params.wallet)
-      if (abortRef.current) return
+      if (abortRef.current) {
+        return
+      }
 
       if (!report.ok) {
         setState({
@@ -142,7 +145,9 @@ export function useEarnRedeem(
         toChain: params.toChain,
         slippage: params.slippage,
       })
-      if (abortRef.current) return
+      if (abortRef.current) {
+        return
+      }
 
       // Phase: ready
       setState({
@@ -152,7 +157,9 @@ export function useEarnRedeem(
         quote,
       })
     } catch (err) {
-      if (abortRef.current) return
+      if (abortRef.current) {
+        return
+      }
       setState({
         ...INITIAL_STATE,
         phase: 'error',

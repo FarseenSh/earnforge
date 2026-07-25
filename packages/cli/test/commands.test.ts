@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { program, setForge, resetForge } from '../src/index.js'
 import type { EarnForge } from '@earnforge/sdk'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { program, resetForge, setForge } from '../src/index.js'
 import {
-  makeVault,
-  makeVault2,
   MOCK_CHAINS,
-  MOCK_PROTOCOLS,
+  MOCK_GAS_ROUTES,
   MOCK_PORTFOLIO,
+  MOCK_PROTOCOLS,
+  MOCK_QUOTE_RESULT,
   MOCK_RISK_SCORE,
   MOCK_SUGGEST_RESULT,
-  MOCK_QUOTE_RESULT,
-  MOCK_GAS_ROUTES,
+  makeVault,
+  makeVault2,
 } from './fixtures.js'
 
 // ── Mock forge factory ──
@@ -26,7 +26,9 @@ function createMockForge(overrides: Partial<EarnForge> = {}): EarnForge {
         .fn()
         .mockResolvedValue({ data: vaults, nextCursor: null, total: 2 }),
       listAll: vi.fn().mockImplementation(async function* () {
-        for (const v of vaults) yield v
+        for (const v of vaults) {
+          yield v
+        }
       }),
       get: vi.fn().mockResolvedValue(makeVault()),
       top: vi.fn().mockResolvedValue(vaults),
@@ -35,14 +37,12 @@ function createMockForge(overrides: Partial<EarnForge> = {}): EarnForge {
     protocols: { list: vi.fn().mockResolvedValue(MOCK_PROTOCOLS) },
     portfolio: { get: vi.fn().mockResolvedValue(MOCK_PORTFOLIO) },
     buildDepositQuote: vi.fn().mockResolvedValue(MOCK_QUOTE_RESULT),
-    preflight: vi
-      .fn()
-      .mockReturnValue({
-        ok: true,
-        issues: [],
-        vault: makeVault(),
-        wallet: '0x',
-      }),
+    preflight: vi.fn().mockReturnValue({
+      ok: true,
+      issues: [],
+      vault: makeVault(),
+      wallet: '0x',
+    }),
     riskScore: vi.fn().mockReturnValue(MOCK_RISK_SCORE),
     suggest: vi.fn().mockResolvedValue(MOCK_SUGGEST_RESULT),
     optimizeGasRoutes: vi.fn().mockResolvedValue(MOCK_GAS_ROUTES),
@@ -527,7 +527,9 @@ describe('CLI commands', () => {
   describe('compare', () => {
     it('outputs JSON array for two vaults', async () => {
       const mockGet = vi.fn().mockImplementation(async (slug: string) => {
-        if (slug === '42161-0xbeef0002') return makeVault2()
+        if (slug === '42161-0xbeef0002') {
+          return makeVault2()
+        }
         return makeVault()
       })
       forge.vaults.get = mockGet
@@ -547,7 +549,9 @@ describe('CLI commands', () => {
 
     it('fetches each vault by slug', async () => {
       const mockGet = vi.fn().mockImplementation(async (slug: string) => {
-        if (slug === '42161-0xbeef0002') return makeVault2()
+        if (slug === '42161-0xbeef0002') {
+          return makeVault2()
+        }
         return makeVault()
       })
       forge.vaults.get = mockGet
@@ -565,7 +569,9 @@ describe('CLI commands', () => {
 
     it('computes risk for each vault', async () => {
       const mockGet = vi.fn().mockImplementation(async (slug: string) => {
-        if (slug === '42161-0xbeef0002') return makeVault2()
+        if (slug === '42161-0xbeef0002') {
+          return makeVault2()
+        }
         return makeVault()
       })
       forge.vaults.get = mockGet
@@ -581,7 +587,9 @@ describe('CLI commands', () => {
 
     it('outputs comparison table in human format', async () => {
       const mockGet = vi.fn().mockImplementation(async (slug: string) => {
-        if (slug === '42161-0xbeef0002') return makeVault2()
+        if (slug === '42161-0xbeef0002') {
+          return makeVault2()
+        }
         return makeVault()
       })
       forge.vaults.get = mockGet

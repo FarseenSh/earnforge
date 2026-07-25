@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+
+import type { StrategyPreset, SuggestResult } from '@earnforge/sdk'
 import { useQuery } from '@tanstack/react-query'
-import type { SuggestResult, StrategyPreset } from '@earnforge/sdk'
 import { useEarnForge } from '../context.js'
 
 export interface UseSuggestParams {

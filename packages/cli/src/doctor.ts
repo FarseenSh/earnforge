@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import chalk from 'chalk'
 import type { Vault } from '@earnforge/sdk'
 import { parseTvl, riskScore } from '@earnforge/sdk'
+import chalk from 'chalk'
 import { riskLabel } from './helpers.js'
 
 export interface DoctorCheck {
@@ -291,7 +291,7 @@ export function formatDoctorReport(
 export function runEnvChecks(): DoctorReport {
   const checks: DoctorCheck[] = []
 
-  const hasApiKey = !!process.env['LIFI_API_KEY']
+  const hasApiKey = !!process.env.LIFI_API_KEY
   checks.push({
     id: 1,
     pitfall: 'LIFI_API_KEY',

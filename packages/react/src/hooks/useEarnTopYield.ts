@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+
+import type { StrategyPreset, Vault } from '@earnforge/sdk'
 import { useQuery } from '@tanstack/react-query'
-import type { Vault } from '@earnforge/sdk'
-import type { StrategyPreset } from '@earnforge/sdk'
 import { useEarnForge } from '../context.js'
 
 export interface UseEarnTopYieldParams {

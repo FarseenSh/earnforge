@@ -1,41 +1,83 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import chalk from 'chalk'
-import Table from 'cli-table3'
 import type {
-  Vault,
+  ApyDataPoint,
   Chain,
+  PreflightReport,
   ProtocolDetail,
   RiskScore,
-  ApyDataPoint,
-  PreflightReport,
+  Vault,
 } from '@earnforge/sdk'
 import { parseTvl } from '@earnforge/sdk'
+import chalk from 'chalk'
+import Table from 'cli-table3'
 
 // ── Formatting helpers ──
 
-export function fmtPct(n: number): string {
-  // API returns APY as percentage (3.84 = 3.84%), NOT as decimal fraction
+/**
+ * Format an APY percentage.
+ *
+ * The API returns APY already scaled as a percentage — `3.84` means 3.84%.
+ * LI.FI's OpenAPI spec and quickstart both claim these are decimals and show a
+ * `* 100`; doing that produces a 100x overstatement. Verified against the live
+ * fleet, which spans 0–106%.
+ *
+ * `null` means the protocol did not report a figure, which is distinct from
+ * reporting zero — rendered as `N/A` rather than `0.00%`.
+ */
+export function fmtPct(n: number | null | undefined): string {
+  if (n === null || n === undefined) {
+    return 'N/A'
+  }
   return `${n.toFixed(2)}%`
 }
 
 export function fmtUsd(n: number): string {
-  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`
+  if (n >= 1_000_000_000) {
+    return `$${(n / 1_000_000_000).toFixed(2)}B`
+  }
+  if (n >= 1_000_000) {
+    return `$${(n / 1_000_000).toFixed(2)}M`
+  }
+  if (n >= 1_000) {
+    return `$${(n / 1_000).toFixed(2)}K`
+  }
   return `$${n.toFixed(2)}`
 }
 
+// Thresholds mirror the SDK's riskLabel(): calibrated so no
+// verification-flagged vault can reach the "low" band.
 export function riskLabel(score: number): string {
-  if (score >= 7) return chalk.green(`${score}/10 (low)`)
-  if (score >= 4) return chalk.yellow(`${score}/10 (medium)`)
+  if (score >= 8) {
+    return chalk.green(`${score}/10 (low)`)
+  }
+  if (score >= 6) {
+    return chalk.yellow(`${score}/10 (medium)`)
+  }
   return chalk.red(`${score}/10 (high)`)
 }
 
 export function riskLabelPlain(score: number): string {
-  if (score >= 7) return `${score}/10 (low)`
-  if (score >= 4) return `${score}/10 (medium)`
+  if (score >= 8) {
+    return `${score}/10 (low)`
+  }
+  if (score >= 6) {
+    return `${score}/10 (medium)`
+  }
   return `${score}/10 (high)`
+}
+
+/** Verification badge — flagged vaults must be visible at a glance. */
+export function verificationBadge(v: Vault): string {
+  if (v.verificationStatus !== 'flagged') {
+    return chalk.green('verified')
+  }
+  const reasons = (v.verificationStatusBreakdown ?? [])
+    .filter((b) => b.result === 'flagged')
+    .map((b) => b.reason)
+  return chalk.red(
+    `FLAGGED${reasons.length > 0 ? ` (${reasons.join(', ')})` : ''}`
+  )
 }
 
 // ── Table builders ──
@@ -79,8 +121,8 @@ export function vaultDetail(v: Vault): string {
     `  ${chalk.dim('Slug:')}         ${v.slug}`,
     `  ${chalk.dim('Chain:')}        ${v.chainId} (${v.network})`,
     `  ${chalk.dim('Address:')}      ${v.address}`,
-    `  ${chalk.dim('Protocol:')}     ${v.protocol.name} (${v.protocol.url})`,
-    `  ${chalk.dim('Provider:')}     ${v.provider}`,
+    `  ${chalk.dim('Protocol:')}     ${v.protocol.id ?? v.protocol.name} (${v.protocol.url})`,
+    `  ${chalk.dim('Verification:')} ${verificationBadge(v)}`,
     `  ${chalk.dim('Tags:')}         ${v.tags.join(', ') || '(none)'}`,
     '',
     chalk.bold('Analytics'),
@@ -101,10 +143,21 @@ export function vaultDetail(v: Vault): string {
     '',
     chalk.bold('Underlying Tokens'),
     ...v.underlyingTokens.map(
-      (t) => `  ${t.symbol} (${t.address}) — ${t.decimals} decimals`
+      (t) =>
+        `  ${t.symbol} (${t.address}) — ${t.decimals} decimals` +
+        (t.priceUsd ? ` @ $${t.priceUsd}` : '')
     ),
     ...(v.underlyingTokens.length === 0 ? ['  (none)'] : []),
     '',
+    ...(v.rewardTokens && v.rewardTokens.length > 0
+      ? [
+          chalk.bold('Reward Tokens'),
+          ...v.rewardTokens.map(
+            (t) => `  ${t.symbol ?? '(unnamed)'} (${t.address})`
+          ),
+          '',
+        ]
+      : []),
     ...(v.description
       ? [chalk.bold('Description'), `  ${v.description}`, '']
       : []),
@@ -133,13 +186,20 @@ export function protocolTable(protocols: ProtocolDetail[]): string {
   return table.toString()
 }
 
+/**
+ * Render portfolio positions.
+ *
+ * `protocolName`, `balanceUsd` and `balanceNative` all became nullable in
+ * Apr 2026. Formatting a null through `Number()` yields `NaN`, so each is
+ * rendered explicitly as `—` when absent.
+ */
 export function portfolioTable(
   positions: Array<{
     chainId: number
-    protocolName: string
+    protocolName: string | null
     asset: { symbol: string; name: string }
-    balanceUsd: string
-    balanceNative: string
+    balanceUsd: string | null
+    balanceNative: string | null
   }>
 ): string {
   const table = new Table({
@@ -152,12 +212,16 @@ export function portfolioTable(
     ],
   })
   for (const p of positions) {
+    const usd =
+      p.balanceUsd === null || Number.isNaN(Number(p.balanceUsd))
+        ? '—'
+        : `$${Number(p.balanceUsd).toFixed(2)}`
     table.push([
       String(p.chainId),
-      p.protocolName,
+      p.protocolName ?? '—',
       `${p.asset.symbol} (${p.asset.name})`,
-      p.balanceNative,
-      `$${Number(p.balanceUsd).toFixed(2)}`,
+      p.balanceNative ?? '—',
+      usd,
     ])
   }
   return table.toString()
@@ -243,11 +307,12 @@ export function preflightTable(report: PreflightReport): string {
 export function compareTable(vaults: Vault[], risks: RiskScore[]): string {
   const fields: Array<{
     label: string
-    value: (v: Vault, r: RiskScore) => string
+    value: (v: Vault, r: RiskScore | undefined) => string
   }> = [
     { label: 'Slug', value: (v) => v.slug },
     { label: 'Chain', value: (v) => `${v.network} (${v.chainId})` },
-    { label: 'Protocol', value: (v) => v.protocol.name },
+    { label: 'Protocol', value: (v) => v.protocol.id ?? v.protocol.name },
+    { label: 'Verification', value: (v) => verificationBadge(v) },
     {
       label: 'APY Total',
       value: (v) => chalk.green(fmtPct(v.analytics.apy.total)),
@@ -265,7 +330,7 @@ export function compareTable(vaults: Vault[], risks: RiskScore[]): string {
         v.analytics.apy30d !== null ? fmtPct(v.analytics.apy30d) : 'N/A',
     },
     { label: 'TVL', value: (v) => fmtUsd(parseTvl(v.analytics.tvl).parsed) },
-    { label: 'Risk', value: (_, r) => riskLabel(r.score) },
+    { label: 'Risk', value: (_, r) => (r ? riskLabel(r.score) : 'N/A') },
     { label: 'Tags', value: (v) => v.tags.join(', ') || '(none)' },
     {
       label: 'Transactional',

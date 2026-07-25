@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createContext, useContext, createElement, type ReactNode } from 'react'
+
 import type { EarnForge } from '@earnforge/sdk'
+import { createContext, createElement, type ReactNode, useContext } from 'react'
 
 const EarnForgeContext = createContext<EarnForge | null>(null)
 

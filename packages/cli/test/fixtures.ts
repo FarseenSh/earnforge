@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type {
-  Vault,
   Chain,
-  ProtocolDetail,
   PortfolioResponse,
+  ProtocolDetail,
   RiskScore,
+  Vault,
 } from '@earnforge/sdk'
 
 export function makeVault(overrides: Partial<Vault> = {}): Vault {

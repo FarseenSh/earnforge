@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createElement, type ReactNode } from 'react'
-import { renderHook, act, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
 import type {
+  ApyDataPoint,
+  DepositQuoteResult,
   EarnForge,
+  PortfolioResponse,
+  PreflightReport,
+  RedeemQuoteResult,
+  RiskScore,
+  SuggestResult,
   Vault,
   VaultListResponse,
-  PortfolioResponse,
-  RiskScore,
-  StrategyConfig,
-  SuggestResult,
-  ApyDataPoint,
-  PreflightReport,
-  DepositQuoteResult,
-  RedeemQuoteResult,
 } from '@earnforge/sdk'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EarnForgeProvider, useEarnForge } from '../src/context.js'
-import { useVaults } from '../src/hooks/useVaults.js'
-import { useVault } from '../src/hooks/useVault.js'
+import { useApyHistory } from '../src/hooks/useApyHistory.js'
+import { useEarnDeposit } from '../src/hooks/useEarnDeposit.js'
+import { useEarnRedeem } from '../src/hooks/useEarnRedeem.js'
 import { useEarnTopYield } from '../src/hooks/useEarnTopYield.js'
 import { usePortfolio } from '../src/hooks/usePortfolio.js'
 import { useRiskScore } from '../src/hooks/useRiskScore.js'
 import { useStrategy } from '../src/hooks/useStrategy.js'
 import { useSuggest } from '../src/hooks/useSuggest.js'
-import { useApyHistory } from '../src/hooks/useApyHistory.js'
-import { useEarnDeposit } from '../src/hooks/useEarnDeposit.js'
-import { useEarnRedeem } from '../src/hooks/useEarnRedeem.js'
+import { useVault } from '../src/hooks/useVault.js'
+import { useVaults } from '../src/hooks/useVaults.js'
 
 // ── Test fixtures ──
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ── Mock grammy before any import ──
 
@@ -91,13 +91,11 @@ function createMockForge() {
   const vault2 = makeVault2()
   return {
     vaults: {
-      list: vi
-        .fn()
-        .mockResolvedValue({
-          data: [vault, vault2],
-          nextCursor: null,
-          total: 2,
-        }),
+      list: vi.fn().mockResolvedValue({
+        data: [vault, vault2],
+        nextCursor: null,
+        total: 2,
+      }),
       listAll: vi.fn(),
       get: vi.fn().mockResolvedValue(vault),
       top: vi.fn().mockResolvedValue([vault, vault2]),
@@ -186,7 +184,9 @@ function makeCtx(text: string) {
 
 async function runCommand(name: string, text: string) {
   const handler = registeredHandlers.get(name)
-  if (!handler) throw new Error(`No handler registered for /${name}`)
+  if (!handler) {
+    throw new Error(`No handler registered for /${name}`)
+  }
   const ctx = makeCtx(text)
   await handler(ctx)
   return mockReply

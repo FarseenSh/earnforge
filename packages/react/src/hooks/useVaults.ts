@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+
+import type { StrategyPreset, Vault, VaultListResponse } from '@earnforge/sdk'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { Vault, VaultListResponse } from '@earnforge/sdk'
-import type { StrategyPreset } from '@earnforge/sdk'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useEarnForge } from '../context.js'
 
 export interface UseVaultsParams {
@@ -59,7 +59,7 @@ export function useVaults(params: UseVaultsParams = {}): UseVaultsReturn {
   useEffect(() => {
     cursorRef.current = null
     accumulatedRef.current = []
-  }, [paramsKey])
+  }, [])
 
   const queryKey = useMemo(
     () => ['earnforge', 'vaults', paramsKey, cursorRef.current] as const,
@@ -77,7 +77,9 @@ export function useVaults(params: UseVaultsParams = {}): UseVaultsReturn {
         strategy: params.strategy,
         cursor: cursorRef.current ?? undefined,
       })
-      cursorRef.current = result.nextCursor
+      // nextCursor is absent from the JSON on the last page, so it arrives as
+      // undefined rather than null — normalise so the ref stays string | null.
+      cursorRef.current = result.nextCursor ?? null
 
       if (accumulatedRef.current.length === 0) {
         accumulatedRef.current = result.data

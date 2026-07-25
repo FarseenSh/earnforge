@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+  MOCK_CHAINS,
+  MOCK_PORTFOLIO,
+  MOCK_PROTOCOLS,
+  MOCK_RISK_SCORE,
+  makeHighRiskVault,
+  makeNonTransactionalVault,
   makeVault,
   makeVault2,
-  makeNonTransactionalVault,
-  makeHighRiskVault,
-  MOCK_CHAINS,
-  MOCK_PROTOCOLS,
-  MOCK_PORTFOLIO,
-  MOCK_RISK_SCORE,
 } from './fixtures.js'
 
 describe('test fixtures', () => {

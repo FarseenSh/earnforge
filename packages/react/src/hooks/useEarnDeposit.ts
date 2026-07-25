@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useCallback, useRef } from 'react'
+
 import type {
-  Vault,
-  PreflightReport,
-  DepositQuoteResult,
   AllowanceResult,
   ApprovalTx,
+  DepositQuoteResult,
+  PreflightReport,
+  Vault,
 } from '@earnforge/sdk'
 import {
-  checkAllowance,
   buildApprovalTx,
+  checkAllowance,
   MAX_UINT256,
   toSmallestUnit,
 } from '@earnforge/sdk'
+import { useCallback, useRef, useState } from 'react'
 import { useEarnForge } from '../context.js'
 
 /**
@@ -123,7 +124,9 @@ export function useEarnDeposit(
       setState({ ...INITIAL_STATE, phase: 'preflight' })
 
       const report = sdk.preflight(params.vault, params.wallet)
-      if (abortRef.current) return
+      if (abortRef.current) {
+        return
+      }
 
       if (!report.ok) {
         setState({
@@ -161,7 +164,9 @@ export function useEarnDeposit(
           params.vault.address,
           requiredAmount
         )
-        if (abortRef.current) return
+        if (abortRef.current) {
+          return
+        }
 
         // If allowance insufficient, build approval tx and wait for it
         if (!allowanceResult.sufficient) {
@@ -189,7 +194,9 @@ export function useEarnDeposit(
               value: 0n,
               chainId: approval.chainId,
             })
-            if (abortRef.current) return
+            if (abortRef.current) {
+              return
+            }
           } else {
             // Cannot auto-approve without sendTransactionAsync — expose the tx for manual sending
             // The caller should check state.approvalTx and handle it
@@ -214,7 +221,9 @@ export function useEarnDeposit(
         fromChain: params.fromChain,
         slippage: params.slippage,
       })
-      if (abortRef.current) return
+      if (abortRef.current) {
+        return
+      }
 
       // Phase: ready
       setState({
@@ -226,7 +235,9 @@ export function useEarnDeposit(
         quote,
       })
     } catch (err) {
-      if (abortRef.current) return
+      if (abortRef.current) {
+        return
+      }
       setState({
         ...INITIAL_STATE,
         phase: 'error',

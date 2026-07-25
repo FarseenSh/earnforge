@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useQuery } from '@tanstack/react-query'
+
 import type { ApyDataPoint, Vault } from '@earnforge/sdk'
+import { useQuery } from '@tanstack/react-query'
 import { useEarnForge } from '../context.js'
 
 export interface UseApyHistoryReturn {

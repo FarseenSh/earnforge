@@ -4,15 +4,15 @@
  * Edge case tests: empty results, errors, special vault shapes.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { program, setForge, resetForge } from '../src/index.js'
-import { runDoctorChecks } from '../src/doctor.js'
 import type { EarnForge } from '@earnforge/sdk'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { runDoctorChecks } from '../src/doctor.js'
+import { program, resetForge, setForge } from '../src/index.js'
 import {
-  makeVault,
-  makeNonTransactionalVault,
-  makeHighRiskVault,
   MOCK_RISK_SCORE,
+  makeHighRiskVault,
+  makeNonTransactionalVault,
+  makeVault,
 } from './fixtures.js'
 
 function createEmptyForge(): EarnForge {
@@ -29,14 +29,12 @@ function createEmptyForge(): EarnForge {
     protocols: { list: vi.fn().mockResolvedValue([]) },
     portfolio: { get: vi.fn().mockResolvedValue({ positions: [] }) },
     buildDepositQuote: vi.fn().mockRejectedValue(new Error('No composer key')),
-    preflight: vi
-      .fn()
-      .mockReturnValue({
-        ok: true,
-        issues: [],
-        vault: makeVault(),
-        wallet: '0x',
-      }),
+    preflight: vi.fn().mockReturnValue({
+      ok: true,
+      issues: [],
+      vault: makeVault(),
+      wallet: '0x',
+    }),
     riskScore: vi.fn().mockReturnValue(MOCK_RISK_SCORE),
     suggest: vi
       .fn()

@@ -1,14 +1,15 @@
 #!/usr/bin/env node
+
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+  createEarnForge,
+  type StrategyPreset,
+  type Vault,
+} from '@earnforge/sdk'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import {
-  createEarnForge,
-  type Vault,
-  type StrategyPreset,
-} from '@earnforge/sdk'
 
 // ── Helpers ─────────────────────────────────────────────────────────
 

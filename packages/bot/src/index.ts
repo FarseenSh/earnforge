@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Bot, Context } from 'grammy'
 import {
+  type Allocation,
   createEarnForge,
   type EarnForge,
-  type Vault,
-  type RiskScore,
-  type Allocation,
   type PreflightReport,
-  type StrategyPreset,
   parseTvl,
+  type RiskScore,
+  type StrategyPreset,
+  type Vault,
 } from '@earnforge/sdk'
+import { Bot, type Context } from 'grammy'
 
 // ── Chain name → chainId mapping ──
 
@@ -43,8 +43,12 @@ const CHAIN_ID_TO_NAME: Record<number, string> = Object.fromEntries(
 // ── Formatting helpers ──
 
 function riskEmoji(label: 'low' | 'medium' | 'high'): string {
-  if (label === 'low') return '\u{1F7E2}'
-  if (label === 'medium') return '\u{1F7E1}'
+  if (label === 'low') {
+    return '\u{1F7E2}'
+  }
+  if (label === 'medium') {
+    return '\u{1F7E1}'
+  }
   return '\u{1F534}'
 }
 
@@ -54,9 +58,15 @@ function fmtApy(apy: number): string {
 
 function fmtTvl(vault: Vault): string {
   const tvl = parseTvl(vault.analytics.tvl).parsed
-  if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(2)}B`
-  if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(2)}M`
-  if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(2)}K`
+  if (tvl >= 1_000_000_000) {
+    return `$${(tvl / 1_000_000_000).toFixed(2)}B`
+  }
+  if (tvl >= 1_000_000) {
+    return `$${(tvl / 1_000_000).toFixed(2)}M`
+  }
+  if (tvl >= 1_000) {
+    return `$${(tvl / 1_000).toFixed(2)}K`
+  }
   return `$${tvl.toFixed(2)}`
 }
 

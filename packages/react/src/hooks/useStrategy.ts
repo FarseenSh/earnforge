@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo } from 'react'
+
 import {
   getStrategy,
-  type StrategyPreset,
   type StrategyConfig,
+  type StrategyPreset,
 } from '@earnforge/sdk'
+import { useMemo } from 'react'
 
 export interface UseStrategyReturn {
   data: StrategyConfig | undefined
@@ -26,7 +27,9 @@ export function useStrategy(
   preset: StrategyPreset | undefined
 ): UseStrategyReturn {
   const data = useMemo(() => {
-    if (!preset) return undefined
+    if (!preset) {
+      return undefined
+    }
     return getStrategy(preset)
   }, [preset])
 

@@ -1,45 +1,43 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Command } from 'commander'
+import {
+  buildApprovalTx,
+  checkAllowance,
+  createEarnForge,
+  type EarnForge,
+  MAX_UINT256,
+  parseTvl,
+  type StrategyPreset,
+  type Vault,
+} from '@earnforge/sdk'
 import chalk from 'chalk'
+import { Command } from 'commander'
 import ora from 'ora'
 import {
-  createEarnForge,
-  parseTvl,
-  checkAllowance,
-  buildApprovalTx,
-  MAX_UINT256,
-  type Vault,
-  type EarnForge,
-  type StrategyPreset,
-} from '@earnforge/sdk'
+  type DoctorReport,
+  formatDoctorReport,
+  formatEnvReport,
+  runDoctorChecks,
+  runEnvChecks,
+} from './doctor.js'
 import {
-  vaultTable,
-  vaultDetail,
-  compareTable,
-  chainTable,
-  protocolTable,
-  portfolioTable,
-  riskTable,
-  suggestTable,
   apyHistoryTable,
-  preflightTable,
+  chainTable,
+  compareTable,
   fmtPct,
   fmtUsd,
-  riskLabel,
-  riskLabelPlain,
   outputResult,
+  portfolioTable,
+  preflightTable,
+  protocolTable,
+  riskTable,
+  suggestTable,
+  vaultDetail,
+  vaultTable,
 } from './helpers.js'
-import {
-  runDoctorChecks,
-  formatDoctorReport,
-  runEnvChecks,
-  formatEnvReport,
-  type DoctorReport,
-} from './doctor.js'
 
-export { runDoctorChecks, formatDoctorReport, runEnvChecks, formatEnvReport }
 export type { DoctorReport }
+export { formatDoctorReport, formatEnvReport, runDoctorChecks, runEnvChecks }
 
 // ── Forge factory (lazy singleton) ──
 
@@ -48,7 +46,7 @@ let _forge: EarnForge | undefined
 function getForge(): EarnForge {
   if (!_forge) {
     _forge = createEarnForge({
-      composerApiKey: process.env['LIFI_API_KEY'],
+      composerApiKey: process.env.LIFI_API_KEY,
     })
   }
   return _forge
@@ -122,17 +120,21 @@ program
         strategy,
       })) {
         // Client-side APY filter
-        if (opts.minApy !== undefined && v.analytics.apy.total < opts.minApy)
+        if (opts.minApy !== undefined && v.analytics.apy.total < opts.minApy) {
           continue
+        }
         // Client-side TVL filter
         if (
           opts.minTvl !== undefined &&
           parseTvl(v.analytics.tvl).parsed < opts.minTvl
-        )
+        ) {
           continue
+        }
 
         vaults.push(v)
-        if (vaults.length >= limit * 3) break // Over-fetch for sorting
+        if (vaults.length >= limit * 3) {
+          break // Over-fetch for sorting
+        }
       }
 
       // Sort
@@ -161,8 +163,9 @@ program
         })),
         opts.json,
         () => {
-          if (result.length === 0)
+          if (result.length === 0) {
             return chalk.yellow('No vaults found matching your filters.')
+          }
           return `${vaultTable(result)}\n\n${chalk.dim(`Showing ${result.length} vault${result.length !== 1 ? 's' : ''}`)}`
         }
       )
@@ -205,8 +208,9 @@ program
         })),
         opts.json,
         () => {
-          if (result.length === 0)
+          if (result.length === 0) {
             return chalk.yellow(`No vaults found for asset: ${opts.asset}`)
+          }
           return `${chalk.bold(`Top ${opts.asset} vaults`)}\n\n${vaultTable(result)}`
         }
       )
@@ -303,8 +307,9 @@ program
       spinner.stop()
 
       outputResult(portfolio, opts.json, () => {
-        if (portfolio.positions.length === 0)
+        if (portfolio.positions.length === 0) {
           return chalk.yellow('No positions found.')
+        }
         const totalUsd = portfolio.positions.reduce(
           (sum, p) => sum + Number(p.balanceUsd),
           0
@@ -359,7 +364,9 @@ program
           })),
           opts.json,
           () => {
-            if (routes.length === 0) return chalk.yellow('No routes found.')
+            if (routes.length === 0) {
+              return chalk.yellow('No routes found.')
+            }
             const lines = [
               chalk.bold(`Gas-optimized routes for ${vault.name}`),
               '',
@@ -743,7 +750,7 @@ program
       const forge = getForge()
       const vault = await forge.vaults.get(opts.vault)
       const report = runDoctorChecks(vault, {
-        hasApiKey: !!process.env['LIFI_API_KEY'],
+        hasApiKey: !!process.env.LIFI_API_KEY,
       })
       spinner.stop()
 
@@ -831,8 +838,9 @@ program
         },
         opts.json,
         () => {
-          if (result.allocations.length === 0)
+          if (result.allocations.length === 0) {
             return chalk.yellow('No suitable vaults found for allocation.')
+          }
           const lines = [
             chalk.bold(
               `Allocation Suggestion — ${fmtUsd(result.totalAmount)} in ${opts.asset}`
@@ -1158,9 +1166,9 @@ program
           error: sim.error?.message,
         }
 
-        outputResult(simData, opts.json, () => {
+        outputResult(simData, opts.json ?? false, () => {
           const status = sim.error
-            ? chalk.red('FAILED: ' + sim.error.message)
+            ? chalk.red(`FAILED: ${sim.error.message}`)
             : chalk.green('SUCCESS — transaction would execute')
           return [
             chalk.bold('Simulation Result'),

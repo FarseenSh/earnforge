@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  runDoctorChecks,
   formatDoctorReport,
-  runEnvChecks,
   formatEnvReport,
+  runDoctorChecks,
+  runEnvChecks,
 } from '../src/doctor.js'
 import {
-  makeVault,
-  makeNonTransactionalVault,
   makeHighRiskVault,
+  makeNonTransactionalVault,
+  makeVault,
 } from './fixtures.js'
 
 describe('runDoctorChecks', () => {

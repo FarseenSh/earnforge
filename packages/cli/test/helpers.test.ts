@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { fmtPct, fmtUsd, riskLabelPlain } from '../src/helpers.js'
 
 describe('fmtPct', () => {
@@ -30,17 +30,32 @@ describe('fmtUsd', () => {
   })
 })
 
+// Thresholds are 8 / 6, matching the SDK's riskLabel(). Recalibrated against
+// the live fleet — scores span 4.1-9.7, so the old 7 / 4 cuts left "high"
+// unreachable. The 8 cut also guarantees no flagged vault reads as low risk.
 describe('riskLabelPlain', () => {
-  it('returns low for score >= 7', () => {
-    expect(riskLabelPlain(7)).toContain('low')
+  it('returns low for score >= 8', () => {
+    expect(riskLabelPlain(8)).toContain('low')
     expect(riskLabelPlain(9.5)).toContain('low')
   })
 
-  it('returns medium for score 4-6.9', () => {
-    expect(riskLabelPlain(5)).toContain('medium')
+  it('returns medium for score 6-7.9', () => {
+    expect(riskLabelPlain(6)).toContain('medium')
+    expect(riskLabelPlain(7.9)).toContain('medium')
   })
 
-  it('returns high for score < 4', () => {
+  it('returns high for score < 6', () => {
+    expect(riskLabelPlain(5.9)).toContain('high')
     expect(riskLabelPlain(2)).toContain('high')
+  })
+})
+
+describe('fmtPct — nullable', () => {
+  it('renders null and undefined as N/A rather than 0.00%', () => {
+    // apy.reward is genuinely null on many vaults; showing 0.00% would assert
+    // "no incentives" when the protocol reported nothing at all.
+    expect(fmtPct(null)).toBe('N/A')
+    expect(fmtPct(undefined)).toBe('N/A')
+    expect(fmtPct(0)).toBe('0.00%')
   })
 })
