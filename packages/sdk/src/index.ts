@@ -1,75 +1,71 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// ── Re-exports ──
-export * from './schemas/index.js'
-export * from './errors.js'
-export * from './rate-limiter.js'
-export * from './cache.js'
-export * from './retry.js'
 export {
-  EarnDataClient,
-  type EarnDataClientOptions,
-  type VaultListParams,
-} from './clients/index.js'
-export {
-  ComposerClient,
-  type ComposerClientOptions,
-  type QuoteParams,
-} from './clients/index.js'
+  type AllowanceResult,
+  type ApprovalTx,
+  buildApprovalTx,
+  checkAllowance,
+  MAX_UINT256,
+} from './allowance.js'
+export { type ApyDataPoint, getApyHistory } from './apy-history.js'
 export {
   buildDepositQuote,
-  toSmallestUnit,
-  fromSmallestUnit,
   type DepositQuoteOptions,
   type DepositQuoteResult,
+  fromSmallestUnit,
+  toSmallestUnit,
 } from './build-deposit-quote.js'
 export {
   buildRedeemQuote,
   type RedeemQuoteOptions,
   type RedeemQuoteResult,
 } from './build-redeem-quote.js'
+export * from './cache.js'
 export {
-  preflight,
-  type PreflightReport,
-  type PreflightOptions,
-} from './preflight.js'
-export { riskScore, type RiskScore, type RiskBreakdown } from './risk-scorer.js'
+  ComposerClient,
+  type ComposerClientOptions,
+  EarnDataClient,
+  type EarnDataClientOptions,
+  type QuoteParams,
+  type VaultListParams,
+} from './clients/index.js'
+export * from './errors.js'
 export {
-  suggest,
-  type SuggestParams,
-  type SuggestResult,
-  type Allocation,
-} from './suggest.js'
-export {
-  STRATEGIES,
-  getStrategy,
-  type StrategyPreset,
-  type StrategyConfig,
-} from './strategies.js'
-export {
-  optimizeGasRoutes,
-  type GasRoute,
   type GasOptimizeOptions,
+  type GasRoute,
+  optimizeGasRoutes,
 } from './gas-optimizer.js'
 export {
-  watch,
-  type WatchOptions,
+  type PreflightOptions,
+  type PreflightReport,
+  preflight,
+} from './preflight.js'
+export * from './rate-limiter.js'
+export * from './retry.js'
+export { type RiskBreakdown, type RiskScore, riskScore } from './risk-scorer.js'
+// ── Re-exports ──
+export * from './schemas/index.js'
+export { getBestApy, parseTvl, type TvlParsed } from './schemas/vault.js'
+export {
+  getStrategy,
+  STRATEGIES,
+  type StrategyConfig,
+  type StrategyPreset,
+} from './strategies.js'
+export {
+  type Allocation,
+  type SuggestParams,
+  type SuggestResult,
+  suggest,
+} from './suggest.js'
+export {
   type WatchEvent,
   type WatchEventType,
+  type WatchOptions,
+  watch,
 } from './watch.js'
-export { getApyHistory, type ApyDataPoint } from './apy-history.js'
-export { parseTvl, getBestApy, type TvlParsed } from './schemas/vault.js'
-export {
-  checkAllowance,
-  buildApprovalTx,
-  MAX_UINT256,
-  type AllowanceResult,
-  type ApprovalTx,
-} from './allowance.js'
 
-// ── Factory ──
-import { EarnDataClient, type EarnDataClientOptions } from './clients/index.js'
-import { ComposerClient } from './clients/index.js'
+import { type ApyDataPoint, getApyHistory } from './apy-history.js'
 import {
   buildDepositQuote,
   type DepositQuoteOptions,
@@ -78,31 +74,52 @@ import {
   buildRedeemQuote,
   type RedeemQuoteOptions,
 } from './build-redeem-quote.js'
+// ── Factory ──
 import {
-  preflight,
-  type PreflightOptions,
-  type PreflightReport,
-} from './preflight.js'
-import { riskScore, type RiskScore } from './risk-scorer.js'
-import { suggest, type SuggestParams, type SuggestResult } from './suggest.js'
-import { STRATEGIES, type StrategyPreset } from './strategies.js'
+  ComposerClient,
+  EarnDataClient,
+  type EarnDataClientOptions,
+} from './clients/index.js'
 import {
-  optimizeGasRoutes,
   type GasOptimizeOptions,
   type GasRoute,
+  optimizeGasRoutes,
 } from './gas-optimizer.js'
-import { watch, type WatchOptions, type WatchEvent } from './watch.js'
-import { getApyHistory, type ApyDataPoint } from './apy-history.js'
-import { parseTvl } from './schemas/vault.js'
+import {
+  type PreflightOptions,
+  type PreflightReport,
+  preflight,
+} from './preflight.js'
+import { type RiskScore, riskScore } from './risk-scorer.js'
+import { isFlagged, parseTvl } from './schemas/vault.js'
+import { STRATEGIES, type StrategyPreset } from './strategies.js'
+import { type SuggestParams, type SuggestResult, suggest } from './suggest.js'
+import { type WatchEvent, type WatchOptions, watch } from './watch.js'
+
+export {
+  type DriftFinding,
+  type DriftReport,
+  type DriftSeverity,
+  detectDrift,
+  formatDriftReport,
+} from './drift.js'
+
 import type {
-  Vault,
   Chain,
-  ProtocolDetail,
   PortfolioResponse,
+  ProtocolDetail,
+  Vault,
   VaultListResponse,
 } from './schemas/index.js'
 
 export interface EarnForgeOptions {
+  /**
+   * LI.FI API key for the Earn Data API. Required — earn.li.fi returns 401
+   * without one as of Apr 2026. Falls back to `process.env.LIFI_API_KEY`.
+   * The same key works for Composer, so passing `apiKey` alone is enough.
+   */
+  apiKey?: string
+  /** Composer API key. Defaults to `apiKey` when omitted. */
   composerApiKey?: string
   earnData?: EarnDataClientOptions
   composerBaseUrl?: string
@@ -189,13 +206,17 @@ interface TopVaultsParams {
  */
 export function createEarnForge(options: EarnForgeOptions = {}): EarnForge {
   const earnData = new EarnDataClient({
+    apiKey: options.apiKey,
     cache: options.cache,
     ...options.earnData,
   })
 
-  const composer = options.composerApiKey
+  // One LI.FI key authenticates both services, so `apiKey` alone is enough;
+  // `composerApiKey` stays available for setups that issue separate keys.
+  const composerKey = options.composerApiKey ?? options.apiKey
+  const composer = composerKey
     ? new ComposerClient({
-        apiKey: options.composerApiKey,
+        apiKey: composerKey,
         baseUrl: options.composerBaseUrl,
       })
     : null
@@ -222,27 +243,45 @@ export function createEarnForge(options: EarnForgeOptions = {}): EarnForge {
       // Apply strategy filters
       if (strategy) {
         const tvlUsd = parseTvl(vault.analytics.tvl).parsed
-        if (strategy.filters.minTvlUsd && tvlUsd < strategy.filters.minTvlUsd)
+        if (strategy.filters.minTvlUsd && tvlUsd < strategy.filters.minTvlUsd) {
           continue
+        }
+        // Drop vaults LI.FI's verification pass flagged. Without this a vault
+        // flagged for apy_outlier sorts straight to the top of max-apy.
+        if (strategy.filters.excludeFlagged && isFlagged(vault)) {
+          continue
+        }
         if (
           strategy.filters.tags &&
           !strategy.filters.tags.some((t) => vault.tags.includes(t))
-        )
+        ) {
           continue
+        }
+        if (strategy.filters.excludeTags?.some((t) => vault.tags.includes(t))) {
+          continue
+        }
+        // Match on protocol.id — the unversioned filter key — falling back to
+        // name for vaults cached before the id field existed.
         if (
           strategy.filters.protocols &&
-          !strategy.filters.protocols.includes(vault.protocol.name)
-        )
+          !strategy.filters.protocols.includes(
+            vault.protocol.id ?? vault.protocol.name
+          )
+        ) {
           continue
+        }
         if (
           strategy.filters.minRiskScore &&
           riskScore(vault).score < strategy.filters.minRiskScore
-        )
+        ) {
           continue
+        }
       }
 
       vaults.push(vault)
-      if (vaults.length >= limit * 3) break // Fetch extra for sorting
+      if (vaults.length >= limit * 3) {
+        break // Fetch extra for sorting
+      }
     }
 
     // Sort

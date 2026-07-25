@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
+
+import { type RiskScore, riskScore } from './risk-scorer.js'
 import type { Vault } from './schemas/index.js'
-import { parseTvl } from './schemas/vault.js'
-import { riskScore, type RiskScore } from './risk-scorer.js'
+import { isFlagged, parseTvl } from './schemas/vault.js'
 import { STRATEGIES, type StrategyPreset } from './strategies.js'
 
 export interface SuggestParams {
@@ -10,6 +11,11 @@ export interface SuggestParams {
   maxChains?: number
   strategy?: StrategyPreset
   maxVaults?: number
+  /**
+   * Include vaults LI.FI's verification pass flagged. Off by default — flagged
+   * vaults are excluded from allocations unless explicitly requested.
+   */
+  includeFlagged?: boolean
 }
 
 export interface Allocation {
@@ -48,6 +54,14 @@ export function suggest(vaults: Vault[], params: SuggestParams): SuggestResult {
   // Only transactional vaults
   candidates = candidates.filter((v) => v.isTransactional)
 
+  // Never allocate real money into a vault LI.FI flagged as suspect. This is
+  // unconditional rather than strategy-driven: ~9% of the fleet is flagged, and
+  // a caller asking for an allocation has not asked to be handed one of them.
+  // Opt back in explicitly with `includeFlagged`.
+  if (!params.includeFlagged) {
+    candidates = candidates.filter((v) => !isFlagged(v))
+  }
+
   // Apply strategy filters if specified
   if (params.strategy) {
     const strategy = STRATEGIES[params.strategy]
@@ -64,11 +78,20 @@ export function suggest(vaults: Vault[], params: SuggestParams): SuggestResult {
           requiredTags.some((t) => v.tags.includes(t))
         )
       }
+      if (strategy.filters.excludeTags?.length) {
+        const excluded = strategy.filters.excludeTags
+        candidates = candidates.filter(
+          (v) => !excluded.some((t) => v.tags.includes(t))
+        )
+      }
       if (strategy.filters.protocols?.length) {
         const allowedProtocols = strategy.filters.protocols
         candidates = candidates.filter((v) =>
-          allowedProtocols.includes(v.protocol.name)
+          allowedProtocols.includes(v.protocol.id ?? v.protocol.name)
         )
+      }
+      if (strategy.filters.isRedeemable) {
+        candidates = candidates.filter((v) => v.isRedeemable)
       }
       if (strategy.filters.minRiskScore) {
         const minScore = strategy.filters.minRiskScore
@@ -94,7 +117,9 @@ export function suggest(vaults: Vault[], params: SuggestParams): SuggestResult {
   const selected: typeof scored = []
 
   for (const item of scored) {
-    if (selected.length >= maxVaults) break
+    if (selected.length >= maxVaults) {
+      break
+    }
     if (
       selectedChains.size >= maxChains &&
       !selectedChains.has(item.vault.chainId)
