@@ -5,7 +5,13 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -15,8 +21,8 @@
         "noUnusedVariables": "error"
       },
       "performance": {
-        "noBarrelFile": "warn",
-        "noReExportAll": "warn"
+        "noBarrelFile": "off",
+        "noReExportAll": "off"
       },
       "style": {
         "useConst": "error",
@@ -26,7 +32,9 @@
       "suspicious": {
         "noConsole": {
           "level": "error",
-          "options": { "allow": ["warn", "error", "debug"] }
+          "options": {
+            "allow": ["warn", "error", "debug"]
+          }
         },
         "noConfusingVoidType": "off",
         "noExplicitAny": "off"
@@ -47,6 +55,28 @@
       "trailingCommas": "es5"
     }
   },
+  "overrides": [
+    {
+      "includes": ["apps/docs/src/styles/**/*.css", "apps/studio/src/**/*.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/test/**", "**/scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": [
       "**",
@@ -54,6 +84,7 @@
       "!**/dist",
       "!**/.turbo",
       "!**/.next",
+      "!**/.astro",
       "!**/coverage",
       "!**/packages/fixtures/src/**/*.json"
     ]

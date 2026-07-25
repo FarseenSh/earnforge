@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Catches API drift within a day of LI.FI shipping it, rather than whenever
+  # someone next happens to open a pull request.
+  schedule:
+    - cron: '0 6 * * *'
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -33,5 +37,49 @@ jobs:
       - name: Build
         run: pnpm turbo build
 
+      # Typecheck was previously absent from CI, which is how two type errors
+      # and sixteen missing-@types/react errors reached a published release.
+      - name: Typecheck
+        run: pnpm turbo typecheck
+
+      - name: Lint
+        run: pnpm check
+
       - name: Test
         run: pnpm turbo test
+
+  # The mocked suite only proves we still agree with a fixture snapshot, so it
+  # cannot detect the API moving underneath us — which is exactly what happened
+  # in Apr 2026 and went unnoticed for three months. This job talks to the real
+  # API and is the only thing that can catch it.
+  live-api:
+    runs-on: ubuntu-latest
+    # Forks cannot read secrets, so the key would be empty and every test would
+    # fail for the wrong reason.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Live API integration tests
+        run: pnpm --filter @earnforge/sdk test:live
+        env:
+          LIFI_API_KEY: ${{ secrets.LIFI_API_KEY }}
+
+      - name: Schema drift check
+        run: pnpm --filter @earnforge/sdk drift
+        env:
+          LIFI_API_KEY: ${{ secrets.LIFI_API_KEY }}
