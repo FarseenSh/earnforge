@@ -5,7 +5,8 @@ now wrong: 623 vaults, 16 chains, 18 pitfalls, Telegram bot).
 
 First person. LI.FI framed as collaborator, since PR #561 is open with them.
 Every figure verified against the live API on Aug 4, 2026, and re-verified after
-the 1.0.1 patch (cli / mcp / skill).
+the patch releases. All five packages are on the 1.0 line; the patch numbers
+differ per package and will keep moving, so the tweets deliberately say "1.0".
 
 ---
 
@@ -200,7 +201,7 @@ npm i @earnforge/sdk
 **Verified before writing** (Aug 4, 2026)
 
 The fleet moves. 66 → 67 → 68 flagged within one day, and 710 → 711 vaults.
-Every figure above was re-measured against the live API after the 1.0.1 patch
+Every figure above was re-measured against the live API after the patch releases
 and still holds exactly — 711 / 19 / 27 / 68, scores 4.10–9.70, USP still rank 1
 at 106.16% with 87% of it emissions.
 
@@ -218,7 +219,7 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 
 
 711 vaults · 19 chains · 27 protocols · 68 flagged · 573 mocked tests · 34 live
-scores 4.10–9.70 · sdk+react 1.0.0 · cli+mcp+skill 1.0.1
+scores 4.10–9.70 · sdk 1.0.2 · cli 1.0.2 · react 1.0.1 · mcp 1.0.2 · skill 1.0.3
 
 USP (pendle:1:_:0xc83f...86cb) — 106.16% total / 13.76% base / 92.40% reward,
 rank 1 of 711 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
