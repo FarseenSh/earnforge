@@ -42,9 +42,30 @@ export function totalPortfolioUsd(positions: Position[]): number {
   return positions.reduce((sum, p) => sum + (positionBalanceUsd(p) ?? 0), 0)
 }
 
-/** Portfolio response */
-export const PortfolioResponseSchema = z.object({
-  positions: z.array(PositionSchema),
-})
+/**
+ * Portfolio response.
+ *
+ * The array was renamed `positions` → `data` (Aug 2026), bringing this endpoint
+ * in line with `/v1/vaults` and adding a `limit`. No changelog entry, no
+ * deprecation window — the same pattern as the April rewrite.
+ *
+ * Both keys are accepted and normalised to `positions`. Reading `data` alone
+ * would break anyone still pointed at a cached or proxied older response for
+ * the sake of matching a shape LI.FI has already shown it will rename again.
+ */
+export const PortfolioResponseSchema = z
+  .object({
+    data: z.array(PositionSchema).optional(),
+    positions: z.array(PositionSchema).optional(),
+    limit: z.number().optional(),
+  })
+  .transform((raw) => ({
+    positions: raw.data ?? raw.positions ?? [],
+    limit: raw.limit,
+  }))
+  .refine(
+    (parsed) => Array.isArray(parsed.positions),
+    'Portfolio response contained neither `data` nor `positions`.'
+  )
 
 export type PortfolioResponse = z.infer<typeof PortfolioResponseSchema>

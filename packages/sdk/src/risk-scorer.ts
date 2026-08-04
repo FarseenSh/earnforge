@@ -38,7 +38,13 @@ export interface RiskScore {
  *
  * `maple` is retained for vaults cached before it left the Earn index.
  */
-const PROTOCOL_TIERS: Record<string, number> = {
+/**
+ * Maturity tier per protocol id. Exported so a live test can assert every id
+ * here still exists upstream: LI.FI renames protocol ids without a changelog,
+ * and an id that no longer resolves silently falls back to tier 3 rather than
+ * erroring — the vault just quietly scores worse.
+ */
+export const PROTOCOL_TIERS: Record<string, number> = {
   aave: 9,
   morpho: 9,
   yearn: 8,

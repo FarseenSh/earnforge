@@ -36,7 +36,7 @@ interface DeFiLlamaPool {
  * and Avant splits by collateral asset — so values are arrays and every
  * candidate project is searched.
  */
-const LIFI_TO_LLAMA_PROJECT: Record<string, string[]> = {
+export const LIFI_TO_LLAMA_PROJECT: Record<string, string[]> = {
   aave: ['aave-v3', 'aave-v4'],
   avant: ['avant-avusd', 'avant-aveth', 'avant-avbtc'],
   cap: ['cap'],

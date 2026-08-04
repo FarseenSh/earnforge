@@ -250,16 +250,104 @@ export async function detectDrift(
     }
   }
 
-  const breaking = findings.filter((f) => f.severity === 'breaking')
+  findings.push(...(await checkEnvelopes(options.apiKey)))
 
   return {
     // Only our own breakages fail the check. LI.FI documenting a field that
     // does not exist is worth reporting but is not our build's problem.
-    ok: breaking.length === 0,
+    //
+    // Counted after the envelope check, not before: tallying breakages first
+    // and appending findings afterwards is how a new check ends up decorative.
+    ok: findings.filter((f) => f.severity === 'breaking').length === 0,
     checkedVaults: raw.length,
     findings,
     specFetched: spec !== null,
   }
+}
+
+/**
+ * Check the response *envelope* of every endpoint, not just the vault fields.
+ *
+ * Added after `/v1/portfolio` renamed its array `positions` → `data` in Aug
+ * 2026 with no changelog. The drift check reported "no breaking drift" straight
+ * through it, because it only ever read `/v1/vaults` — the endpoint that had
+ * not changed. A detector that inspects one endpoint deeply and the rest not at
+ * all gives precisely the false assurance it exists to prevent.
+ *
+ * This is deliberately shallow: it asks only "is the payload still shaped the
+ * way the client unwraps it", which is the break that actually happens.
+ */
+async function checkEnvelopes(apiKey?: string): Promise<DriftFinding[]> {
+  const findings: DriftFinding[] = []
+  const key = apiKey ?? process.env.LIFI_API_KEY
+  if (!key) {
+    return findings
+  }
+
+  const probes = [
+    { path: '/v1/chains', expect: 'array' as const },
+    { path: '/v1/protocols', expect: 'array' as const },
+    {
+      path: '/v1/vaults?limit=1',
+      expect: 'envelope' as const,
+      keys: ['data'],
+    },
+    {
+      // A wallet with known Aave positions, so an empty result is itself a
+      // signal rather than an expected outcome.
+      path: '/v1/portfolio/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/positions',
+      expect: 'envelope' as const,
+      keys: ['data', 'positions'],
+    },
+  ]
+
+  for (const probe of probes) {
+    let body: unknown
+    try {
+      const res = await fetch(`https://earn.li.fi${probe.path}`, {
+        headers: { 'x-lifi-api-key': key },
+      })
+      if (!res.ok) {
+        continue
+      }
+      body = await res.json()
+    } catch {
+      continue
+    }
+
+    if (probe.expect === 'array') {
+      if (!Array.isArray(body)) {
+        findings.push({
+          severity: 'breaking',
+          between: 'live-vs-schema',
+          field: probe.path,
+          message:
+            `${probe.path} returned an object where the client expects a ` +
+            'bare array. The list will parse as empty rather than erroring.',
+        })
+      }
+      continue
+    }
+
+    const obj = body as Record<string, unknown> | null
+    const found = probe.keys.filter(
+      (k) => obj && Array.isArray((obj as Record<string, unknown>)[k])
+    )
+    if (found.length === 0) {
+      findings.push({
+        severity: 'breaking',
+        between: 'live-vs-schema',
+        field: probe.path,
+        message:
+          `${probe.path} carries none of the expected array keys ` +
+          `(${probe.keys.join(', ')}). Present keys: ` +
+          `${obj ? Object.keys(obj).join(', ') : 'none'}. The endpoint has ` +
+          'been reshaped and the client will not find its results.',
+      })
+    }
+  }
+
+  return findings
 }
 
 /** Render a drift report as human-readable lines. */

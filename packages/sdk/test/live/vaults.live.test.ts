@@ -15,8 +15,9 @@
  * every time a vault is added trains people to ignore it.
  */
 import { describe, expect, it } from 'vitest'
+import { LIFI_TO_LLAMA_PROJECT } from '../../src/apy-history.js'
 import { EarnDataClient } from '../../src/clients/index.js'
-import { riskScore } from '../../src/risk-scorer.js'
+import { PROTOCOL_TIERS, riskScore } from '../../src/risk-scorer.js'
 import { VaultSchema } from '../../src/schemas/index.js'
 import { isFlagged, parseTvl, parseVaultSlug } from '../../src/schemas/vault.js'
 
@@ -82,10 +83,45 @@ describe('Live API — Protocols', () => {
     expect(ids).toContain('euler')
   })
 
-  it('exposes no versioned protocol ids', async () => {
-    const protocols = await client.listProtocols()
-    for (const p of protocols) {
-      expect(p.id ?? p.name).not.toMatch(/-v\d+$/)
+  it('every protocol id we ship still resolves upstream', async () => {
+    // This replaces an assertion that no protocol id carries a version suffix.
+    // That held in Jul 2026, when LI.FI had retired every versioned slug — and
+    // stopped holding in Aug, when `spark-v2` appeared. The rule was never
+    // "versioned ids do not exist"; it is "do not hardcode an id without
+    // checking it", because a stale one returns zero results rather than an
+    // error, and an unknown one silently drops to risk tier 3.
+    const live = new Set(
+      (await client.listProtocols()).map((p) => p.id ?? p.name)
+    )
+    const shipped = new Set([
+      ...Object.keys(PROTOCOL_TIERS),
+      ...Object.keys(LIFI_TO_LLAMA_PROJECT),
+    ])
+    // `maple` left the Earn index in Jul 2026. The mapping is kept so stored
+    // vault references still resolve, but it is not expected to be live.
+    shipped.delete('maple')
+
+    const vanished = [...shipped].filter((id) => !live.has(id))
+    expect(vanished, `protocol ids we score/map that no longer exist`).toEqual(
+      []
+    )
+  })
+
+  it('reports which live protocols have no risk tier', async () => {
+    // Not a failure — new protocols appear constantly and default to tier 3.
+    // But an unscored protocol is a silent quality gap, so it should be visible
+    // rather than discovered by a user wondering why everything scores the same.
+    const live = (await client.listProtocols()).map((p) => p.id ?? p.name)
+    const untiered = live.filter((id) => !(id in PROTOCOL_TIERS))
+    if (untiered.length > 0) {
+      console.warn(
+        `[coverage] ${untiered.length}/${live.length} live protocols have no ` +
+          `risk tier and default to 3: ${untiered.join(', ')}`
+      )
+    }
+    // The blue-chips must always be tiered; everything else is best-effort.
+    for (const id of ['aave', 'morpho', 'euler']) {
+      expect(untiered, `${id} lost its risk tier`).not.toContain(id)
     }
   })
 
