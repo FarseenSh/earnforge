@@ -18,7 +18,7 @@ these by hand, from an OpenAPI spec that disagrees with the service.
 semicolons, single quotes, no runtime dependency. Dropping it in is:
 
 1. Copy `earn.ts` to `src/earn.ts` in `lifinance/types`.
-2. Add `export * from './earn.js';` to `src/index.ts`.
+2. Add `export * from './earn.js'` to `src/index.ts`.
 
 No other changes. It imports nothing.
 
