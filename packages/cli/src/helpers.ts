@@ -227,17 +227,41 @@ export function portfolioTable(
   return table.toString()
 }
 
+/** Colour a dimension so a weak one is visible without reading every row. */
+function dimension(score: number): string {
+  const text = `${score}/10`
+  if (score >= 8) {
+    return chalk.green(text)
+  }
+  if (score >= 5) {
+    return chalk.yellow(text)
+  }
+  return chalk.red(text)
+}
+
 export function riskTable(risk: RiskScore): string {
   const table = new Table({
     head: [chalk.bold('Dimension'), chalk.bold('Score')],
   })
-  table.push(['TVL Magnitude', `${risk.breakdown.tvl}/10`])
-  table.push(['APY Stability', `${risk.breakdown.apyStability}/10`])
-  table.push(['Protocol Maturity', `${risk.breakdown.protocol}/10`])
-  table.push(['Redeemability', `${risk.breakdown.redeemability}/10`])
-  table.push(['Asset Type', `${risk.breakdown.assetType}/10`])
+  table.push(['TVL Magnitude', dimension(risk.breakdown.tvl)])
+  table.push(['APY Stability', dimension(risk.breakdown.apyStability)])
+  table.push(['Protocol Maturity', dimension(risk.breakdown.protocol)])
+  table.push(['Redeemability', dimension(risk.breakdown.redeemability)])
+  table.push(['Asset Type', dimension(risk.breakdown.assetType)])
+  // Both of these arrived with risk scorer v2 and were never added here, so
+  // the CLI reported five dimensions of a seven-dimension score — omitting
+  // LI.FI's own verification signal, which is the whole reason v2 exists.
+  table.push(['Verification', dimension(risk.breakdown.verification)])
+  table.push(['Reward Dependency', dimension(risk.breakdown.rewardDependency)])
   table.push([chalk.bold('Composite'), chalk.bold(riskLabel(risk.score))])
-  return table.toString()
+
+  // The flags are the actionable part — a number tells you something is wrong,
+  // these tell you what. Printing the score without them was the bug.
+  if (risk.flags.length === 0) {
+    return table.toString()
+  }
+  const flags = risk.flags.map((f) => chalk.yellow(`  ! ${f}`)).join('\n')
+  return `${table.toString()}\n\n${chalk.bold('Flags')}\n${flags}`
 }
 
 export function suggestTable(

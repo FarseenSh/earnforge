@@ -146,8 +146,15 @@ export const MOCK_RISK_SCORE: RiskScore = {
     protocol: 9,
     redeemability: 10,
     assetType: 9,
+    // Both arrived with risk scorer v2. This fixture claimed to be a
+    // `RiskScore` without them for a whole release, and nothing objected:
+    // the package typechecks `src` only, so a test fixture can drift from
+    // the type it declares indefinitely.
+    verification: 10,
+    rewardDependency: 9,
   },
   label: 'low',
+  flags: [],
 }
 
 export const MOCK_SUGGEST_RESULT = {

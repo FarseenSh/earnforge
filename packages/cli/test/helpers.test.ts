@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import type { RiskScore } from '@earnforge/sdk'
 import { describe, expect, it } from 'vitest'
-import { fmtPct, fmtUsd, riskLabelPlain } from '../src/helpers.js'
+import { fmtPct, fmtUsd, riskLabelPlain, riskTable } from '../src/helpers.js'
 
 describe('fmtPct', () => {
   it('formats a percentage value as a string (API returns percentages, not fractions)', () => {
@@ -57,5 +58,59 @@ describe('fmtPct — nullable', () => {
     expect(fmtPct(null)).toBe('N/A')
     expect(fmtPct(undefined)).toBe('N/A')
     expect(fmtPct(0)).toBe('0.00%')
+  })
+})
+
+describe('riskTable', () => {
+  const risk: RiskScore = {
+    score: 5.5,
+    label: 'high',
+    breakdown: {
+      tvl: 3,
+      apyStability: 10,
+      protocol: 7,
+      redeemability: 10,
+      assetType: 9,
+      verification: 1,
+      rewardDependency: 2,
+    },
+    flags: [
+      'flagged by LI.FI verification: apy_outlier',
+      '87% of APY comes from token incentives',
+    ],
+  }
+
+  it('renders every dimension the scorer produces', () => {
+    // The table listed five of seven for an entire release: `verification`
+    // and `rewardDependency` arrived with risk scorer v2 and were never added,
+    // so the CLI silently omitted LI.FI's own quality signal — the reason v2
+    // exists. Asserting on the key count means the next added dimension fails
+    // here rather than going unnoticed.
+    const out = riskTable(risk)
+    for (const label of [
+      'TVL Magnitude',
+      'APY Stability',
+      'Protocol Maturity',
+      'Redeemability',
+      'Asset Type',
+      'Verification',
+      'Reward Dependency',
+    ]) {
+      expect(out, `${label} missing from the risk table`).toContain(label)
+    }
+    expect(Object.keys(risk.breakdown)).toHaveLength(7)
+  })
+
+  it('prints the flags, not just the number', () => {
+    // A composite of 5.5 says something is wrong; the flags say what. Printing
+    // the score alone was the actual defect.
+    const out = riskTable(risk)
+    expect(out).toContain('apy_outlier')
+    expect(out).toContain('87% of APY comes from token incentives')
+  })
+
+  it('omits the Flags section entirely when there is nothing to report', () => {
+    const clean = riskTable({ ...risk, score: 9.2, label: 'low', flags: [] })
+    expect(clean).not.toContain('Flags')
   })
 })
