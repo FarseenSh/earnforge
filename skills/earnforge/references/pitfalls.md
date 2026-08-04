@@ -45,7 +45,7 @@ that genuinely has no vaults. Never hardcode a slug — resolve via
 `earnforge protocols`.
 
 **An unknown query param is dropped, not rejected.** Sending `minTvl` instead of
-`minTvlUsd` returned all 710 vaults instead of 33 — a "$100M+ TVL" filter that
+`minTvlUsd` returned all 710 vaults instead of 41 — a "$100M+ TVL" filter that
 silently returns sub-$20k dust.
 
 **`verificationStatus` is documented nowhere** and flags 66 of 710 vaults, mostly

@@ -16,7 +16,7 @@ A TypeScript toolkit for the LI.FI Earn API — the layer that tells you *which*
 vault to pick, not just which ones exist.
 
 SDK · CLI · React hooks · MCP server · Agent Skill
-567 tests, all green.
+573 tests, all green.
 
 npm i @earnforge/sdk
 
@@ -65,7 +65,7 @@ Risk scoring across 7 dimensions:
 TVL · APY stability · protocol maturity · redeemability · asset type ·
 verification status · reward dependency
 
-0–10 composite plus plain-language flags, calibrated on all 710 live vaults.
+0–10 composite plus plain-language flags, calibrated on all 711 live vaults.
 Real scores span 4.1 to 9.7.
 
 ---
@@ -118,7 +118,7 @@ The docs say APY is a decimal. The quickstart does `apy.total * 100`.
 It's already a percentage. Follow the official example and you render 2919%
 where you mean 29.19%.
 
-Checked across 710 vaults.
+Checked across 711 vaults.
 
 ---
 
@@ -137,7 +137,7 @@ Four more, verified live:
 
 And one that isn't written down anywhere:
 
-`verificationStatus` — undocumented, on every vault, flagging 67 of 710 as
+`verificationStatus` — undocumented, on every vault, flagging 68 of 711 as
 suspect. USP is one: `apy_outlier`.
 
 So the top APY in the fleet is 87% emissions *and* flagged — and nothing shows
@@ -198,8 +198,16 @@ npm i @earnforge/sdk
 
 **Verified before writing** (Aug 4, 2026)
 
-710 vaults · 19 chains · 27 protocols · 67 flagged · 567 mocked tests · 34 live
+The fleet moves. 66 → 67 → 68 flagged within one day, and 710 → 711 vaults.
+Re-verify tweets 5, 9 and 11 before posting if it has been more than a day:
+
+```bash
+LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
+```
+
+
+711 vaults · 19 chains · 27 protocols · 68 flagged · 573 mocked tests · 34 live
 scores 4.10–9.70 · all 5 packages at 1.0.0
 
 USP (pendle:1:_:0xc83f...86cb) — 106.16% total / 13.76% base / 92.40% reward,
-rank 1 of 710 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
+rank 1 of 711 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
