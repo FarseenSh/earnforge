@@ -18,7 +18,7 @@ A TypeScript toolkit for the LI.FI Earn API — the layer that tells you *which*
 vault to pick, not just which ones exist.
 
 SDK · CLI · React hooks · MCP server · Agent Skill
-573 tests, all green.
+588 tests, all green.
 
 npm i @earnforge/sdk
 
@@ -67,7 +67,7 @@ Risk scoring across 7 dimensions:
 TVL · APY stability · protocol maturity · redeemability · asset type ·
 verification status · reward dependency
 
-0–10 composite plus plain-language flags, calibrated on all 711 live vaults.
+0–10 composite plus plain-language flags, calibrated on all 712 live vaults.
 Real scores span 4.1 to 9.7.
 
 ---
@@ -120,7 +120,7 @@ The docs say APY is a decimal. The quickstart does `apy.total * 100`.
 It's already a percentage. Follow the official example and you render 2919%
 where you mean 29.19%.
 
-Checked across 711 vaults.
+Checked across 712 vaults.
 
 ---
 
@@ -139,7 +139,7 @@ Four more, verified live:
 
 And one that isn't written down anywhere:
 
-`verificationStatus` — undocumented, on every vault, flagging 68 of 711 as
+`verificationStatus` — undocumented, on every vault, flagging 68 of 712 as
 suspect. USP is one: `apy_outlier`.
 
 So the top APY in the fleet is 87% emissions *and* flagged — and nothing shows
@@ -200,9 +200,11 @@ npm i @earnforge/sdk
 
 **Verified before writing** (Aug 4, 2026)
 
-The fleet moves. 66 → 67 → 68 flagged within one day, and 710 → 711 vaults.
+The fleet moves, and faster than the flagged count suggests: 66 → 67 → 68
+flagged inside a day, and 710 → 711 → 712 vaults across two. The vault total is
+the figure most likely to be stale by the time you post; 19 / 27 / 68 have held.
 Every figure above was re-measured against the live API after the patch releases
-and still holds exactly — 711 / 19 / 27 / 68, scores 4.10–9.70, USP still rank 1
+and still holds — 19 / 27 / 68, scores 4.10–9.70, USP still rank 1
 at 106.16% with 87% of it emissions.
 
 One number was *removed* rather than refreshed: the thread used to say analytics
@@ -218,8 +220,8 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 ```
 
 
-711 vaults · 19 chains · 27 protocols · 68 flagged · 573 mocked tests · 34 live
+712 vaults · 19 chains · 27 protocols · 68 flagged · 588 mocked tests · 34 live
 scores 4.10–9.70 · sdk 1.0.2 · cli 1.0.2 · react 1.0.1 · mcp 1.0.2 · skill 1.0.3
 
 USP (pendle:1:_:0xc83f...86cb) — 106.16% total / 13.76% base / 92.40% reward,
-rank 1 of 711 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
+rank 1 of 712 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
