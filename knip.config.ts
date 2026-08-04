@@ -11,7 +11,9 @@ const config: KnipConfig = {
       ignoreDependencies: ['msw'],
     },
   },
-  ignore: ['apps/**'],
+  // `contrib/` holds code written for someone else's repository, in their
+  // house style. It is intentionally unreferenced here — that is the point.
+  ignore: ['apps/**', 'contrib/**'],
 }
 
 export default config

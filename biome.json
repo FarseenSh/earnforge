@@ -86,7 +86,8 @@
       "!**/.next",
       "!**/.astro",
       "!**/coverage",
-      "!**/packages/fixtures/src/**/*.json"
+      "!**/packages/fixtures/src/**/*.json",
+      "!contrib"
     ]
   }
 }
