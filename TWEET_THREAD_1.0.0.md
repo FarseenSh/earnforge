@@ -4,13 +4,14 @@ Supersedes `TWEET_THREAD.md` (Apr 2026 hackathon draft — every number in it is
 now wrong: 623 vaults, 16 chains, 18 pitfalls, Telegram bot).
 
 First person. LI.FI framed as collaborator, since PR #561 is open with them.
-Every figure verified against the live API on Aug 4, 2026.
+Every figure verified against the live API on Aug 4, 2026, and re-verified after
+the 1.0.1 patch (cli / mcp / skill).
 
 ---
 
 **1/**
 
-EarnForge 1.0.0 is out.
+EarnForge 1.0 is out.
 
 A TypeScript toolkit for the LI.FI Earn API — the layer that tells you *which*
 vault to pick, not just which ones exist.
@@ -128,7 +129,7 @@ Four more, verified live:
 
 ▸ `tvl.usd` documented as string — it's a number
 ▸ `caps`/`timeLock`/`kyc`/`lpTokens` documented — zero vaults send them
-▸ 15-min analytics refresh — observed floor 87 min
+▸ 15-min analytics refresh — really one hourly batch
 ▸ a stale protocol slug returns 200 and zero results, never an error
 
 ---
@@ -199,6 +200,16 @@ npm i @earnforge/sdk
 **Verified before writing** (Aug 4, 2026)
 
 The fleet moves. 66 → 67 → 68 flagged within one day, and 710 → 711 vaults.
+Every figure above was re-measured against the live API after the 1.0.1 patch
+and still holds exactly — 711 / 19 / 27 / 68, scores 4.10–9.70, USP still rank 1
+at 106.16% with 87% of it emissions.
+
+One number was *removed* rather than refreshed: the thread used to say analytics
+had an "observed floor of 87 minutes". That was never a property of the API, only
+how far into the refresh cycle the sample landed. The fleet updates in one hourly
+batch — 588 of 711 vaults share a single `updatedAt` minute — so the figure reads
+differently every time you look. The structural claim replaces it and stays true.
+
 Re-verify tweets 5, 9 and 11 before posting if it has been more than a day:
 
 ```bash
@@ -207,7 +218,7 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 
 
 711 vaults · 19 chains · 27 protocols · 68 flagged · 573 mocked tests · 34 live
-scores 4.10–9.70 · all 5 packages at 1.0.0
+scores 4.10–9.70 · sdk+react 1.0.0 · cli+mcp+skill 1.0.1
 
 USP (pendle:1:_:0xc83f...86cb) — 106.16% total / 13.76% base / 92.40% reward,
 rank 1 of 711 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
