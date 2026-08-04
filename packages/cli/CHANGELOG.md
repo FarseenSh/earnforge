@@ -1,5 +1,28 @@
 # @earnforge/cli
 
+## 1.0.4
+
+### Patch Changes
+
+- **`earnforge init` scaffolds a project that builds.** It wrote the page to
+  `src/page.tsx` with no root layout, so `next build` failed with "Couldn't find
+  any `pages` or `app` directory" before reaching a line of the generated code —
+  directly below the printed instruction to run it. Now emits
+  `src/app/page.tsx`, `src/app/layout.tsx` and a `tsconfig.json`, verified by
+  installing and building the output.
+
+  The generated *content* was reviewed and corrected in 1.0.0. The file layout
+  that decides whether any of it runs was not.
+
+- **`--version` reports the real version.** It was hardcoded `'0.1.0'`,
+  corrected to a hardcoded `'1.0.0'` in the 1.0.0 release, and had drifted again
+  by 1.0.3. Read from package.json now, with a test comparing the two.
+
+- Vault display tolerates tokens that report no symbol, rather than printing
+  `undefined`.
+
+- Picks up the `@earnforge/sdk` 1.0.4 fix for full-fleet iteration.
+
 ## 1.0.3
 
 ### Patch Changes

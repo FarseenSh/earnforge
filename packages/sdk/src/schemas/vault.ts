@@ -17,10 +17,23 @@ export const ProtocolSchema = z.object({
  * observed live. `weight` is documented for multi-asset vaults but never
  * actually emitted — accepted optimistically in case it ships.
  */
+/**
+ * An underlying token, as the API actually sends it.
+ *
+ * `symbol` and `decimals` are optional because they are genuinely absent on
+ * live vaults: `morpho:1:_:0xb5ce...b938` (KPK-WARS-YIELD) ships a token object
+ * carrying nothing but an address. One vault in 712 is enough — requiring these
+ * made `listAll()` throw a ZodError partway through the fleet, which took the
+ * Studio's vault list to zero and would break any full-fleet iteration.
+ *
+ * Callers that need `decimals` for amount conversion already fall back to 18;
+ * callers that display `symbol` must tolerate its absence rather than assume
+ * a string.
+ */
 export const UnderlyingTokenSchema = z.object({
-  symbol: z.string(),
+  symbol: z.string().optional(),
   address: z.string(),
-  decimals: z.number(),
+  decimals: z.number().optional(),
   priceUsd: z.string().optional(),
   weight: z.number().optional(),
 })

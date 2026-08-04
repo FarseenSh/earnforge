@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { EarnDataClient } from './clients/earn-data-client.js'
+import { VaultSchema } from './schemas/vault.js'
 
 /**
  * Schema drift detection.
@@ -251,6 +252,7 @@ export async function detectDrift(
   }
 
   findings.push(...(await checkEnvelopes(options.apiKey)))
+  findings.push(...(await checkEveryVaultParses(options.apiKey)))
 
   return {
     // Only our own breakages fail the check. LI.FI documenting a field that
@@ -277,6 +279,93 @@ export async function detectDrift(
  * This is deliberately shallow: it asks only "is the payload still shaped the
  * way the client unwraps it", which is the break that actually happens.
  */
+/**
+ * Parse every vault in the fleet, not a sample of one page.
+ *
+ * The sampled checks above answer "does this field still exist and still have
+ * this type", which the first page settles. They cannot answer "is our schema
+ * satisfiable by every vault", and those are different questions: a field can
+ * be present on the first three hundred vaults and absent on the next one.
+ *
+ * That is not hypothetical. `underlyingTokens[].symbol` and `.decimals` were
+ * required, and exactly one vault in 712 shipped a token object carrying only
+ * an address — far enough into the fleet that a 100-vault sample never reached
+ * it. `listAll()` threw a ZodError partway through, which took the Studio's
+ * vault list to zero in production while every sampled check stayed green.
+ *
+ * `safeParse` per vault, so one malformed vault is a finding rather than an
+ * exception that stops the audit at the first bad row.
+ */
+async function checkEveryVaultParses(apiKey?: string): Promise<DriftFinding[]> {
+  const findings: DriftFinding[] = []
+  const key = apiKey ?? process.env.LIFI_API_KEY
+  if (!key) {
+    return findings
+  }
+
+  let cursor: string | undefined
+  let checked = 0
+  const failures = new Map<string, { count: number; example: string }>()
+
+  try {
+    do {
+      const url = new URL('https://earn.li.fi/v1/vaults')
+      url.searchParams.set('limit', '50')
+      if (cursor) {
+        url.searchParams.set('cursor', cursor)
+      }
+      const res = await fetch(url, { headers: { 'x-lifi-api-key': key } })
+      if (!res.ok) {
+        break
+      }
+      const body = (await res.json()) as {
+        data?: unknown[]
+        nextCursor?: string | null
+      }
+      for (const vault of body.data ?? []) {
+        checked++
+        const parsed = VaultSchema.safeParse(vault)
+        if (parsed.success) {
+          continue
+        }
+        for (const issue of parsed.error.issues) {
+          // Group by the shape of the path rather than the exact index, so a
+          // hundred vaults failing the same way is one finding.
+          const path = issue.path
+            .map((p) => (typeof p === 'number' ? '[]' : String(p)))
+            .join('.')
+          const prior = failures.get(path)
+          const slug =
+            (vault as { slug?: string }).slug ?? '(vault without a slug)'
+          failures.set(path, {
+            count: (prior?.count ?? 0) + 1,
+            example: prior?.example ?? slug,
+          })
+        }
+      }
+      cursor = body.nextCursor ?? undefined
+      // A guard, not a limit: the fleet is ~15 pages and a cursor that stops
+      // advancing should not spin forever.
+    } while (cursor && checked < 5000)
+  } catch {
+    return findings
+  }
+
+  for (const [path, { count, example }] of failures) {
+    findings.push({
+      severity: 'breaking',
+      field: path,
+      between: 'live-vs-schema',
+      message:
+        `${count} of ${checked} live vaults fail our schema at \`${path}\` ` +
+        `(e.g. ${example}). Every full-fleet iteration throws on these — ` +
+        'sampled checks cannot see them.',
+    })
+  }
+
+  return findings
+}
+
 async function checkEnvelopes(apiKey?: string): Promise<DriftFinding[]> {
   const findings: DriftFinding[] = []
   const key = apiKey ?? process.env.LIFI_API_KEY

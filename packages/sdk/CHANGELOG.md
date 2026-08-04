@@ -1,5 +1,30 @@
 # @earnforge/sdk
 
+## 1.0.4
+
+### Patch Changes
+
+- **`listAll()` completes.** It threw a `ZodError` roughly 300 vaults into the
+  fleet, because `underlyingTokens[].symbol` and `.decimals` were required and
+  one vault in 712 — `morpho:1:_:0xb5ce...b938`, KPK-WARS-YIELD — ships a token
+  object carrying nothing but an address. Anything iterating every vault died on
+  it: EarnForge Studio's vault list read zero in production, and `earnforge
+  list` without a chain filter could not finish.
+
+  Both fields are optional now, which is what the API demonstrably sends.
+  Callers needing `decimals` for amount conversion already fell back to 18;
+  callers displaying `symbol` no longer assume a string.
+
+  Pitfall #15 anticipated an *empty* `underlyingTokens` array. This is the
+  stranger case it did not: a populated array with a partial entry.
+
+- **`detectDrift()` parses every vault, not one page.** It sampled 100 and
+  therefore could never have seen a vault at index 300. Sampling answers "does
+  this field still exist"; it cannot answer "is our schema satisfiable by every
+  vault", and those come apart at exactly one vault in seven hundred. Failures
+  are grouped by field path and reported per vault rather than thrown, so one
+  malformed row is a finding instead of the end of the audit.
+
 ## 1.0.3
 
 ### Patch Changes

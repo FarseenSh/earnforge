@@ -14,6 +14,7 @@ import {
 import chalk from 'chalk'
 import { Command } from 'commander'
 import ora from 'ora'
+import pkg from '../package.json' with { type: 'json' }
 import {
   type DoctorCheck,
   type DoctorReport,
@@ -109,7 +110,10 @@ export const program = new Command()
 
 program
   .name('earnforge')
-  .version('1.0.0')
+  // Read, not written. This was hardcoded '0.1.0', "fixed" to a hardcoded
+  // '1.0.0', and drifted again by 1.0.3 — swapping one literal for another
+  // fixes the value, never the cause.
+  .version(pkg.version)
   .description('EarnForge CLI — Developer toolkit for the LI.FI Earn API')
 
 // ── list ──
@@ -303,7 +307,9 @@ program
           tags: v.tags,
           isTransactional: v.isTransactional,
           isRedeemable: v.isRedeemable,
-          underlyingTokens: v.underlyingTokens.map((t) => t.symbol),
+          underlyingTokens: v.underlyingTokens
+            .map((t) => t.symbol)
+            .filter((s): s is string => s !== undefined),
         })),
         opts.json,
         () => {
@@ -1024,7 +1030,10 @@ program
     }
 
     fs.mkdirSync(dir, { recursive: true })
-    fs.mkdirSync(path.join(dir, 'src'), { recursive: true })
+    // `src/app`, not `src` — the App Router resolves routes from an `app`
+    // directory, and `next build` fails outright with "Couldn't find any
+    // `pages` or `app` directory" without one.
+    fs.mkdirSync(path.join(dir, 'src', 'app'), { recursive: true })
 
     fs.writeFileSync(
       path.join(dir, 'package.json'),
@@ -1066,7 +1075,7 @@ program
     )
 
     fs.writeFileSync(
-      path.join(dir, 'src', 'page.tsx'),
+      path.join(dir, 'src', 'app', 'page.tsx'),
       `// SPDX-License-Identifier: Apache-2.0
 //
 // Server Component — this runs on the server, which is the only safe place for
@@ -1107,6 +1116,67 @@ export default async function Home() {
   );
 }
 `
+    )
+
+    // The App Router requires a root layout. Without it `next build` fails
+    // before it reaches any page, so a scaffold that omits this produces a
+    // project that cannot start — which is what this one did.
+    fs.writeFileSync(
+      path.join(dir, 'src', 'app', 'layout.tsx'),
+      `// SPDX-License-Identifier: Apache-2.0
+export const metadata = {
+  title: '${name}',
+  description: 'Built with @earnforge/sdk on the LI.FI Earn API',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`
+    )
+
+    // Next generates a tsconfig on first run, but writing one means the very
+    // first \`next build\` is not also a config migration.
+    fs.writeFileSync(
+      path.join(dir, 'tsconfig.json'),
+      `${JSON.stringify(
+        {
+          compilerOptions: {
+            target: 'ES2022',
+            lib: ['dom', 'dom.iterable', 'ES2022'],
+            allowJs: true,
+            skipLibCheck: true,
+            strict: true,
+            noEmit: true,
+            esModuleInterop: true,
+            module: 'esnext',
+            moduleResolution: 'bundler',
+            resolveJsonModule: true,
+            isolatedModules: true,
+            jsx: 'preserve',
+            incremental: true,
+            plugins: [{ name: 'next' }],
+            paths: { '@/*': ['./src/*'] },
+          },
+          include: [
+            'next-env.d.ts',
+            '**/*.ts',
+            '**/*.tsx',
+            '.next/types/**/*.ts',
+          ],
+          exclude: ['node_modules'],
+        },
+        null,
+        2
+      )}\n`
     )
 
     // biome-ignore lint/suspicious/noConsole: CLI output

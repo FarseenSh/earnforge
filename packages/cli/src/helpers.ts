@@ -144,7 +144,7 @@ export function vaultDetail(v: Vault): string {
     chalk.bold('Underlying Tokens'),
     ...v.underlyingTokens.map(
       (t) =>
-        `  ${t.symbol} (${t.address}) — ${t.decimals} decimals` +
+        `  ${t.symbol ?? '(no symbol)'} (${t.address}) — ${t.decimals ?? '?'} decimals` +
         (t.priceUsd ? ` @ $${t.priceUsd}` : '')
     ),
     ...(v.underlyingTokens.length === 0 ? ['  (none)'] : []),
@@ -367,7 +367,7 @@ export function compareTable(vaults: Vault[], risks: RiskScore[]): string {
     {
       label: 'Underlying',
       value: (v) =>
-        v.underlyingTokens.map((t) => t.symbol).join(', ') || '(none)',
+        v.underlyingTokens.map((t) => t.symbol ?? '?').join(', ') || '(none)',
     },
   ]
 

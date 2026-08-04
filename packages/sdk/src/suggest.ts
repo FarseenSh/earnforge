@@ -46,7 +46,7 @@ export function suggest(vaults: Vault[], params: SuggestParams): SuggestResult {
   let candidates = params.asset
     ? vaults.filter((v) =>
         v.underlyingTokens.some(
-          (t) => t.symbol.toUpperCase() === params.asset?.toUpperCase()
+          (t) => t.symbol?.toUpperCase() === params.asset?.toUpperCase()
         )
       )
     : [...vaults]

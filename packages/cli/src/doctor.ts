@@ -122,7 +122,7 @@ export function runDoctorChecks(
       'Use underlyingTokens[0].decimals for amount conversion (6 for USDC, 18 for ETH)',
     passed: hasDecimals,
     detail: hasDecimals
-      ? `Decimals: ${decimals} (${vault.underlyingTokens[0]?.symbol})`
+      ? `Decimals: ${decimals} (${vault.underlyingTokens[0]?.symbol ?? 'symbol not reported'})`
       : 'No underlyingTokens — decimals unknown, must specify fromToken manually',
   })
 
@@ -187,7 +187,7 @@ export function runDoctorChecks(
       'Some vaults have empty underlyingTokens — must specify fromToken manually',
     passed: hasUnderlyingTokens,
     detail: hasUnderlyingTokens
-      ? `Underlying: ${vault.underlyingTokens.map((t) => t.symbol).join(', ')}`
+      ? `Underlying: ${vault.underlyingTokens.map((t) => t.symbol ?? '?').join(', ')}`
       : 'underlyingTokens is EMPTY — you must pass fromToken explicitly',
   })
 

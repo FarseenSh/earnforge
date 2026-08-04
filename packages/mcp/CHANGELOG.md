@@ -1,5 +1,17 @@
 # @earnforge/mcp
 
+## 1.0.4
+
+### Patch Changes
+
+- `underlyingTokens` omits entries with no symbol rather than emitting
+  `undefined` into an array the output schema declares as strings.
+
+- The package description said 11 tools; there are 12. `check-api-drift` was
+  added in 1.0.0 and the description did not follow.
+
+- Picks up the `@earnforge/sdk` 1.0.4 fix for full-fleet iteration.
+
 ## 1.0.3
 
 ### Patch Changes

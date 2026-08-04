@@ -85,7 +85,11 @@ function summarizeVault(vault: Vault) {
       reward: vault.analytics.apy.reward,
     },
     tvlUsd: parseTvl(vault.analytics.tvl).parsed,
-    underlyingTokens: vault.underlyingTokens.map((t) => t.symbol),
+    // Drop tokens with no symbol rather than emitting `undefined` into an
+    // array the output schema declares as strings.
+    underlyingTokens: vault.underlyingTokens
+      .map((t) => t.symbol)
+      .filter((s): s is string => s !== undefined),
     isTransactional: vault.isTransactional,
     isRedeemable: vault.isRedeemable,
     verification: verificationOf(vault),

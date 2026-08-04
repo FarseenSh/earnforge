@@ -102,7 +102,7 @@ export function VaultExplorer() {
       result = result.filter(
         (v) =>
           v.name.toLowerCase().includes(term) ||
-          v.underlyingTokens.some((t) => t.symbol.toLowerCase().includes(term))
+          v.underlyingTokens.some((t) => t.symbol?.toLowerCase().includes(term))
       )
     }
 
