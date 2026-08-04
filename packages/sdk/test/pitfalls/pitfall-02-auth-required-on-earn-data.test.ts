@@ -69,11 +69,11 @@ describe('Pitfall #2: Earn Data API requires auth (inverted Apr 2026)', () => {
     await client.listChains()
 
     expect(fetchMock).toHaveBeenCalledOnce()
-    const init = fetchMock.mock.calls[0]?.[1]
-    expect(init).toBeDefined()
-    expect((init?.headers as Record<string, string>)['x-lifi-api-key']).toBe(
-      'sentinel-key'
-    )
+    const headers = (fetchMock.mock.calls[0]?.[1]?.headers ?? {}) as Record<
+      string,
+      string
+    >
+    expect(headers['x-lifi-api-key']).toBe('sentinel-key')
   })
 
   it('accepts the key from LIFI_API_KEY when not passed explicitly', () => {
