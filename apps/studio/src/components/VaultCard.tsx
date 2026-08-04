@@ -2,7 +2,7 @@
 'use client'
 
 import type { RiskScore, Vault } from '@earnforge/sdk'
-import { parseTvl } from '@earnforge/sdk'
+import { flagReasons, isFlagged, parseTvl } from '@earnforge/sdk'
 import { RiskBadge } from './RiskBadge'
 
 interface VaultCardProps {
@@ -78,6 +78,11 @@ export function VaultCard({
 }: VaultCardProps) {
   const tvl = parseTvl(vault.analytics.tvl)
   const isStablecoin = vault.tags.includes('stablecoin')
+  // LI.FI flags roughly 9% of vaults and nothing surfaces it. Showing the APY
+  // of a flagged vault without the flag is how a broken or outlier vault ends
+  // up looking like a recommendation.
+  const flagged = isFlagged(vault)
+  const reasons = flagged ? flagReasons(vault) : []
 
   return (
     <button
@@ -114,6 +119,20 @@ export function VaultCard({
         )}
       </div>
 
+      {flagged && (
+        <div
+          data-testid="flagged-warning"
+          className="mb-3 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1.5"
+        >
+          <p className="text-xs font-medium text-red-400">
+            Flagged by LI.FI
+            {reasons.length > 0 && (
+              <span className="font-normal"> — {reasons.join(', ')}</span>
+            )}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <p className="text-xs text-[var(--color-text-muted)]">APY</p>
@@ -134,6 +153,19 @@ export function VaultCard({
           <span className="text-xs text-[var(--color-text-muted)]">30d</span>
           <Sparkline data={apyHistory} />
         </div>
+      )}
+
+      {risk.flags.length > 0 && (
+        <ul data-testid="risk-flags" className="mt-2 space-y-0.5">
+          {risk.flags.map((flag) => (
+            <li
+              key={flag}
+              className="text-xs text-[var(--color-text-muted)] leading-snug"
+            >
+              <span className="text-yellow-500">!</span> {flag}
+            </li>
+          ))}
+        </ul>
       )}
 
       {vault.description && (

@@ -2,7 +2,12 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { VaultCard } from '@/components/VaultCard'
-import { mockRiskScore, mockVault } from './helpers'
+import {
+  mockFlaggedVault,
+  mockHighRiskScore,
+  mockRiskScore,
+  mockVault,
+} from './helpers'
 
 describe('VaultCard', () => {
   it('renders vault name and protocol', () => {
@@ -151,5 +156,64 @@ describe('VaultCard', () => {
     expect(
       screen.getByText('A great vault for stablecoins')
     ).toBeInTheDocument()
+  })
+
+  it('warns that a vault is flagged, with the reason', () => {
+    // Studio computed verificationStatus and showed none of it. A flagged vault
+    // rendered identically to any other — same layout, same APY, no warning —
+    // which is how an outlier ends up looking like a recommendation.
+    render(
+      <VaultCard
+        vault={mockFlaggedVault()}
+        risk={mockHighRiskScore()}
+        isSelected={false}
+        onClick={() => {}}
+      />
+    )
+    const warning = screen.getByTestId('flagged-warning')
+    expect(warning).toHaveTextContent('Flagged by LI.FI')
+    expect(warning).toHaveTextContent('zero_apy')
+  })
+
+  it('shows no warning on a vault that is not flagged', () => {
+    render(
+      <VaultCard
+        vault={mockVault()}
+        risk={mockRiskScore()}
+        isSelected={false}
+        onClick={() => {}}
+      />
+    )
+    expect(screen.queryByTestId('flagged-warning')).toBeNull()
+  })
+
+  it('lists the risk flags, which say what the score cannot', () => {
+    render(
+      <VaultCard
+        vault={mockVault()}
+        risk={mockRiskScore({
+          score: 5.5,
+          label: 'high',
+          flags: ['87% of APY comes from token incentives'],
+        })}
+        isSelected={false}
+        onClick={() => {}}
+      />
+    )
+    expect(screen.getByTestId('risk-flags')).toHaveTextContent(
+      '87% of APY comes from token incentives'
+    )
+  })
+
+  it('omits the flag list entirely when there is nothing to report', () => {
+    render(
+      <VaultCard
+        vault={mockVault()}
+        risk={mockRiskScore({ flags: [] })}
+        isSelected={false}
+        onClick={() => {}}
+      />
+    )
+    expect(screen.queryByTestId('risk-flags')).toBeNull()
   })
 })

@@ -35,15 +35,31 @@ describe('RiskBadge', () => {
     expect(badge).toHaveTextContent('7.0')
   })
 
-  it('handles boundary score of exactly 7 as green', () => {
-    render(<RiskBadge score={7} label="low" />)
-    const badge = screen.getByTestId('risk-badge')
-    expect(badge.className).toContain('green')
-  })
-
-  it('handles boundary score of exactly 4 as yellow', () => {
-    render(<RiskBadge score={4} label="medium" />)
+  it('colours by label, not by re-deriving from the score', () => {
+    // The bug this replaces: the badge had its own `>= 7` cutoff while risk
+    // scorer v2 labels at 8. A 7.5 scored `medium` rendered green — the colour
+    // contradicting the word next to it. Every previous test passed a score and
+    // label that already agreed, so none of them could catch it.
+    render(<RiskBadge score={7.5} label="medium" />)
     const badge = screen.getByTestId('risk-badge')
     expect(badge.className).toContain('yellow')
+    expect(badge.className).not.toContain('green')
+  })
+
+  it('renders the 8 boundary as low', () => {
+    render(<RiskBadge score={8} label="low" />)
+    expect(screen.getByTestId('risk-badge').className).toContain('green')
+  })
+
+  it('renders the 6 boundary as medium', () => {
+    render(<RiskBadge score={6} label="medium" />)
+    expect(screen.getByTestId('risk-badge').className).toContain('yellow')
+  })
+
+  it('never renders a flagged-vault score as low', () => {
+    // Verification carries 0.22 of the weight, so a flagged vault caps at 7.96
+    // and the SDK can never label it `low`. 7.9/high must not look safe.
+    render(<RiskBadge score={7.9} label="high" />)
+    expect(screen.getByTestId('risk-badge').className).toContain('red')
   })
 })
