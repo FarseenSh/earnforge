@@ -27,6 +27,7 @@ import {
   VaultSummaryOut,
 } from './output-schemas.js'
 import { registerSkillResources } from './resources.js'
+import { SERVER_VERSION } from './version.js'
 
 /** Slug description reused across tools — the format changed in Apr 2026. */
 const SLUG_DESC =
@@ -111,7 +112,7 @@ export interface CreateServerOptions {
 export function createServer(options: CreateServerOptions = {}): McpServer {
   const server = new McpServer({
     name: 'earnforge-mcp',
-    version: '1.0.0',
+    version: SERVER_VERSION,
   })
 
   const forge = createEarnForge({

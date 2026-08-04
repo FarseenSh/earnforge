@@ -317,6 +317,30 @@ describe('CLI commands', () => {
       )
     })
 
+    it('passes --from-token through to the amount resolution', async () => {
+      // `simulate` sent --from-token to the flow but not to the quote that
+      // scales the human amount, so the amount was scaled by the VAULT asset's
+      // decimals. `--amount 1 --from-token WETH` became 1e6 wei of WETH — a
+      // millionth of a cent — and the simulation failed on dust rather than on
+      // anything the caller wrote.
+      await runCommand([
+        'simulate',
+        '--vault',
+        '8453-0xbeef0001',
+        '--amount',
+        '1',
+        '--wallet',
+        '0xw',
+        '--from-token',
+        '0xweth',
+        '--json',
+      ])
+      expect(forge.buildDepositQuote).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ fromToken: '0xweth' })
+      )
+    })
+
     it('supports --from-chain override', async () => {
       await runCommand([
         'quote',

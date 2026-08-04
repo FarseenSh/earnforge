@@ -1174,10 +1174,17 @@ program
 
         // Resolve the human amount to base units using the existing token
         // lookup, so `--amount 100` keeps meaning 100 USDC rather than 100 wei.
+        //
+        // `fromToken` has to go in here too, not just into the flow below:
+        // without it the amount is scaled by the *vault asset's* decimals, so
+        // `--amount 1 --from-token WETH` became 1e6 wei of WETH — a millionth
+        // of a cent — and the simulation failed on dust rather than on
+        // anything real.
         spinner.text = 'Resolving amount...'
         const quote = await forge.buildDepositQuote(vault, {
           fromAmount: opts.amount,
           wallet: opts.wallet,
+          fromToken: opts.fromToken,
         })
 
         // Composer simulates the compiled program against the current chain

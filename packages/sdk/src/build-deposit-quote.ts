@@ -21,7 +21,7 @@ export interface DepositQuoteResult {
 }
 
 /**
- * Build a deposit quote with all 18 pitfalls handled:
+ * Build a deposit quote with the relevant pitfalls handled:
  *
  * - toToken = vault.address (Pitfall #5)
  * - Uses correct decimals from underlyingTokens (Pitfall #9)

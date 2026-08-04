@@ -46,8 +46,14 @@ export interface ComposerFlowsOptions {
 }
 
 export interface DepositFlowParams {
-  /** Target vault. Its `chainId` and `address` define the destination. */
-  vault: Pick<Vault, 'chainId' | 'address' | 'name'>
+  /**
+   * Target vault. `chainId` and `address` define the destination;
+   * `underlyingTokens[0]` is the asset the swap must produce for the zap to
+   * have a routable edge into the share token.
+   */
+  vault: Pick<Vault, 'chainId' | 'address' | 'name'> & {
+    underlyingTokens?: readonly { address: string }[]
+  }
   /** Address that signs and receives the position. */
   wallet: string
   /** Token being spent. Omit for the chain's native asset. */
@@ -148,6 +154,13 @@ export class ComposerFlows {
    * the deposit uses the exact amount received rather than an estimate made
    * before the swap ran.
    *
+   * The two steps target *different* resources, and that is the whole point:
+   * the swap produces the vault's underlying asset, and the zap turns that
+   * asset into vault shares. Pointing the swap at the share token instead makes
+   * the zap's input and output the same resource, and Composer rejects the
+   * program with `No routing edge found from erc20:<vault> to erc20:<vault>` —
+   * the flow can never compile, for any vault, from any input token.
+   *
    * The slippage guard goes on the *zap*, not the swap: `lifi.swap`'s
    * `amountOut` port declares `providesMinimum`, because the aggregator already
    * bakes `minOut` into its own calldata. Attaching a second guard there is a
@@ -172,16 +185,33 @@ export class ComposerFlows {
       chainId
     )
 
-    const swap = builder.lifi.swap('swap', {
-      bind: { amountIn: builder.inputs.amountIn },
-      config: {
-        resourceOut: vaultShare,
-        slippage: slippageBps / 10_000,
-      },
-    })
+    // The asset the vault actually accepts. Every live vault reports one; the
+    // fallback exists so an unreported asset degrades to "zap straight from the
+    // input" rather than composing a swap whose destination we had to guess.
+    const underlying = vault.underlyingTokens?.[0]?.address
+
+    // Nothing to swap when the caller already holds the vault's asset.
+    const inputIsVaultAsset =
+      underlying !== undefined &&
+      params.fromToken !== undefined &&
+      params.fromToken.toLowerCase() === underlying.toLowerCase()
+
+    const swap =
+      underlying !== undefined && !inputIsVaultAsset
+        ? builder.lifi.swap('swap', {
+            bind: { amountIn: builder.inputs.amountIn },
+            config: {
+              resourceOut: resources.erc20(
+                asAddress(underlying, 'underlyingToken'),
+                chainId
+              ),
+              slippage: slippageBps / 10_000,
+            },
+          })
+        : null
 
     builder.lifi.zap('deposit', {
-      bind: { amountIn: swap.amountOut },
+      bind: { amountIn: swap ? swap.amountOut : builder.inputs.amountIn },
       config: { resourceOut: vaultShare },
       guards: [guards.slippage({ port: 'amountOut', bps: slippageBps })],
     })

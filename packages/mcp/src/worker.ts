@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createMcpHandler } from '@modelcontextprotocol/server'
 import { createServer } from './server.js'
+import { SERVER_VERSION } from './version.js'
 
 /**
  * Cloudflare Worker entry point.
@@ -94,7 +95,7 @@ export default {
     // Liveness probe that does not require a key, so uptime checks stay cheap.
     if (url.pathname === '/health') {
       return Response.json(
-        { ok: true, server: 'earnforge-mcp', version: '1.0.0' },
+        { ok: true, server: 'earnforge-mcp', version: SERVER_VERSION },
         { headers: CORS_HEADERS }
       )
     }

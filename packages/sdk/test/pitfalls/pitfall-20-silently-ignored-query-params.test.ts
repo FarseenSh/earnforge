@@ -11,10 +11,10 @@ import { EarnDataClient } from '../../src/clients/index.js'
  * fleet with HTTP 200.
  *
  * The consequence for a yield tool is specific and bad: asking for "vaults with
- * at least $100M TVL" returned all 609 vaults including sub-$20k dust, and
+ * at least $100M TVL" returned the entire fleet including sub-$20k dust, and
  * every downstream consumer — `suggest()`, strategy presets, the CLI's
  * `--min-tvl` — happily operated on the wrong candidate set. Verified live:
- * `minTvl=100000000` yields 609 results, `minTvlUsd=100000000` yields 33.
+ * `minTvl=100000000` yields all 711 results, `minTvlUsd=100000000` yields 41.
  *
  * The lesson generalises past this one parameter. A filter that fails open is
  * worse than one that throws, because the result still looks plausible. Any

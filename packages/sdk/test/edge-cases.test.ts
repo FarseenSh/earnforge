@@ -17,7 +17,7 @@ describe('Edge cases — comprehensive', () => {
 
   /**
    * Pitfall #15 was discovered via a UNIBTC vault that reported no underlying
-   * tokens. That vault is gone and zero of 609 live vaults now have an empty
+   * tokens. That vault is gone and zero of 711 live vaults now have an empty
    * array, so the guard can no longer be driven from a fixture. It is still
    * worth holding: the shape is legal, and LI.FI has reintroduced dropped
    * shapes before. So the case is constructed rather than found.

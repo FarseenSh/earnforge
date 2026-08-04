@@ -255,7 +255,7 @@ describe('Zod Schemas — validated against real API fixtures', () => {
 describe('Edge cases from real fixtures', () => {
   it('tolerates an empty underlyingTokens array even though none occur now', () => {
     // Pitfall #15 was built around a UNIBTC vault with no underlying tokens.
-    // Zero of 609 live vaults now have an empty array, so the guard can only be
+    // Zero of 711 live vaults now have an empty array, so the guard can only be
     // asserted structurally — the schema must still accept it, because the
     // shape is legal and LI.FI has reintroduced dropped shapes before.
     const base = VaultSchema.parse(vaultSingle)

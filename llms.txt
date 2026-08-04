@@ -105,16 +105,16 @@ execution duration), and action details.
   a chain id mis-parses every current slug, and since nextCursor IS a slug, this
   also breaks pagination.
 - protocol: object with { id, name, url }. `id` is unversioned.
-- isTransactional: boolean. If false, deposits via Composer will fail. 6.2% of the fleet.
-- isRedeemable: boolean. If false, withdrawals may not be supported. 7.3% of the fleet.
+- isTransactional: boolean. If false, deposits via Composer will fail. ~6% of the fleet.
+- isRedeemable: boolean. If false, withdrawals may not be supported. ~7% of the fleet.
 - underlyingTokens: array of { symbol, address, decimals, priceUsd }.
 - tags: array of strings (e.g. "stablecoin", "lst")
 - depositPacks / redeemPacks: available deposit/redeem methods
-- description: OPTIONAL, and usually absent — 76.8% of vaults omit it.
+- description: OPTIONAL, and usually absent — roughly three quarters of vaults omit it.
 - verificationStatus: "none" | "flagged". UNDOCUMENTED — it appears in no spec,
   changelog or quickstart, and LI.FI's own hosted MCP server does not expose it.
-  68 of 711 vaults (9.6%) are flagged. Sort by APY without checking it and a
-  flagged vault lands at the top of your list.
+  Roughly 9-10% of vaults are flagged (68 of 711 when this was written). Sort
+  by APY without checking it and a flagged vault lands at the top of your list.
 - verificationStatusBreakdown: array of { reason, result }. Reasons seen live:
   "zero_apy" (most), "apy_outlier".
 
@@ -126,10 +126,11 @@ execution duration), and action details.
   2919%.
 - analytics.apy.base / analytics.apy.reward: the split of total.
 - analytics.apy.reward is THREE-VALUED and the distinction is load-bearing:
-  `null` means the protocol did not report (324 vaults), `0` means it reported
-  none (300 vaults), and `> 0` means real incentives (87 vaults). Normalising
-  null to 0 conflates 324 unknowns with 300 confirmed zeroes and destroys any
-  reward-sustainability signal.
+  `null` means the protocol did not report, `0` means it reported none, and
+  `> 0` means real incentives. The split is close to even between the first two
+  — 324 null against 300 zero at the time of writing — so normalising null to 0
+  conflates several hundred unknowns with several hundred confirmed zeroes and
+  destroys any reward-sustainability signal.
 - analytics.apy1d / apy7d / apy30d: number OR null. Fresh vaults lack history.
 - analytics.tvl.usd: NUMBER. The spec declares it a string. Accept both.
 - analytics.updatedAt: ISO timestamp. The docs describe a 15-minute refresh; in
@@ -165,7 +166,7 @@ const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY });
 
 // Auto-paginating vault iteration
 for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
-  if (isFlagged(vault)) continue;              // LI.FI flags 9.6% as suspect
+  if (isFlagged(vault)) continue;              // LI.FI flags ~9% as suspect
   const risk = forge.riskScore(vault);
   console.log(vault.name, vault.analytics.apy.total, risk.label, risk.flags);
 }

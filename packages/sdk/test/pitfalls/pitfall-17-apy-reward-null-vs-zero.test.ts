@@ -21,12 +21,12 @@ function analytics(reward: number | null) {
  * Pitfall #17 — apy.reward is three-valued, and the split is per-vault.
  *
  * The original framing was "Morpho returns 0, Euler/Aave return null, so
- * normalise null to 0." Measured across 609 live vaults that is too simple in
+ * normalise null to 0." Measured across 711 live vaults that is too simple in
  * two ways.
  *
  * First, all three states occur: null, exact 0, and a positive number. Second,
  * the split varies WITHIN a protocol rather than between protocols — morpho
- * shows 160 zeros alongside 50 non-zeros; aave shows 143 nulls alongside 17
+ * shows 193 zeros alongside 32 non-zeros; aave shows 144 nulls alongside 17
  * non-zeros.
  *
  * So collapsing null to 0 destroys real information: "the protocol reported no

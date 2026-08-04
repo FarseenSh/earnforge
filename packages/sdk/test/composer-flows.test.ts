@@ -16,14 +16,24 @@ import {
  * malformed and never sign something unsimulated.
  */
 
+const USDC = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
+
+/**
+ * `underlyingTokens` is load-bearing here, not decoration. The fixture used to
+ * omit it, which no live vault does — and that omission hid a bug for a whole
+ * release: the swap was composed to output the vault SHARE token, so the zap
+ * ran share -> share and Composer refused the program with "No routing edge
+ * found". Compilation is stubbed in these tests, so the flow "passed" while
+ * being impossible to compile for any vault, from any input.
+ */
 const VAULT = {
   chainId: 8453,
   address: '0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61',
   name: 'Morpho USDC',
   protocol: { id: 'morpho', name: 'Morpho', url: 'https://morpho.org' },
+  underlyingTokens: [{ address: USDC }],
 }
 
-const USDC = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
 const WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
 
 /**
@@ -118,8 +128,10 @@ describe('ComposerFlows', () => {
       }).buildDepositFlow({
         vault: VAULT,
         wallet: WALLET,
-        fromToken: USDC,
-        amount: '1000000',
+        // WETH rather than the vault's own USDC: these assertions are about the
+        // swap leg, and depositing the vault asset correctly composes no swap.
+        fromToken: '0x4200000000000000000000000000000000000006',
+        amount: '1000000000000000000',
         slippageBps: 250,
       })
       const call = fetchMock.mock.calls[0] as unknown as [
@@ -149,6 +161,64 @@ describe('ComposerFlows', () => {
       expect(flow).not.toMatch(
         /"guards":\s*\[[^\]]*\][^}]*"op":\s*"lifi\.swap"/
       )
+    })
+
+    it('swaps into the vault asset, not into the share token', async () => {
+      // The bug this pins: pointing the swap at `vault.address` makes the zap's
+      // input and output the same resource, and Composer rejects the program
+      // with "No routing edge found from erc20:<vault> to erc20:<vault>". It is
+      // not a routing edge case — the flow cannot compile for any vault.
+      const fetchMock = vi.fn(okResponse)
+      await createComposerFlows({
+        apiKey: 'k',
+        fetch: fetchMock as unknown as typeof globalThis.fetch,
+      }).buildDepositFlow({
+        vault: VAULT,
+        wallet: WALLET,
+        // A token that is neither the vault asset nor the share token, so the
+        // swap leg has somewhere real to go.
+        fromToken: '0x4200000000000000000000000000000000000006',
+        amount: '1000000000000000000',
+      })
+      const call = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { body: string },
+      ]
+      const body = JSON.parse(call[1].body) as Record<string, unknown>
+      const flow = JSON.stringify(body)
+
+      // The swap's declared output must be the underlying asset.
+      expect(flow.toLowerCase()).toContain(USDC.toLowerCase())
+
+      // And the swap must not be pointed at the share token. Locate the swap
+      // op and assert the vault address does not appear as its resourceOut.
+      const swapOp = flow.slice(flow.indexOf('lifi.swap'))
+      const swapResourceOut = swapOp.slice(0, swapOp.indexOf('lifi.zap'))
+      expect(swapResourceOut.toLowerCase()).not.toContain(
+        VAULT.address.toLowerCase()
+      )
+    })
+
+    it('omits the swap entirely when the input already is the vault asset', async () => {
+      // Depositing USDC into a USDC vault needs no swap. Composing one anyway
+      // asks the router for a USDC -> USDC edge, which does not exist.
+      const fetchMock = vi.fn(okResponse)
+      await createComposerFlows({
+        apiKey: 'k',
+        fetch: fetchMock as unknown as typeof globalThis.fetch,
+      }).buildDepositFlow({
+        vault: VAULT,
+        wallet: WALLET,
+        fromToken: USDC,
+        amount: '1000000',
+      })
+      const call = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { body: string },
+      ]
+      const flow = JSON.stringify(JSON.parse(call[1].body))
+      expect(flow).not.toContain('lifi.swap')
+      expect(flow).toContain('lifi.zap')
     })
 
     it('sweeps leftovers back to the sender', async () => {
