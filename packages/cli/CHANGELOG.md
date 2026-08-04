@@ -1,5 +1,22 @@
 # @earnforge/cli
 
+## 1.0.1
+
+### Patch Changes
+
+- `earnforge risk` prints all seven dimensions and the flags. It printed five
+  and no flags — `verification` and `rewardDependency` arrived with risk scorer
+  v2 and were never added to the renderer, so the CLI computed LI.FI's own
+  quality signal and discarded it.
+
+  On the worst vault in the fleet it reported `Composite 5.5/10 (high)` and
+  stopped, while holding `Verification 1/10`, `Reward Dependency 2/10`, and
+  three flags naming the outlier verification status, the 87% emission share,
+  and stale analytics. The number said something was wrong; only the flags said
+  what.
+
+  It survived because nothing asserted on the output. Three tests do now.
+
 ## 1.0.0
 
 ### Major Changes

@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "Apache-2.0",
   "description": "Earn-native MCP server for the LI.FI Earn API — 11 tools for vault discovery, risk scoring, allocation, and deposit quoting",

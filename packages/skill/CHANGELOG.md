@@ -1,5 +1,13 @@
 # @earnforge/skill
 
+## 1.0.1
+
+### Patch Changes
+
+- `references/pitfalls.md` reported that an unfiltered `minTvl` query returned
+  33 results where the measurement was 41. The two copies of that figure had
+  drifted apart.
+
 ## 1.0.0
 
 ### Major Changes

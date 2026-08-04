@@ -1,5 +1,25 @@
 # @earnforge/mcp
 
+## 1.0.1
+
+### Patch Changes
+
+- The Cloudflare Worker resolves tool results before responding. Without this,
+  every tool call on a self-hosted Worker returns Cloudflare error 1042 while
+  the Worker's own log records `outcome: ok` with no exception.
+
+  The handler was upgrading to an SSE stream, returning from `fetch()` in ~2ms,
+  and then calling the Earn API from that stream — after the request scope had
+  ended. `tools/list`, `resources/list` and `server/discover` were unaffected
+  because they need no network, so the protocol surface looked entirely healthy
+  while everything that did real work died.
+
+  Anyone who deployed their own Worker from `1.0.0` should upgrade; the
+  published instance was already fixed.
+
+- README documents the hosted endpoint, including the `x-lifi-api-key` header
+  that moves a caller onto their own rate-limit budget.
+
 ## 1.0.0
 
 ### Major Changes
