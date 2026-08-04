@@ -1,5 +1,7 @@
 # Earn types for `@lifi/types`
 
+> **Submitted:** [lifinance/types#561](https://github.com/lifinance/types/pull/561)
+
 A PR-ready contribution adding LI.FI Earn types to
 [`@lifi/types`](https://www.npmjs.com/package/@lifi/types).
 
@@ -12,8 +14,8 @@ these by hand, from an OpenAPI spec that disagrees with the service.
 
 ## What to do with it
 
-`earn.ts` is written in the package's own house style: plain interfaces, no
-runtime dependency, no validation library. Dropping it in should be:
+`earn.ts` is written in the package's own house style — plain interfaces, no
+semicolons, single quotes, no runtime dependency. Dropping it in is:
 
 1. Copy `earn.ts` to `src/earn.ts` in `lifinance/types`.
 2. Add `export * from './earn.js';` to `src/index.ts`.

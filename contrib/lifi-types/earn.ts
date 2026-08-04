@@ -17,20 +17,20 @@
  * result set.
  */
 export interface EarnProtocol {
-  id?: string;
-  name: string;
-  url: string;
+  id?: string
+  name: string
+  url: string
 }
 
 /** A token the vault holds. */
 export interface EarnUnderlyingToken {
-  symbol: string;
-  address: string;
-  decimals: number;
+  symbol: string
+  address: string
+  decimals: number
   /** Decimal string, present on every token observed live. */
-  priceUsd?: string;
+  priceUsd?: string
   /** Documented for multi-asset vaults, but not currently emitted. */
-  weight?: number;
+  weight?: number
 }
 
 /**
@@ -40,10 +40,10 @@ export interface EarnUnderlyingToken {
  * absent on some entries, so both are optional here.
  */
 export interface EarnRewardToken {
-  address: string;
-  symbol?: string;
-  decimals?: number;
-  priceUsd?: string;
+  address: string
+  symbol?: string
+  decimals?: number
+  priceUsd?: string
 }
 
 /**
@@ -53,8 +53,8 @@ export interface EarnRewardToken {
  * decommissioned in Jun 2026, but the field still populates on vaults.
  */
 export interface EarnPack {
-  name: string;
-  stepsType: string;
+  name: string
+  stepsType: string
 }
 
 /**
@@ -63,7 +63,7 @@ export interface EarnPack {
  * The OpenAPI spec, the quickstart and the how-it-works page all describe
  * these as decimals, and the quickstart multiplies by 100. They are wrong:
  * doing so overstates every yield by 100x. Values above 1 are common, and
- * a normaliser keyed on "below 1 means decimal" would misread the 139 vaults
+ * a normaliser keyed on "below 1 means decimal" would misread the 161 vaults
  * that legitimately yield under 1%.
  *
  * `reward` is three-valued and the distinction is load-bearing:
@@ -76,9 +76,9 @@ export interface EarnPack {
  * separates organic yield from an emission that can end.
  */
 export interface EarnApy {
-  base: number | null;
-  total: number;
-  reward: number | null;
+  base: number | null
+  total: number
+  reward: number | null
 }
 
 /**
@@ -89,8 +89,8 @@ export interface EarnApy {
  * is not a breaking change for consumers.
  */
 export interface EarnTvl {
-  usd: number | string;
-  native?: number | string;
+  usd: number | string
+  native?: number | string
 }
 
 /**
@@ -101,26 +101,26 @@ export interface EarnTvl {
  * a freshness guarantee.
  */
 export interface EarnAnalytics {
-  apy: EarnApy;
-  tvl: EarnTvl;
-  apy1d: number | null;
-  apy7d: number | null;
-  apy30d: number | null;
-  updatedAt: string;
+  apy: EarnApy
+  tvl: EarnTvl
+  apy1d: number | null
+  apy7d: number | null
+  apy30d: number | null
+  updatedAt: string
 }
 
 /** One reason contributing to a vault's verification status. */
 export interface EarnVerificationBreakdown {
   /** e.g. `zero_apy`, `apy_outlier`. */
-  reason: string;
+  reason: string
   /** e.g. `flagged`, `passed`. */
-  result: string;
+  result: string
 }
 
 /** Deposit capacity limits. Documented in the spec; not currently emitted. */
 export interface EarnCaps {
-  totalCap?: number | string;
-  maxCap?: number | string;
+  totalCap?: number | string
+  maxCap?: number | string
 }
 
 /**
@@ -135,37 +135,37 @@ export interface EarnCaps {
  * `isTransactional: true` and still have no routing edge to enter it.
  */
 export interface EarnVault {
-  address: string;
-  chainId: number;
-  name: string;
-  slug: string;
-  network: string;
-  /** Present on roughly 16% of vaults. */
-  description?: string;
-  protocol: EarnProtocol;
-  syncedAt: string;
+  address: string
+  chainId: number
+  name: string
+  slug: string
+  network: string
+  /** Present on roughly 23% of vaults. */
+  description?: string
+  protocol: EarnProtocol
+  syncedAt: string
   /** Observed values include `single`, `multi`, `stablecoin`, `il-risk`. */
-  tags: string[];
-  underlyingTokens: EarnUnderlyingToken[];
+  tags: string[]
+  underlyingTokens: EarnUnderlyingToken[]
   /** Absent rather than empty when the vault emits no rewards. */
-  rewardTokens?: EarnRewardToken[];
-  analytics: EarnAnalytics;
-  isTransactional: boolean;
-  isRedeemable: boolean;
-  depositPacks: EarnPack[];
-  redeemPacks: EarnPack[];
+  rewardTokens?: EarnRewardToken[]
+  analytics: EarnAnalytics
+  isTransactional: boolean
+  isRedeemable: boolean
+  depositPacks: EarnPack[]
+  redeemPacks: EarnPack[]
   /**
    * Vault quality signal — undocumented, but present on every vault and set to
    * `flagged` on roughly 9% of them.
    */
-  verificationStatus?: string;
-  verificationStatusBreakdown?: EarnVerificationBreakdown[];
+  verificationStatus?: string
+  verificationStatusBreakdown?: EarnVerificationBreakdown[]
   /** Documented but never emitted. */
-  caps?: EarnCaps;
+  caps?: EarnCaps
   /** Documented but never emitted. */
-  timeLock?: number;
+  timeLock?: number
   /** Documented but never emitted. */
-  kyc?: boolean;
+  kyc?: boolean
 }
 
 /**
@@ -176,32 +176,32 @@ export interface EarnVault {
  * missing and null identically when paginating.
  */
 export interface EarnVaultListResponse {
-  data: EarnVault[];
-  nextCursor?: string | null;
-  total: number;
+  data: EarnVault[]
+  nextCursor?: string | null
+  total: number
 }
 
 /** A chain with at least one indexed vault. Returned as a bare array. */
 export interface EarnChain {
-  chainId: number;
-  name: string;
-  networkCaip: string;
+  chainId: number
+  name: string
+  networkCaip: string
 }
 
 /** A single position in a wallet's Earn portfolio. */
 export interface EarnPosition {
-  chainId: number;
+  chainId: number
   /** The vault contract. */
-  address?: string;
-  protocolName: string | null;
+  address?: string
+  protocolName: string | null
   asset: {
-    address: string;
-    name: string;
-    symbol: string;
-    decimals: number;
-  };
-  balanceUsd: string | null;
-  balanceNative: string | null;
+    address: string
+    name: string
+    symbol: string
+    decimals: number
+  }
+  balanceUsd: string | null
+  balanceNative: string | null
 }
 
 /**
@@ -211,10 +211,10 @@ export interface EarnPosition {
  * entry. Both are declared so consumers can migrate without a breaking change.
  */
 export interface EarnPortfolioResponse {
-  data?: EarnPosition[];
+  data?: EarnPosition[]
   /** @deprecated Renamed to `data` in Aug 2026. */
-  positions?: EarnPosition[];
-  limit?: number;
+  positions?: EarnPosition[]
+  limit?: number
 }
 
 /**
@@ -224,7 +224,7 @@ export interface EarnPortfolioResponse {
  * `{ statusCode, message }` despite the changelog announcing structured 404s.
  */
 export interface EarnApiFieldError {
-  code: string;
-  message: string;
-  path: (string | number)[];
+  code: string
+  message: string
+  path: (string | number)[]
 }
