@@ -53,17 +53,40 @@ wrangler deploy
 No build step: `wrangler.toml` points at `src/worker.ts` so wrangler does the
 bundling itself. That is load-bearing — see the `[alias]` note in the config.
 
+A public instance runs at `earnforge-mcp.papermind-ai.workers.dev`, so an agent
+can reach every tool with no install and no key:
+
 ```json
 {
   "mcpServers": {
-    "earnforge": { "type": "http", "url": "https://your-worker/mcp" }
+    "earnforge": {
+      "type": "http",
+      "url": "https://earnforge-mcp.papermind-ai.workers.dev/mcp"
+    }
   }
 }
 ```
 
-Callers may pass their own `x-lifi-api-key` header to spend their own rate-limit
-budget instead of the Worker's. `GET /health` is an unauthenticated liveness
-probe.
+**Bring your own key for anything beyond trying it out.** The shared instance
+spends a single 100 req/min budget across everyone using it, so it will
+rate-limit under load. Pass `x-lifi-api-key` and the Worker uses yours instead:
+
+```json
+{
+  "mcpServers": {
+    "earnforge": {
+      "type": "http",
+      "url": "https://earnforge-mcp.papermind-ai.workers.dev/mcp",
+      "headers": { "x-lifi-api-key": "your-key-from-portal.li.fi" }
+    }
+  }
+}
+```
+
+For anything production, deploy your own with the three commands above —
+it is the same Worker, on your own account and quota.
+
+`GET /health` is an unauthenticated liveness probe.
 
 ## Tools
 

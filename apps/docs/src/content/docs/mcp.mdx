@@ -26,6 +26,40 @@ call these tools to query vaults, compute risk, build deposit quotes, and more.
 
 ---
 
+## Hosted — no install
+
+A public instance runs on Cloudflare Workers and speaks the `2026-07-28`
+protocol revision. Point any MCP client at it:
+
+```json
+{
+  "mcpServers": {
+    "earnforge": {
+      "type": "http",
+      "url": "https://earnforge-mcp.papermind-ai.workers.dev/mcp"
+    }
+  }
+}
+```
+
+All twelve tools, plus the Agent Skill served as resources under
+`skill://earnforge/*` — so one connection gives an agent the tools *and* the
+instructions for using them.
+
+:::caution[Bring your own key for real use]
+The shared instance spends a single 100 req/min budget across every caller, so
+it rate-limits under load. Add an `x-lifi-api-key` header and the Worker uses
+your key instead:
+
+```json
+"headers": { "x-lifi-api-key": "your-key-from-portal.li.fi" }
+```
+
+For production, deploy your own — same Worker, your account, your quota.
+:::
+
+---
+
 ## Configuration
 
 Add the EarnForge MCP server to your client's configuration file.
