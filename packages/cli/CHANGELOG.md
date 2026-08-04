@@ -1,5 +1,18 @@
 # @earnforge/cli
 
+## 1.0.3
+
+### Patch Changes
+
+- `earnforge simulate` works. It never has: the flow it built could not compile
+  for any vault, from any input. Fixed in `@earnforge/sdk` 1.0.3, which this
+  release requires.
+
+- `--from-token` reaches the amount resolution, not just the flow. Without it
+  the human amount was scaled by the *vault asset's* decimals, so
+  `--amount 1 --from-token WETH` meant 1e6 wei of WETH — a millionth of a cent
+  — and the simulation failed on dust rather than on anything the caller wrote.
+
 ## 1.0.2
 
 ### Patch Changes

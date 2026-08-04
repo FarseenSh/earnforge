@@ -1,5 +1,17 @@
 # @earnforge/mcp
 
+## 1.0.3
+
+### Patch Changes
+
+- `serverInfo.version` reports the real version. It was hardcoded `'1.0.0'` in
+  two separate places and stayed there through three releases, so the hosted
+  Worker told every client it was 1.0.0 while npm served 1.0.2. It is read from
+  package.json now, with a test comparing the two — the literal agreed with
+  itself everywhere it appeared, which is exactly why nothing caught it.
+
+- Picks up the `@earnforge/sdk` 1.0.3 deposit-flow fix.
+
 ## 1.0.2
 
 ### Patch Changes

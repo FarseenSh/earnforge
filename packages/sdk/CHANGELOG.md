@@ -1,5 +1,29 @@
 # @earnforge/sdk
 
+## 1.0.3
+
+### Patch Changes
+
+- **The deposit flow can compile.** `buildDepositFlow` composed the swap to
+  output the vault's *share* token, then zapped from that into the same share
+  token. Composer rejects the program with
+  `No routing edge found from erc20:<vault> to erc20:<vault>` — not for certain
+  vaults or certain inputs, but for every vault from every input, which means
+  `earnforge simulate` had never once succeeded.
+
+  The swap now outputs the vault's underlying asset, which is what the zap needs
+  on its input side, and the swap leg is skipped entirely when the caller
+  already holds that asset. Verified against live Composer: USDC into STEAKUSDC
+  simulates clean at 1,012,480 gas, WETH at 2,084,552 with the swap included.
+
+  The tests could not have caught this. Compilation is stubbed, and the vault
+  fixture omitted `underlyingTokens` — which no live vault does — so the flow
+  passed while being impossible to compile. The fixture now carries the field
+  and two tests pin the swap's destination.
+
+- `DepositFlowParams.vault` accepts `underlyingTokens`, since the flow now needs
+  the vault's asset to route through.
+
 ## 1.0.2
 
 ### Patch Changes
