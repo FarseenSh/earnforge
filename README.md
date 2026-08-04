@@ -95,7 +95,7 @@ rate limiting, caching and retry logic are inherited rather than reimplemented.
 | [`@earnforge/cli`](./packages/cli) | 19 commands — `list`, `risk`, `suggest`, `doctor`, `compare`, all with `--json` |
 | [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query — `useVaults`, `useRiskScore`, `useEarnDeposit` |
 | [`@earnforge/mcp`](./packages/mcp) | 12 MCP tools on the `2026-07-28` revision; [hosted, no install](https://earnforge-mcp.papermind-ai.workers.dev/health); serves the skill over MCP |
-| [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec |
+| [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec — `npx skills add FarseenSh/earnforge` |
 | [`earnforge-studio`](./apps/studio) | Next.js dashboard — explorer, sparklines, risk badges, code generator |
 
 ---

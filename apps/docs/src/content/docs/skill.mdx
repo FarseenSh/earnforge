@@ -12,9 +12,22 @@ and use EarnForge correctly.
 
 ## Installation
 
+The quickest way — installs into whichever agent you use, and works with
+Claude Code, Cursor, Codex, Gemini CLI and a dozen others:
+
+```bash
+npx skills add FarseenSh/earnforge
+```
+
+Or as an npm dependency, if you want it pinned in a project:
+
 ```bash
 npm i @earnforge/skill
 ```
+
+It is also served over MCP as resources under `skill://earnforge/*`, so
+connecting to the [MCP server](/mcp/) gives an agent the tools *and* these
+instructions over one connection — no install at all.
 
 The installed package contains:
 
