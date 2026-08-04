@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/FarseenSh/earnforge/issues"
   },
-  "description": "Earn-native MCP server for the LI.FI Earn API — 11 tools for vault discovery, risk scoring, allocation, and deposit quoting",
+  "description": "Earn-native MCP server for the LI.FI Earn API — 12 tools for vault discovery, risk scoring, allocation, and deposit quoting",
   "keywords": [
     "lifi",
     "earn",
