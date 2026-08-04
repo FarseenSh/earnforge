@@ -1,5 +1,13 @@
 # @earnforge/skill
 
+## 1.0.2
+
+### Patch Changes
+
+- `references/pitfalls.md` counted 710 vaults and 66 flagged. Both moved before
+  publish; the live fleet reads 711 and 68. An agent quoting the flagged share
+  to a user would have been quoting a stale figure.
+
 ## 1.0.1
 
 ### Patch Changes

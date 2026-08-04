@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "Apache-2.0",
   "description": "Typed SDK for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposit quoting, with every documented and undocumented API quirk handled by default",

@@ -1,5 +1,22 @@
 # @earnforge/sdk
 
+## 1.0.1
+
+### Patch Changes
+
+- Documentation-only. The README and the risk scorer's own comments quoted an
+  "observed floor of 87 minutes" for analytics staleness. That figure was never
+  a property of the API — it was how far into the refresh cycle the sample
+  landed. The fleet updates in one hourly batch, with 588 of 711 vaults sharing
+  a single `updatedAt` minute, so the number reads differently every time it is
+  measured. Replaced with the structural claim, which holds: the documented
+  15-minute refresh is never what you get.
+
+  Fleet counts normalised to one measurement (711 vaults, 68 flagged). Three
+  figures dated the same day disagreed — 710, 711, and 609 in the risk scorer.
+
+  No behaviour change; `STALE_ANALYTICS_MS` and every score are unchanged.
+
 ## 1.0.0
 
 ### Major Changes
