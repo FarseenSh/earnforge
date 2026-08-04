@@ -97,8 +97,8 @@ export const IncludedStepSchema = z.object({
   type: z.string(),
   tool: z.string(),
   toolDetails: ToolDetailsSchema.optional(),
-  action: z.record(z.unknown()),
-  estimate: z.record(z.unknown()),
+  action: z.record(z.string(), z.unknown()),
+  estimate: z.record(z.string(), z.unknown()),
 })
 
 /** Full Composer quote response */

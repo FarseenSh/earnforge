@@ -4,6 +4,11 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2023"],
+    // TypeScript 7 no longer implicitly pulls in every `@types/*` package it
+    // can find, so ambient Node globals (`process`, `console`) have to be
+    // requested. Every workspace package targets Node; packages that also need
+    // web globals add `DOM` to `lib` themselves.
+    "types": ["node"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

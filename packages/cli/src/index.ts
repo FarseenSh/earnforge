@@ -14,6 +14,7 @@ import chalk from 'chalk'
 import { Command } from 'commander'
 import ora from 'ora'
 import {
+  type DoctorCheck,
   type DoctorReport,
   formatDoctorReport,
   formatEnvReport,
@@ -36,7 +37,10 @@ import {
   vaultTable,
 } from './helpers.js'
 
-export type { DoctorReport }
+// `DoctorCheck` is reachable structurally through `DoctorReport.checks`, but
+// anyone writing a function that takes one needs the name — so it is exported
+// alongside the report rather than left implicit.
+export type { DoctorCheck, DoctorReport }
 export { formatDoctorReport, formatEnvReport, runDoctorChecks, runEnvChecks }
 
 // ── Forge factory (lazy singleton) ──

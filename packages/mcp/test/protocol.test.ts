@@ -145,8 +145,12 @@ describe('MCP protocol surface', () => {
         const res = await client.readResource({
           uri: `skill://earnforge/${name}`,
         })
-        expect(res.contents[0]?.mimeType).toBe('text/markdown')
-        expect((res.contents[0]?.text as string).length).toBeGreaterThan(50)
+        const content = res.contents[0]
+        expect(content?.mimeType).toBe('text/markdown')
+        // Casting the optional chain to `string` and dereferencing it would
+        // throw a TypeError instead of failing the assertion when a reference
+        // is missing entirely — the case most worth reporting clearly.
+        expect(String(content?.text ?? '').length).toBeGreaterThan(50)
       }
     })
 
