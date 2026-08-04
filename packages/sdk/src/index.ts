@@ -29,6 +29,15 @@ export {
   type QuoteParams,
   type VaultListParams,
 } from './clients/index.js'
+export {
+  ComposerFlowError,
+  ComposerFlows,
+  type ComposerFlowsOptions,
+  createComposerFlows,
+  type DepositFlowParams,
+  type FlowSimulation,
+  routableProtocols,
+} from './composer-flows.js'
 export * from './errors.js'
 export {
   type GasOptimizeOptions,
@@ -41,6 +50,13 @@ export {
   preflight,
 } from './preflight.js'
 export * from './rate-limiter.js'
+export {
+  analyzeRewardSustainability,
+  type RewardSustainability,
+  rewardSustainability,
+  type RewardTrend,
+  type SustainabilityLabel,
+} from './reward-sustainability.js'
 export * from './retry.js'
 export {
   type RiskBreakdown,

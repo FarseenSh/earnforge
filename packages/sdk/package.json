@@ -43,6 +43,8 @@
     "drift": "tsx scripts/drift.ts"
   },
   "dependencies": {
+    "@lifi/compose-spec": "0.2.0",
+    "@lifi/composer-sdk": "^0.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

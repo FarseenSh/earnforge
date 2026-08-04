@@ -3,6 +3,7 @@
 import {
   buildApprovalTx,
   checkAllowance,
+  createComposerFlows,
   createEarnForge,
   type EarnForge,
   MAX_UINT256,
@@ -56,6 +57,24 @@ function getForge(): EarnForge {
     })
   }
   return _forge
+}
+
+/**
+ * The API key, as a hard requirement rather than an optional fallback.
+ *
+ * `createEarnForge` tolerates a missing key and fails later with a 401; the
+ * Compose API rejects the request outright, so surfacing it here gives the
+ * caller the portal link instead of a bare authentication error.
+ */
+function resolveApiKey(): string {
+  const key = process.env.LIFI_API_KEY
+  if (!key) {
+    throw new Error(
+      'LIFI_API_KEY is not set. Both the Earn Data API and Composer require ' +
+        'one — create it at https://portal.li.fi'
+    )
+  }
+  return key
 }
 
 /** Override forge instance (for testing) */
@@ -1106,18 +1125,27 @@ export default async function Home() {
 
 program
   .command('simulate')
-  .description('Dry-run a deposit quote against an anvil fork (requires anvil)')
+  .description(
+    "Simulate a deposit against the chain head using Composer's own simulator"
+  )
   .requiredOption('--vault <slug>', 'Vault slug')
   .requiredOption('--amount <human>', 'Deposit amount (human-readable)')
   .requiredOption('--wallet <addr>', 'Wallet address')
-  .option('--rpc <url>', 'Custom RPC URL (default: auto-detect)')
+  .option('--from-token <addr>', 'Token to spend (default: the vault asset)')
+  .option('--slippage-bps <n>', 'Slippage tolerance in basis points', '100')
+  .option(
+    '--allow-revert',
+    'Return calldata even if the simulation reverts, with diagnostics'
+  )
   .option('--json', 'JSON output')
   .action(
     async (opts: {
       vault: string
       amount: string
       wallet: string
-      rpc?: string
+      fromToken?: string
+      slippageBps?: string
+      allowRevert?: boolean
       json?: boolean
     }) => {
       const spinner = ora('Running preflight checks...').start()
@@ -1144,71 +1172,75 @@ program
           console.warn(chalk.yellow(`  [${w.code}] ${w.message}`))
         }
 
-        spinner.text = 'Building quote for simulation...'
-        const result = await forge.buildDepositQuote(vault, {
+        // Resolve the human amount to base units using the existing token
+        // lookup, so `--amount 100` keeps meaning 100 USDC rather than 100 wei.
+        spinner.text = 'Resolving amount...'
+        const quote = await forge.buildDepositQuote(vault, {
           fromAmount: opts.amount,
           wallet: opts.wallet,
         })
 
-        spinner.text = 'Simulating on anvil fork...'
-
-        const txReq = result.quote.transactionRequest
-        const rpcUrl = opts.rpc ?? `https://rpc.li.fi/v1/chain/${vault.chainId}`
-
-        // Use a simple eth_call simulation
-        const simResult = await globalThis.fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_call',
-            params: [
-              {
-                from: opts.wallet,
-                to: txReq.to,
-                data: txReq.data,
-                value: txReq.value,
-                gas: txReq.gasLimit,
-              },
-              'latest',
-            ],
-            id: 1,
-          }),
+        // Composer simulates the compiled program against the current chain
+        // head, so it sees allowances, balances and the actual protocol state.
+        // The previous implementation was a bare `eth_call` against a public
+        // RPC — it could not observe any of that, and reported SUCCESS for
+        // transactions that would revert on submission.
+        spinner.text = 'Simulating against the chain head...'
+        const flows = createComposerFlows({ apiKey: resolveApiKey() })
+        const sim = await flows.buildDepositFlow({
+          vault,
+          wallet: opts.wallet,
+          fromToken: opts.fromToken,
+          amount: quote.rawAmount,
+          slippageBps: Number(opts.slippageBps ?? 100),
+          allowRevert: opts.allowRevert ?? false,
         })
-
-        const sim = (await simResult.json()) as {
-          result?: string
-          error?: { message: string }
-        }
         spinner.stop()
+
+        const tx = sim.transaction as {
+          to?: string
+          chainId?: number
+          gasLimit?: string
+        } | null
 
         const simData = {
           vault: vault.slug,
           amount: opts.amount,
-          decimals: result.decimals,
-          rawAmount: result.rawAmount,
-          gasLimit: txReq.gasLimit,
-          to: txReq.to,
-          chainId: txReq.chainId,
-          simulation: sim.error ? 'FAILED' : 'SUCCESS',
-          error: sim.error?.message,
+          decimals: quote.decimals,
+          rawAmount: quote.rawAmount,
+          simulation: sim.ok ? 'SUCCESS' : 'REVERTED',
+          gasLimit: tx?.gasLimit,
+          to: tx?.to,
+          chainId: tx?.chainId ?? vault.chainId,
+          producedResources: sim.producedResources,
+          approvals: sim.approvals,
+          priceImpact: sim.priceImpact,
+          revert: sim.revert,
+        }
+
+        if (!sim.ok) {
+          process.exitCode = 1
         }
 
         outputResult(simData, opts.json ?? false, () => {
-          const status = sim.error
-            ? chalk.red(`FAILED: ${sim.error.message}`)
-            : chalk.green('SUCCESS — transaction would execute')
-          return [
+          const status = sim.ok
+            ? chalk.green('SUCCESS — simulated cleanly against chain head')
+            : chalk.red('REVERTED — see revert diagnostics below')
+          const lines = [
             chalk.bold('Simulation Result'),
             '',
             `  Vault:     ${vault.name} (${vault.slug})`,
-            `  Amount:    ${opts.amount} (${result.rawAmount} raw)`,
-            `  Gas Limit: ${txReq.gasLimit}`,
-            `  Target:    ${txReq.to}`,
-            `  Chain:     ${txReq.chainId}`,
+            `  Amount:    ${opts.amount} (${quote.rawAmount} raw)`,
+            `  Gas Limit: ${tx?.gasLimit ?? chalk.dim('n/a — reverted')}`,
+            `  Target:    ${tx?.to ?? chalk.dim('n/a')}`,
+            `  Chain:     ${tx?.chainId ?? vault.chainId}`,
             '',
             `  Status:    ${status}`,
-          ].join('\n')
+          ]
+          if (sim.revert) {
+            lines.push('', chalk.red(`  Revert: ${JSON.stringify(sim.revert)}`))
+          }
+          return lines.join('\n')
         })
       } catch (err) {
         spinner.fail('Simulation failed')
