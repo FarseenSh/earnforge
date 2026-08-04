@@ -56,12 +56,30 @@ function withCors(response: Response): Response {
 let handler: ReturnType<typeof createMcpHandler> | undefined
 
 function getHandler(fallbackKey: string | undefined) {
-  handler ??= createMcpHandler(({ requestInfo }) => {
-    // Read the per-caller override here, inside the factory, so one cached
-    // handler still serves callers using their own keys correctly.
-    const callerKey = requestInfo?.headers.get('x-lifi-api-key') ?? undefined
-    return createServer({ apiKey: callerKey ?? fallbackKey })
-  })
+  handler ??= createMcpHandler(
+    ({ requestInfo }) => {
+      // Read the per-caller override here, inside the factory, so one cached
+      // handler still serves callers using their own keys correctly.
+      const callerKey = requestInfo?.headers.get('x-lifi-api-key') ?? undefined
+      return createServer({ apiKey: callerKey ?? fallbackKey })
+    },
+    {
+      // Resolve the whole result before responding, rather than opening an SSE
+      // stream and filling it afterwards.
+      //
+      // The default upgrades to a stream as soon as a handler might emit a
+      // notification, which returns from `fetch()` in ~2ms and then performs
+      // the Earn API call from the stream — after the Worker's request scope
+      // has ended. Cloudflare tears that down: the client sees error 1042
+      // while the Worker's own log records `outcome: ok` with no exception,
+      // because from its side nothing failed.
+      //
+      // `tools/list` and `resources/list` were unaffected precisely because
+      // they need no network, which is why the protocol looked healthy while
+      // every real tool call died.
+      responseMode: 'json',
+    }
+  )
   return handler
 }
 
