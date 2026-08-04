@@ -29,36 +29,81 @@ export interface RiskScore {
 }
 
 /**
- * Protocol maturity tiers, keyed by LI.FI's UNVERSIONED protocol id.
+ * Protocol maturity tiers, keyed by LI.FI's live protocol id.
  *
- * Every key below appears in the live GET /v1/protocols response. The previous
- * versioned keys (`aave-v3`, `morpho-v1`, `euler-v2`) matched nothing after the
- * Apr 2026 rewrite, so every vault silently fell through to the default of 3 —
- * meaning Aave and Morpho vaults were scored as if they were unknown protocols.
+ * Every key appears in the live `GET /v1/protocols` response. The versioned
+ * keys this table once used (`aave-v3`, `morpho-v1`, `euler-v2`) matched
+ * nothing after the Apr 2026 rewrite, so every vault silently fell through to
+ * the default of 3 — Aave and Morpho scored as unknown protocols.
+ *
+ * Note that "always unversioned" is *not* the rule, though it held for a year:
+ * `spark-v2` arrived versioned in Aug 2026. The only durable rule is that ids
+ * are read from the endpoint, never assumed — which the live suite enforces.
+ *
+ * Exported so that test can assert every id here still resolves upstream. An
+ * id that stops resolving does not error; the vault just quietly scores worse.
+ *
+ * ## How these were assigned
+ *
+ * LI.FI's `/v1/protocols` carries only `id`, `name` and `url` — no maturity
+ * signal at all — so the tiers are derived from four observable inputs, scored
+ * against the live fleet (710 vaults, Aug 2026) and DeFiLlama:
+ *
+ * 1. **Track record** — how long the protocol has been listed. The single
+ *    strongest signal, and the one TVL cannot substitute for.
+ * 2. **Audits** — zero published audits is a material caution regardless of
+ *    size. It is why `kinetiq` sits at 5 despite $785M, and why `ample` is
+ *    below the unknown-protocol default rather than at it.
+ * 3. **Scale** — aggregate TVL, cross-checked between the Earn fleet and
+ *    DeFiLlama. A large gap between the two means most of the protocol's
+ *    capital is not in the vaults being scored, so Earn-side TVL is weighted.
+ * 4. **Category risk** — RWA and lottery mechanics carry failure modes that
+ *    on-chain lending does not (off-chain counterparty, negative expected
+ *    value per position), and are capped accordingly.
+ *
+ * The scale is deliberately coarse. 9 is reserved for protocols whose failure
+ * would be a systemic event; 3 means "we have no basis to judge this"; below 3
+ * means we looked and found something concerning. Precision beyond a whole
+ * number would imply confidence this data does not support.
  *
  * `maple` is retained for vaults cached before it left the Earn index.
  */
-/**
- * Maturity tier per protocol id. Exported so a live test can assert every id
- * here still exists upstream: LI.FI renames protocol ids without a changelog,
- * and an id that no longer resolves silently falls back to tier 3 rather than
- * erroring — the vault just quietly scores worse.
- */
 export const PROTOCOL_TIERS: Record<string, number> = {
+  // Blue chip — multi-year record, deep audits, systemic scale.
   aave: 9,
   morpho: 9,
   yearn: 8,
+  // Established — long record or very large, well audited.
+  'spark-v2': 8, // SparkLend, listed 2023-05, 2 audits, $3.6B
   euler: 7,
   fluid: 7,
   pendle: 7,
   'etherfi-staking': 7,
   ethena: 6,
   maple: 6,
+  // Mid — real adoption, but young, thin, or unaudited.
+  ipor: 5, // listed 2022-10, the longest record in this band
+  midas: 5, // 2024-07, 2 audits, RWA across 3 chains
+  kinetiq: 5, // $785M but 2025-07 and ZERO audits — size is not safety
+  hyperlend: 5, // $437M, 2025-03, 2 audits, single chain
   upshift: 5,
+  // Small or young — audited, but short record and limited scale.
   avant: 4,
   cap: 4,
   neverland: 4,
   yo: 4,
+  usdai: 4, // 2025-05, RWA lending — off-chain counterparty risk
+  nest: 4, // 2024-10, RWA credit
+  concrete: 4, // 2025-02; most of its TVL sits outside these vaults
+  infinifi: 4, // 2025-05, $52M
+  'auto-finance': 4, // 2 audits, $36M, 10 vaults across 4 chains
+  ember: 4, // 2025-09 — under a year old
+  // Explicitly evaluated and still unknown. Same value as the fallback, but
+  // recorded so the coverage check can tell "unexamined" from "examined".
+  apyx: 3, // no audits, no DeFiLlama TVL, no listing date
+  hypurrfi: 3, // audited but $1.5M across 3 vaults — too thin to judge
+  // Below the unknown default: examined, and the findings are adverse.
+  ample: 2, // listed 2026-03, ZERO audits, and lottery-style payout mechanics
 }
 
 /**
