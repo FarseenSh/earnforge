@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-515%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-550%20passing-brightgreen)](#testing)
 [![Pitfalls](https://img.shields.io/badge/API%20pitfalls-23-red)](./PITFALLS.md)
 
 > **The judgment layer for the LI.FI Earn API.**
@@ -93,7 +93,7 @@ rate limiting, caching and retry logic are inherited rather than reimplemented.
 | [`@earnforge/sdk`](./packages/sdk) | Typed client, Zod schemas, risk scorer, strategies, quoting, drift detection |
 | [`@earnforge/cli`](./packages/cli) | 19 commands — `list`, `risk`, `suggest`, `doctor`, `compare`, all with `--json` |
 | [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query — `useVaults`, `useRiskScore`, `useEarnDeposit` |
-| [`@earnforge/mcp`](./packages/mcp) | 12 MCP tools with structured output; hostable on Cloudflare; serves the skill over MCP |
+| [`@earnforge/mcp`](./packages/mcp) | 12 MCP tools on the `2026-07-28` revision; runs on Cloudflare Workers; serves the skill over MCP |
 | [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec |
 | [`earnforge-studio`](./apps/studio) | Next.js dashboard — explorer, sparklines, risk badges, code generator |
 
@@ -119,10 +119,35 @@ deliberate: verification carries 0.22 of the weight, so a flagged vault caps at
 
 ### Reward sustainability
 
-`apy.reward` is three-valued — null, zero, or positive — and the split varies
-*within* a protocol. Preserving that distinction is what makes
-`rewardShareOfTotal()` meaningful: a vault earning 87% of its yield from token
-incentives is a different proposition from one earning it from lending fees.
+*Is this 12% real, or an incentive that ends?* No LI.FI surface answers it.
+
+```ts
+const { label, organicApy, reasons } = rewardSustainability(vault)
+// 'incentive-dependent', 2.4
+// ['Incentives are 80% of total APY. Organic yield is only 2.40%.']
+```
+
+It works only because `apy.reward` is three-valued and the schema refuses to
+coerce it. `null` means the protocol reported nothing — 143 of Aave's 160
+vaults. `0` means it reported no incentives — 160 of Morpho's 210. A `?? 0`
+transform collapses the two and scores most of Aave as confidently organic
+while knowing nothing about it, so `null` is labelled `unknown` and stays that
+way. `analyzeRewardSustainability()` additionally reads the DeFiLlama curve,
+since a decaying APY separates *this emission exists* from *this emission is
+ending*.
+
+### Composer Flows
+
+`/v1/quote` builds one step at a time, so swap-then-deposit is two transactions
+and the second has to guess what the first returned. A Flow binds the swap's
+`amountOut` handle straight into the deposit's `amountIn` — the exact received
+amount, one transaction, atomic.
+
+`vaultRoutability()` answers what no Earn field does: the vault list is a
+**superset** of what Composer can execute. Protocols ingested from DeFiLlama
+appear with no routing edges at all, and seven protocols are deposit-only —
+so a vault can be listed, carry `isTransactional: true`, and still be
+impossible to enter or impossible to exit.
 
 ### Drift detection
 
@@ -154,12 +179,12 @@ coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor
 
 | Suite | Count |
 |---|---|
-| SDK (incl. 23 pitfall regressions) | 251 |
+| SDK (incl. 23 pitfall regressions) | 280 |
 | CLI | 106 |
-| MCP (incl. protocol + Worker surface) | 56 |
+| MCP (incl. `2026-07-28` wire + Worker surface) | 62 |
 | Studio | 56 |
 | React | 46 |
-| **Total** | **515** |
+| **Total** | **550** |
 | Live API integration | **32** |
 
 ```bash
@@ -176,8 +201,9 @@ test, which is how it shipped broken.
 
 ## Stack
 
-TypeScript 5.9 · pnpm 10 · Turborepo 2.5 · tsdown · Biome 2.4 · Vitest 4 ·
-Zod 3 · viem 2.47 · TanStack Query 5 · MCP SDK 1.12 · grammY 1.35 · Next.js 15
+TypeScript 7.0 · pnpm 10 · Turborepo 2.5 · tsdown · Biome 2.5 · Vitest 4 ·
+Zod 4 · viem 2.55 · TanStack Query 5 · MCP SDK 2.0 (`2026-07-28`) ·
+`@lifi/composer-sdk` 0.2 · Next.js 16 · Astro 7
 
 Zod is a deliberate divergence from LI.FI's own stack — runtime validation is
 what surfaces the discrepancies in the table above.

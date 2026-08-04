@@ -106,8 +106,11 @@ All commands accept `--json` for machine-readable output.
 - `earnforge watch --vault <slug> [--apy-drop 20] [--tvl-drop 30] [--json]`
   Monitor a vault for APY/TVL drops. Streams events.
 
-- `earnforge simulate --vault <slug> --amount 100 --wallet 0x... [--json]`
-  Dry-run a deposit via eth_call. Runs preflight first.
+- `earnforge simulate --vault <slug> --amount 100 --wallet 0x... [--from-token 0x...] [--slippage-bps 100] [--allow-revert] [--json]`
+  Simulate a deposit against the current chain head using Composer's own
+  simulator, which sees allowances, balances and protocol state. Runs preflight
+  first. Exits non-zero and returns revert diagnostics if it would fail — report
+  that to the user rather than presenting the transaction as ready.
 
 ### Reference Data
 

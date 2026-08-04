@@ -29,17 +29,29 @@ The Earn Data API returns `401` without a key — create one at
 
 ## Hosted (Cloudflare Worker)
 
-The server is stateless by design: a fresh transport per request, no session id.
-That makes a Worker the natural host — no sticky routing, no shared session
-store, nothing to rebuild on a cold start. It also matches where the protocol is
-going, since the `2026-07-28` revision removes the `initialize` handshake and
-`Mcp-Session-Id` entirely.
+Serves the **`2026-07-28`** revision, which is stateless by definition: no
+`initialize` handshake, no `Mcp-Session-Id`, every request carrying its own
+protocol version in `_meta`. That makes a Worker the natural host — no sticky
+routing, no shared session store, nothing to rebuild on a cold start.
+
+2025-era clients are served from the same factory, so upgrading the protocol
+strands no existing host. A request is treated as modern when it carries the
+per-request `_meta` envelope, and falls through to the 2025 path otherwise.
+
+Verified on the actual runtime under `wrangler dev`, not only against
+synthetic `Request` objects: `server/discover` advertising the revision,
+`resultType` on every result, `ttlMs`/`cacheScope` on list results, and
+`serverInfo` in result `_meta`.
 
 ```bash
-pnpm --filter @earnforge/mcp build
+cd packages/mcp
 wrangler secret put LIFI_API_KEY
+wrangler dev            # exercise it locally first
 wrangler deploy
 ```
+
+No build step: `wrangler.toml` points at `src/worker.ts` so wrangler does the
+bundling itself. That is load-bearing — see the `[alias]` note in the config.
 
 ```json
 {
