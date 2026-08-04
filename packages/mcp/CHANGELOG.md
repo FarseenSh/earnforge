@@ -1,5 +1,18 @@
 # @earnforge/mcp
 
+## 1.0.2
+
+### Patch Changes
+
+- Depends on `@earnforge/sdk` as `^1.0.2` rather than an exact pin. The
+  workspace protocol was `workspace:*`, which publishes as an exact version —
+  so every release of this package hard-pinned one SDK build and no SDK patch
+  could ever reach an installed copy. `workspace:^` publishes a caret range,
+  which is what a same-repo dependency is meant to express.
+
+- Package metadata declares `repository`, `homepage`, `bugs` and `author`. The
+  npm page had no link back to the source or the docs.
+
 ## 1.0.1
 
 ### Patch Changes

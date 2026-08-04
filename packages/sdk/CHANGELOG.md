@@ -1,5 +1,12 @@
 # @earnforge/sdk
 
+## 1.0.2
+
+### Patch Changes
+
+- Package metadata declares `repository`, `homepage`, `bugs` and `author`. The
+  npm page had no link back to the source or the docs.
+
 ## 1.0.1
 
 ### Patch Changes

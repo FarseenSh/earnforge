@@ -127,7 +127,7 @@ importers:
   packages/cli:
     dependencies:
       '@earnforge/sdk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../sdk
       chalk:
         specifier: ^5.4.1
@@ -160,7 +160,7 @@ importers:
   packages/mcp:
     dependencies:
       '@earnforge/sdk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../sdk
       '@modelcontextprotocol/server':
         specifier: ^2.0.0
@@ -191,7 +191,7 @@ importers:
   packages/react:
     dependencies:
       '@earnforge/sdk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../sdk
       viem:
         specifier: ^2.47.11

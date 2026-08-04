@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Farseen Shaikh",
@@ -48,7 +48,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@earnforge/sdk": "workspace:*",
+    "@earnforge/sdk": "workspace:^",
     "chalk": "^5.4.1",
     "cli-table3": "^0.6.5",
     "commander": "^15.0.0",

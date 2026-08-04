@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Farseen Shaikh",
@@ -47,7 +47,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@earnforge/sdk": "workspace:*"
+    "@earnforge/sdk": "workspace:^"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5.90.0",
