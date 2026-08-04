@@ -15,6 +15,7 @@
  * every time a vault is added trains people to ignore it.
  */
 import { describe, expect, it } from 'vitest'
+import { getAaveAccountData } from '../../src/aave-lifecycle.js'
 import { LIFI_TO_LLAMA_PROJECT } from '../../src/apy-history.js'
 import { EarnDataClient } from '../../src/clients/index.js'
 import { PROTOCOL_TIERS, riskScore } from '../../src/risk-scorer.js'
@@ -338,5 +339,35 @@ describe('Live API — Async Iterator', () => {
       count++
     }
     expect(count).toBe(page.total)
+  })
+})
+
+describe('Live chain — Aave v3 Pool ABI', () => {
+  // Aave v3 Pool, Ethereum mainnet.
+  const POOL = '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
+  const RPC = 'https://ethereum-rpc.publicnode.com'
+
+  it('getUserAccountData still returns the six words we decode', async () => {
+    // `getAaveAccountData` reads this by raw selector rather than through an
+    // ABI, so a signature change would not fail to compile — it would decode
+    // whatever came back and hand the caller a plausible, wrong health factor.
+    // This is the only thing standing between that and a liquidation.
+    const data = await getAaveAccountData(
+      RPC,
+      POOL,
+      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+    )
+    expect(typeof data.totalCollateralBase).toBe('bigint')
+    expect(typeof data.currentLiquidationThreshold).toBe('bigint')
+    // Basis points, so a sane threshold is 0 (no position) or under 100%.
+    expect(Number(data.currentLiquidationThreshold)).toBeLessThanOrEqual(10_000)
+    // Either a real ratio or null for a debt-free account — never uint256 max
+    // leaking through as 1.16e59.
+    expect(
+      data.healthFactor === null || Number.isFinite(data.healthFactor)
+    ).toBe(true)
+    if (data.healthFactor !== null) {
+      expect(data.healthFactor).toBeLessThan(1e6)
+    }
   })
 })

@@ -1,6 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export {
+  type AaveAccountData,
+  AaveLifecycleError,
+  assertBorrowSafe,
+  type BorrowProjection,
+  DEFAULT_HEALTH_FACTOR_FLOOR,
+  getAaveAccountData,
+  LIQUIDATION_THRESHOLD,
+  projectBorrow,
+} from './aave-lifecycle.js'
+export {
   type AllowanceResult,
   type ApprovalTx,
   buildApprovalTx,
@@ -50,14 +60,14 @@ export {
   preflight,
 } from './preflight.js'
 export * from './rate-limiter.js'
+export * from './retry.js'
 export {
   analyzeRewardSustainability,
   type RewardSustainability,
-  rewardSustainability,
   type RewardTrend,
+  rewardSustainability,
   type SustainabilityLabel,
 } from './reward-sustainability.js'
-export * from './retry.js'
 export {
   type RiskBreakdown,
   type RiskScore,
