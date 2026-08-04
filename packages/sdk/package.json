@@ -40,7 +40,8 @@
     "test:live": "vitest run test/live",
     "circular": "madge --circular --extensions ts src/",
     "clean": "rm -rf dist .turbo",
-    "drift": "tsx scripts/drift.ts"
+    "drift": "tsx scripts/drift.ts",
+    "generate:refs": "tsx scripts/generate-references.ts"
   },
   "dependencies": {
     "@lifi/compose-spec": "0.2.0",

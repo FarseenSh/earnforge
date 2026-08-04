@@ -1046,13 +1046,13 @@ program
             '@earnforge/sdk': '^1.0.0',
             '@earnforge/react': '^1.0.0',
             '@tanstack/react-query': '^5.90.0',
-            next: '^15.0.0',
+            next: '^16.0.0',
             react: '^19.0.0',
             'react-dom': '^19.0.0',
             // wagmi 3 to match the LI.FI ecosystem — Widget v4 and SDK v4 are
             // wagmi 3 / React 19 only.
             wagmi: '^3.0.0',
-            viem: '^2.47.0',
+            viem: '^2.55.0',
           },
         },
         null,

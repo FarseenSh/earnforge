@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-550%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-564%20passing-brightgreen)](#testing)
 [![Pitfalls](https://img.shields.io/badge/API%20pitfalls-23-red)](./PITFALLS.md)
 
 > **The judgment layer for the LI.FI Earn API.**
@@ -50,7 +50,7 @@ documented API quirks are handled for you.
 ## Why this exists
 
 The Earn API is easy to get wrong, and several of its behaviours contradict
-LI.FI's own documentation. Verified against 609 live vaults:
+LI.FI's own documentation. Verified against 710 live vaults:
 
 | What LI.FI documents | What the API does |
 |---|---|
@@ -179,13 +179,13 @@ coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor
 
 | Suite | Count |
 |---|---|
-| SDK (incl. 23 pitfall regressions) | 280 |
+| SDK (incl. 23 pitfall regressions) | 294 |
 | CLI | 106 |
 | MCP (incl. `2026-07-28` wire + Worker surface) | 62 |
 | Studio | 56 |
 | React | 46 |
-| **Total** | **550** |
-| Live API integration | **32** |
+| **Total** | **564** |
+| Live API integration | **34** |
 
 ```bash
 pnpm turbo test                                    # mocked

@@ -2,7 +2,7 @@
 
 Every pitfall here has a dedicated regression test under
 `packages/sdk/test/pitfalls/`, and every claim was verified against the live API
-on **Jul 25, 2026** across 609 vaults. Where LI.FI's documentation says something
+on **Aug 4, 2026** across 710 vaults. Where LI.FI's documentation says something
 different, that difference is itself recorded — six of these exist *because* the
 docs and the API disagree.
 
@@ -30,7 +30,7 @@ what it did.
 | 12 | Chain mismatch | current | `preflight()` chain comparison |
 | 13 | Non-transactional vault | current | `isTransactional` guard |
 | 14 | Rate limit | current | Token bucket, 100 req/min |
-| 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 609 vaults now hit it |
+| 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 710 vaults now hit it |
 | 16 | Optional `description` | current | `.optional()` — present on 18% of vaults |
 | 17 | **`apy.reward` is three-valued** | revised | null preserved, not coerced to 0 |
 | 18 | `apy1d` null | current | Extended fallback chain |
@@ -70,7 +70,7 @@ is what breaks on the next flip, and it has already flipped once.
 ### #17 — Reward semantics revised
 
 The original rule was *"Morpho returns 0, Euler and Aave return null, so
-normalise null to 0."* Across 609 vaults that is too simple in two ways: all three
+normalise null to 0."* Across 710 vaults that is too simple in two ways: all three
 states occur, and the split varies **within** a protocol rather than between
 protocols.
 
@@ -118,8 +118,8 @@ The TVL filter is `minTvlUsd`. We sent `minTvl`. The API returned the entire
 unfiltered fleet with `200` — no rejection, no warning.
 
 ```
-minTvl=100000000     -> 609 results   (silently unfiltered)
-minTvlUsd=100000000  ->  33 results
+minTvl=100000000     -> 710 results   (silently unfiltered)
+minTvlUsd=100000000  ->  41 results
 ```
 
 For a yield tool that is the worst possible failure: you ask for "$100M+ vaults"
@@ -133,7 +133,7 @@ Every vault carries `verificationStatus` and `verificationStatusBreakdown`.
 Neither appears in the OpenAPI spec, the changelog, the quickstart, or the
 NormalizedVault reference — and LI.FI's hosted MCP server does not expose them.
 
-They are not cosmetic. **56 of 609 vaults (9.2%)** are `flagged`:
+They are not cosmetic. **66 of 710 vaults (9.3%)** are `flagged`:
 
 | Reason | Count |
 |---|---|
@@ -159,7 +159,7 @@ responses rather than from the specification.
 |---|---|
 | APY is "expressed as a decimal (`0.0534` = 5.34%)" | already a percentage |
 | `tvl.usd` is a string | a number |
-| `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 609 vaults send any |
+| `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 710 vaults send any |
 
 The APY one costs money. The quickstart compounds it by multiplying by 100, so
 **following LI.FI's official example overstates every yield 100×** — a 29% vault
@@ -188,7 +188,7 @@ stopped producing them.
 ## #15 is obsolete, and stays anyway
 
 Pitfall #15 was found via a UNIBTC vault reporting no underlying tokens. Zero of
-609 live vaults now have an empty array, so the case cannot be driven from a
+710 live vaults now have an empty array, so the case cannot be driven from a
 fixture.
 
 The guard remains, tested against a synthesised vault. The shape is still legal,
