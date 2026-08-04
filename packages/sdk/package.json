@@ -3,6 +3,16 @@
   "version": "1.0.1",
   "type": "module",
   "license": "Apache-2.0",
+  "author": "Farseen Shaikh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FarseenSh/earnforge.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://earnforge-docs.vercel.app",
+  "bugs": {
+    "url": "https://github.com/FarseenSh/earnforge/issues"
+  },
   "description": "Typed SDK for the LI.FI Earn API — vault discovery, risk scoring, yield strategies, and deposit quoting, with every documented and undocumented API quirk handled by default",
   "keywords": [
     "lifi",

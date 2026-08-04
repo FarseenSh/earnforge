@@ -3,7 +3,26 @@
   "version": "1.0.1",
   "type": "module",
   "license": "Apache-2.0",
+  "author": "Farseen Shaikh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FarseenSh/earnforge.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://earnforge-docs.vercel.app",
+  "bugs": {
+    "url": "https://github.com/FarseenSh/earnforge/issues"
+  },
   "description": "CLI for the LI.FI Earn API — vault discovery, risk scoring, deposit and withdrawal quoting, and API diagnostics",
+  "keywords": [
+    "lifi",
+    "earn",
+    "defi",
+    "yield",
+    "vaults",
+    "cli",
+    "command-line"
+  ],
   "bin": {
     "earnforge": "./dist/esm/bin.mjs"
   },

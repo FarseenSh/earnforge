@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "cp ../../llms.txt public/llms.txt",
     "build": "astro build",
     "preview": "astro preview"
   },

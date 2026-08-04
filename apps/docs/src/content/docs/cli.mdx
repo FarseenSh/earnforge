@@ -420,6 +420,162 @@ Supported Protocols
 
 ---
 
+### earnforge simulate
+
+Simulate a deposit against the chain head using Composer's own simulator.
+
+```bash
+earnforge simulate --vault morpho:8453:_:0xbeef... --amount 1000 --wallet 0xYourAddress
+earnforge simulate --vault morpho:8453:_:0xbeef... --amount 1000 --wallet 0xYourAddress --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--vault <slug>` | string | **required** | Vault slug |
+| `--amount <human>` | string | **required** | Deposit amount, human-readable |
+| `--wallet <addr>` | string | **required** | Wallet address |
+| `--from-token <addr>` | string | the vault asset | Token to spend |
+| `--slippage-bps <n>` | number | — | Slippage tolerance in basis points |
+| `--allow-revert` | boolean | `false` | Return calldata even if the simulation reverts, with diagnostics |
+| `--json` | boolean | `false` | Output as JSON |
+
+This compiles through Composer and simulates against the chain head, so it observes
+allowances, balances and protocol state. Exits non-zero on a simulated revert.
+
+Earlier versions issued a bare `eth_call`, which cannot see any of that and reported
+SUCCESS for transactions that would revert on submission.
+
+---
+
+### earnforge preflight
+
+Run pre-deposit checks on a vault and wallet before you sign anything.
+
+```bash
+earnforge preflight --vault morpho:8453:_:0xbeef... --wallet 0xYourAddress --amount 1000
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--vault <slug>` | string | **required** | Vault slug |
+| `--wallet <addr>` | string | **required** | Wallet address |
+| `--amount <human>` | string | — | Deposit amount, human-readable |
+| `--wallet-chain <id>` | number | — | Wallet's current chain ID |
+| `--cross-chain` | boolean | `false` | Flag cross-chain deposit intent |
+| `--json` | boolean | `false` | Output as JSON |
+
+---
+
+### earnforge withdraw
+
+Build a withdrawal/redeem quote.
+
+```bash
+earnforge withdraw --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0xYourAddress
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--vault <slug>` | string | **required** | Vault slug |
+| `--amount <human>` | string | **required** | Vault shares to redeem |
+| `--wallet <addr>` | string | **required** | Wallet address |
+| `--to-token <addr>` | string | — | Override destination token |
+| `--to-chain <id>` | number | — | Override destination chain |
+| `--slippage <n>` | number | — | Slippage tolerance (`0.03` = 3%) |
+| `--json` | boolean | `false` | Output as JSON |
+
+---
+
+### earnforge allowance
+
+Check an ERC-20 allowance for a spender.
+
+```bash
+earnforge allowance --token 0x8335... --owner 0xYourAddress \
+  --spender 0xbeef... --amount 1000000 --chain 8453
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--token <addr>` | string | **required** | ERC-20 token address |
+| `--owner <addr>` | string | **required** | Token owner (wallet) address |
+| `--spender <addr>` | string | **required** | Spender — from `quote.estimate.approvalAddress` |
+| `--amount <raw>` | string | **required** | Required amount, smallest unit |
+| `--chain <id>` | number | **required** | Chain ID |
+| `--rpc <url>` | string | public RPC | Custom RPC URL |
+| `--json` | boolean | `false` | Output as JSON |
+
+---
+
+### earnforge approve
+
+Build an ERC-20 approval transaction. Returns unsigned calldata; it never signs or
+broadcasts.
+
+```bash
+earnforge approve --token 0x8335... --spender 0xbeef... --chain 8453
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--token <addr>` | string | **required** | ERC-20 token address |
+| `--spender <addr>` | string | **required** | Spender — from `quote.estimate.approvalAddress` |
+| `--chain <id>` | number | **required** | Chain ID |
+| `--amount <raw>` | string | unlimited | Amount to approve |
+| `--json` | boolean | `false` | Output as JSON |
+
+---
+
+### earnforge compare
+
+Side-by-side comparison of two or more vaults.
+
+```bash
+earnforge compare morpho:8453:_:0xbeef... aave:1:_:0x9277...
+earnforge compare morpho:8453:_:0xbeef... aave:1:_:0x9277... --json
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<slugs...>` | Vault slugs to compare, space-separated |
+
+---
+
+### earnforge apy-history
+
+Fetch 30-day APY history from DeFiLlama.
+
+```bash
+earnforge apy-history morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<slug>` | Vault slug |
+
+The Earn API exposes only current and trailing APY, so history comes from DeFiLlama
+via a protocol-slug mapping.
+
+---
+
+### earnforge init
+
+Scaffold a new Next.js + wagmi + `@earnforge/react` project.
+
+```bash
+earnforge init my-yield-app
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<name>` | Project name |
+
+The scaffold filters verification-flagged vaults with the reason inline, shows risk
+alongside APY, and keeps the API key in a Server Component — a scaffolder's output
+becomes the pattern every new project copies.
+
+---
+
 ## JSON Output
 
 Every command supports `--json` to output structured JSON instead of formatted tables.

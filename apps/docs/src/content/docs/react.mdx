@@ -1,6 +1,6 @@
 ---
 title: React Hooks
-description: 9 React hooks for building Earn-powered UIs with @earnforge/react.
+description: 11 React hooks for building Earn-powered UIs with @earnforge/react.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
@@ -429,3 +429,84 @@ idle --> preflight --> quoting --> ready --> sending --> success
 | `prepare` | `() => Promise<void>` | Start preflight + quote flow |
 | `execute` | `() => Promise<void>` | Send the transaction |
 | `reset` | `() => void` | Reset to idle |
+
+---
+
+### useEarnRedeem
+
+The exit path, and the mirror of `useEarnDeposit` — same phase machine, same
+`prepare` / `execute` / `reset` shape. Redeems vault shares back to an underlying
+token, optionally on a different chain.
+
+```tsx
+import { useEarnRedeem } from '@earnforge/react';
+import { useSendTransaction, useAccount } from 'wagmi';
+
+function RedeemForm({ vault }: { vault: Vault }) {
+  const { address } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
+
+  const { state, prepare, execute, reset } = useEarnRedeem({
+    vault,
+    amount: '100',          // vault SHARES, not underlying
+    wallet: address ?? '',
+    sendTransactionAsync,
+  });
+
+  if (state.phase === 'ready') {
+    return <button onClick={execute}>Confirm Redeem</button>;
+  }
+  return <button onClick={prepare}>Prepare Redeem</button>;
+}
+```
+
+#### Parameters
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `vault` | `Vault \| undefined` | Vault to redeem from |
+| `amount` | `string` | Vault **share** tokens to redeem, human-readable |
+| `wallet` | `string` | Wallet address |
+| `toToken` | `string?` | Token to receive. Defaults to the underlying token on the vault chain. |
+| `toChain` | `number?` | Destination chain. Defaults to the vault chain. |
+| `slippage` | `number?` | Slippage tolerance (`0.03` = 3%) |
+| `sendTransactionAsync` | `function?` | From wagmi's `useSendTransaction()` |
+
+#### Return Value
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `state` | `RedeemState` | Same phase machine as `useEarnDeposit` |
+| `prepare` | `() => Promise<void>` | Start preflight + quote flow |
+| `execute` | `() => Promise<void>` | Send the transaction |
+| `reset` | `() => void` | Reset to idle |
+
+<Aside type="caution">
+`amount` is denominated in vault **shares**, not the underlying asset. A vault whose
+share price has drifted from 1:1 will return a different amount of underlying than the
+number you pass here.
+</Aside>
+
+---
+
+### useEarnForge
+
+Returns the underlying `EarnForge` SDK instance from context. Every other hook is
+built on it; reach for this when you need something the hooks do not cover, such as
+`watch()` or `optimizeGasRoutes()`.
+
+```tsx
+import { useEarnForge } from '@earnforge/react';
+
+function GasRoutes({ vault }: { vault: Vault }) {
+  const forge = useEarnForge();
+
+  useEffect(() => {
+    forge.optimizeGasRoutes(vault, { amount: '1000', wallet: '0x...' })
+      .then(setRoutes);
+  }, [forge, vault]);
+}
+```
+
+Throws if called outside an `<EarnForgeProvider>`, so a missing provider fails at the
+call site rather than surfacing later as an undefined client.

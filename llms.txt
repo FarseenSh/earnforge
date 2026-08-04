@@ -1,68 +1,82 @@
 # EarnForge
 
-> Developer toolkit for the LI.FI Earn API. Handles 18 integration pitfalls
+> Developer toolkit for the LI.FI Earn API. Handles 23 integration pitfalls
 > so you can focus on building yield products.
+
+All figures below were verified against the live API on Aug 4, 2026:
+711 vaults, 19 chains, 27 protocols, 68 vaults verification-flagged.
+
+LI.FI rewrote the Earn API in April 2026. Every path moved, auth became
+mandatory, and two documented field types are wrong in the current spec. If you
+have older notes about this API, prefer this file — several of the things that
+changed inverted rather than merely moved.
 
 ## Earn Data API (earn.li.fi)
 
 Base URL: https://earn.li.fi
-Auth: NONE. Do not send Authorization or x-lifi-api-key headers.
+Auth: REQUIRED. Send `x-lifi-api-key`. Without it every endpoint returns 401.
+Get a key from https://portal.li.fi.
 
-### GET /v1/earn/vaults
+Paths dropped the `/earn` segment in Apr 2026. `/v1/earn/vaults` is now
+`/v1/vaults`, and the old paths return 404 rather than redirecting.
 
-List vaults with optional filters. Returns paginated results (max 50 per page).
+### GET /v1/vaults
+
+List vaults with optional filters. Paginated, max 50 per page.
 
 Query params:
 - chainId (number) -- numeric chain ID, not chain name. e.g. 8453 for Base.
 - asset (string) -- token symbol filter, e.g. "USDC"
-- minTvl (number) -- minimum TVL in USD
-- sortBy (string) -- sort field
-- cursor (string) -- pagination cursor from previous response's nextCursor
+- protocol (string) -- UNVERSIONED protocol id. "aave", not "aave-v3".
+- minTvlUsd (number) -- minimum TVL in USD. NOT `minTvl`; see below.
+- cursor (string) -- pagination cursor from the previous response's nextCursor
+
+Unknown query params are dropped rather than rejected. Sending `minTvl` instead
+of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet — 711 results
+where the filter would have returned 41. A filter that fails open is worse than
+one that throws, so spell the param exactly.
+
+The same applies to protocol ids: a stale slug like `morpho-v1` returns HTTP 200
+with `total: 0`, which is indistinguishable from a protocol that has no vaults.
+Resolve ids from `/v1/protocols` rather than hardcoding them.
 
 Response shape:
 ```json
 {
   "data": [ ...vaults ],
-  "nextCursor": "abc123" | null,
-  "total": 711
+  "nextCursor": "morpho:8453:_:0xbeef..." | null,
+  "total": 711,
+  "normalizedAt": "2026-08-04T14:03:50.453Z"
 }
 ```
 
-### GET /v1/earn/vaults/{chainId}/{address}
+`nextCursor` is itself a vault slug.
+
+### GET /v1/vaults/{chainId}/{address}
 
 Get a single vault. chainId MUST be a number (e.g. 8453), not a chain name
 (e.g. "Base"). Using a chain name returns 400.
 
-### GET /v1/earn/chains
+### GET /v1/chains
 
-List all supported chains. Returns an array of objects with chainId (number),
-name (string), networkCaip (string). Chain coverage changes; read the endpoint.
+List supported chains. Returns an array. Chain coverage changes; read the
+endpoint rather than hardcoding a count.
 
-### GET /v1/earn/protocols
+### GET /v1/protocols
 
-List all supported protocols. Returns an array with name and url.
+List supported protocols. Returns an array of objects with `id`, `name`, `url`.
+The `id` is unversioned.
 
-### GET /v1/earn/portfolio/{walletAddress}/positions
+### GET /v1/portfolio/{walletAddress}/positions
 
-Get earn positions for a wallet address. Returns:
-```json
-{
-  "positions": [
-    {
-      "chainId": 8453,
-      "protocolName": "aave",
-      "asset": { "address": "0x...", "name": "...", "symbol": "...", "decimals": 6 },
-      "balanceUsd": "1234.56",
-      "balanceNative": "1234560000"
-    }
-  ]
-}
-```
+Get earn positions for a wallet. The positions array is returned under `data`;
+older responses used `positions`. Accept either.
 
 ## Composer API (li.quest)
 
 Base URL: https://li.quest
-Auth: REQUIRED. Send x-lifi-api-key header. Get a key from https://li.fi.
+Auth: REQUIRED. Send `x-lifi-api-key`. The same LI.FI key works for both
+services, so one key is enough.
 
 ### GET /v1/quote
 
@@ -75,116 +89,176 @@ Query params:
 - toToken (string) -- MUST be vault.address (the vault share token), NOT the underlying token address
 - fromAddress (string) -- wallet address
 - toAddress (string) -- wallet address (same as fromAddress for deposits)
-- fromAmount (string) -- amount in smallest unit (wei). Use toSmallestUnit() to convert.
+- fromAmount (string) -- amount in smallest unit (wei)
 - slippage (number) -- optional, e.g. 0.03 for 3%
 - fromAmountForGas (string) -- optional, amount to reserve for gas
 
-Response includes transactionRequest (ready to sign), estimate (gas/fee
-costs, execution duration), and action details.
+Response includes transactionRequest (ready to sign), estimate (gas/fee costs,
+execution duration), and action details.
 
 ## Vault object -- key field semantics
 
 - address: the vault's share token address. This is what you pass as toToken to Composer.
 - chainId: numeric chain ID (number, not string, not chain name)
-- slug: "{chainId}-{address}" -- used as a unique identifier
-- isTransactional: boolean. If false, deposits via Composer will fail. Check before quoting.
-- isRedeemable: boolean. If false, withdrawals may not be supported.
-- underlyingTokens: array of { symbol, address, decimals }. Can be empty on some vaults.
-- analytics.apy.total: number, always present. The annualized yield.
-- analytics.apy.reward: number OR null. Normalized to 0 by EarnForge SDK.
-- analytics.apy1d / apy7d / apy30d: number OR null. Use getBestApy() for safe fallback.
-- analytics.tvl.usd: STRING, not number. Use parseTvl() to convert.
-- description: OPTIONAL. ~14% of vaults omit this field.
+- slug: "{protocolId}:{chainId}:_:{address}" -- e.g. "morpho:8453:_:0xbeef...".
+  The old "{chainId}-{address}" form is gone. Code that splits on "-" to recover
+  a chain id mis-parses every current slug, and since nextCursor IS a slug, this
+  also breaks pagination.
+- protocol: object with { id, name, url }. `id` is unversioned.
+- isTransactional: boolean. If false, deposits via Composer will fail. 6.2% of the fleet.
+- isRedeemable: boolean. If false, withdrawals may not be supported. 7.3% of the fleet.
+- underlyingTokens: array of { symbol, address, decimals, priceUsd }.
 - tags: array of strings (e.g. "stablecoin", "lst")
 - depositPacks / redeemPacks: available deposit/redeem methods
+- description: OPTIONAL, and usually absent — 76.8% of vaults omit it.
+- verificationStatus: "none" | "flagged". UNDOCUMENTED — it appears in no spec,
+  changelog or quickstart, and LI.FI's own hosted MCP server does not expose it.
+  68 of 711 vaults (9.6%) are flagged. Sort by APY without checking it and a
+  flagged vault lands at the top of your list.
+- verificationStatusBreakdown: array of { reason, result }. Reasons seen live:
+  "zero_apy" (most), "apy_outlier".
 
-## 18 Integration Pitfalls
+### analytics
 
-1. Wrong base URL -- Earn Data is earn.li.fi, Composer is li.quest
-2. Auth on Earn Data -- do not send auth headers to earn.li.fi
-3. Missing Composer key -- li.quest requires x-lifi-api-key
-4. POST instead of GET -- /v1/quote is GET with query params
-5. Wrong toToken -- must be vault.address, not underlying token
-6. Ignoring pagination -- max 50 per page, follow nextCursor
-7. Null APY values -- apy1d/apy7d/apy30d can be null
-8. TVL is a string -- analytics.tvl.usd is "12345.67" not 12345.67
-9. Decimal mismatch -- USDC=6, WETH=18, must convert human amounts
-10. Stale quote -- quotes expire quickly, do not cache
-11. No gas token -- 0 native balance causes opaque revert
-12. Chain mismatch -- wallet chain must match vault chain
-13. Non-transactional vault -- ~30% of vaults have isTransactional:false
-14. Rate limit -- undocumented limits, use token bucket
-15. Empty underlyingTokens -- some vaults return []
-16. Optional description -- ~14% omit description field
-17. apy.reward null vs 0 -- protocols disagree, normalize to 0
-18. apy1d null -- fresh vaults lack historical data, use fallback chain
+- analytics.apy.total: number. ALREADY A PERCENTAGE. The spec says it is
+  "expressed as a decimal (0.0534 = 5.34%)" and the official quickstart
+  multiplies by 100. Both are wrong: following them renders a 29.19% vault as
+  2919%.
+- analytics.apy.base / analytics.apy.reward: the split of total.
+- analytics.apy.reward is THREE-VALUED and the distinction is load-bearing:
+  `null` means the protocol did not report (324 vaults), `0` means it reported
+  none (300 vaults), and `> 0` means real incentives (87 vaults). Normalising
+  null to 0 conflates 324 unknowns with 300 confirmed zeroes and destroys any
+  reward-sustainability signal.
+- analytics.apy1d / apy7d / apy30d: number OR null. Fresh vaults lack history.
+- analytics.tvl.usd: NUMBER. The spec declares it a string. Accept both.
+- analytics.updatedAt: ISO timestamp. The docs describe a 15-minute refresh; in
+  practice the fleet updates in one hourly batch — 588 of 711 vaults share a
+  single updatedAt minute — so the freshest reading is over an hour old and a
+  tail runs to ~92 hours. Treat it as a coarse staleness signal.
+
+Fields the OpenAPI spec documents that NO live vault sends: `caps`, `timeLock`,
+`kyc`, `lpTokens`. Do not code against them.
+
+## The pitfalls that invert
+
+Most integration mistakes are things you have not done yet. These three are
+things you may have already done correctly and must now undo:
+
+1. Earn Data used to require no auth. It now hard-401s without `x-lifi-api-key`.
+2. `analytics.tvl.usd` used to be a string. It is now a number.
+3. Vault slugs used to be `{chainId}-{address}`. They are now
+   `{protocol}:{chainId}:_:{address}`.
+
+All 23 are documented at https://earnforge-docs.vercel.app/pitfalls/ with a
+regression test each.
 
 ## EarnForge SDK
 
 Install: npm i @earnforge/sdk
 
 ```typescript
-import { createEarnForge, riskScore, parseTvl, getBestApy } from "@earnforge/sdk";
+import { createEarnForge, riskScore, isFlagged, parseTvl } from "@earnforge/sdk";
 
-const forge = createEarnForge({ composerApiKey: "your-key" });
+// One LI.FI key authenticates both Earn Data and Composer.
+const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY });
 
-// List all vaults with auto-pagination
+// Auto-paginating vault iteration
 for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
-  console.log(vault.name, vault.analytics.apy.total);
+  if (isFlagged(vault)) continue;              // LI.FI flags 9.6% as suspect
+  const risk = forge.riskScore(vault);
+  console.log(vault.name, vault.analytics.apy.total, risk.label, risk.flags);
 }
 
-// Risk score
-const risk = forge.riskScore(vault); // { score: 7.2, label: "low", breakdown: {...} }
+// Risk score: 7 dimensions, 0-10 composite. Labels are low >= 8, medium >= 6.
+const risk = forge.riskScore(vault);
+// { score: 9.7, label: "low", breakdown: {...}, flags: [] }
 
-// Parse TVL safely
-const tvl = parseTvl(vault.analytics.tvl); // { raw: "12345.67", parsed: 12345.67, bigint: 12345n }
+// Reward sustainability — preserves the null vs 0 distinction
+import { rewardSustainability } from "@earnforge/sdk";
+rewardSustainability(vault);  // "organic" | "incentive-heavy" | "unknown" | ...
 
-// Best APY with fallback
-const apy = getBestApy(vault.analytics); // handles null apy1d/apy7d/apy30d
-
-// Build deposit quote (handles pitfalls 3,4,5,9,13,15)
+// Build deposit quote
 const quote = await forge.buildDepositQuote(vault, {
   fromAmount: "100",
   wallet: "0x...",
 });
 
-// Preflight checks (handles pitfalls 11,12,13,15)
-const report = forge.preflight(vault, "0x...", {
-  walletChainId: 8453,
-  nativeBalance: 1000000000000000n,
-});
+// Preflight checks before signing
+const report = forge.preflight(vault, "0x...", { walletChainId: 8453 });
 
-// Portfolio suggestions
+// Portfolio suggestions — excludes flagged vaults unless includeFlagged: true
 const suggestion = await forge.suggest({
   amount: 10000,
   asset: "USDC",
   strategy: "conservative",
 });
+
+// Detect drift between the live API, LI.FI's OpenAPI spec, and our schemas
+import { detectDrift } from "@earnforge/sdk";
 ```
 
 ## EarnForge CLI
 
 Install: npm i -g @earnforge/cli
 
-All commands support --json for machine-readable output.
+Requires `LIFI_API_KEY`. Every command supports `--json`.
 
 ```
-earnforge list --chain 8453 --asset USDC --min-apy 0.05 --json
+earnforge list --chain 8453 --asset USDC --json
 earnforge top --asset USDC --limit 5 --json
 earnforge vault morpho:8453:_:0xbeef... --json
-earnforge portfolio 0xwallet... --json
-earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0x... --json
+earnforge compare morpho:8453:_:0xbeef... aave:1:_:0x9277... --json
 earnforge risk morpho:8453:_:0xbeef... --json
+earnforge apy-history morpho:8453:_:0xbeef... --json
+earnforge portfolio 0xwallet... --json
 earnforge suggest --amount 10000 --asset USDC --strategy conservative --json
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0x... --json
+earnforge simulate --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0x... --json
+earnforge withdraw --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0x... --json
+earnforge preflight --vault morpho:8453:_:0xbeef... --wallet 0x... --json
+earnforge allowance --token 0x... --owner 0x... --spender 0x... --amount 1000000 --chain 8453 --json
+earnforge approve --token 0x... --spender 0x... --chain 8453 --json
 earnforge watch --vault morpho:8453:_:0xbeef... --json
 earnforge chains --json
 earnforge protocols --json
 earnforge doctor --vault morpho:8453:_:0xbeef... --json
-earnforge doctor --env --json
+earnforge init my-yield-app
 ```
 
-## Optional: API key
+## EarnForge MCP server
 
-Set the LIFI_API_KEY environment variable for Composer API access
-(required for deposit quoting and gas optimization). Earn Data API
-endpoints (vaults, chains, protocols, portfolio) work without any key.
+Hosted, zero install, MCP revision 2026-07-28:
+
+  https://earnforge-mcp.papermind-ai.workers.dev/mcp
+
+12 tools, each with an outputSchema and validated structuredContent:
+get-earn-vaults, get-earn-vault, get-earn-chains, get-earn-protocols,
+get-earn-portfolio, get-vault-risk, quote-vault-deposit, quote-vault-redeem,
+check-allowance, suggest-allocation, run-doctor, check-api-drift.
+
+Every tool is annotated readOnlyHint / destructiveHint:false — quote tools
+return unsigned transactions and nothing here signs or broadcasts. Pass your own
+`x-lifi-api-key` header to use your own rate-limit budget.
+
+The Agent Skill is also served over the same connection as MCP resources under
+`skill://earnforge/*`.
+
+## EarnForge Agent Skill
+
+  npx skills add FarseenSh/earnforge
+
+Follows the Agent Skills specification. Declares `LIFI_API_KEY` as a required
+credential.
+
+## Other packages
+
+- @earnforge/react -- 11 hooks on wagmi + TanStack Query
+- @earnforge/skill -- the Agent Skill as an npm package
+
+## Links
+
+- Docs: https://earnforge-docs.vercel.app
+- Studio: https://earnforge-studio.vercel.app
+- Source: https://github.com/FarseenSh/earnforge
+- License: Apache-2.0

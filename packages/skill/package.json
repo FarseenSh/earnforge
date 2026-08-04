@@ -3,7 +3,26 @@
   "version": "1.0.2",
   "type": "module",
   "license": "Apache-2.0",
+  "author": "Farseen Shaikh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FarseenSh/earnforge.git",
+    "directory": "packages/skill"
+  },
+  "homepage": "https://earnforge-docs.vercel.app",
+  "bugs": {
+    "url": "https://github.com/FarseenSh/earnforge/issues"
+  },
   "description": "Agent Skill for the LI.FI Earn API — vault discovery, risk scoring, and deposit quoting via the earnforge CLI",
+  "keywords": [
+    "lifi",
+    "earn",
+    "defi",
+    "yield",
+    "vaults",
+    "agent-skill",
+    "ai-agent"
+  ],
   "files": [
     "SKILL.md",
     "references",
