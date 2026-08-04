@@ -6,15 +6,24 @@ description: How EarnForge computes the 0-10 composite risk score for DeFi yield
 import { Aside } from '@astrojs/starlight/components';
 
 EarnForge computes a composite 0-10 risk score for every vault. Higher score means safer.
-The score is deterministic, purely data-driven, and based on 5 dimensions with fixed weights.
+The score is deterministic, purely data-driven, and based on 7 dimensions with fixed weights.
 
 ## Score Labels
 
 | Score Range | Label | Color |
 |-------------|-------|-------|
-| >= 7.0 | **low** risk | Green |
-| 4.0 - 6.9 | **medium** risk | Yellow |
-| < 4.0 | **high** risk | Red |
+| >= 8.0 | **low** risk | Green |
+| 6.0 - 7.9 | **medium** risk | Yellow |
+| < 6.0 | **high** risk | Red |
+
+These cuts are calibrated against the live fleet, whose scores span **4.1 to 9.7** with a
+median of 7.9. The original thresholds (low >= 7, high < 4) put roughly 80% of vaults in
+"low" and made "high" unreachable, so the label carried no information.
+
+The 8.0 cut is deliberate. A verification-flagged vault scores at most **7.96** even with a
+perfect showing on every other dimension, so **no flagged vault can ever be labelled low
+risk**. That upper bound is real rather than theoretical: no protocol scores above 9, and no
+asset type scores above 9, so the remaining 0.78 of weight cannot reach 8.0 on its own.
 
 <Aside>
 "Low risk" means the vault scores well across all dimensions. It does **not** mean the vault
@@ -24,9 +33,9 @@ are beyond the scope of this scoring system.
 
 ---
 
-## The 5 Dimensions
+## The 7 Dimensions
 
-### 1. TVL Magnitude (25% weight)
+### 1. TVL Magnitude (18% weight)
 
 Measures how much capital is locked in the vault. Higher TVL generally indicates more
 trust and lower risk of rug pulls or liquidity crises.
@@ -41,12 +50,13 @@ trust and lower risk of rug pulls or liquidity crises.
 | >= $100K | 3 |
 | < $100K | 1 |
 
-<Aside type="tip">
-TVL comes from the API as a **string** (`"12345678.90"`). The SDK's `parseTvl()` converts
-it to a number before scoring. See [Pitfall #8](/pitfalls/) for details.
+<Aside type="caution">
+The spec declares `tvl.usd` a **string**; the live API sends a **number**. The SDK's
+`parseTvl()` accepts either, so the flip is a non-event for callers — but code that assumes
+one shape will break when it meets the other. See [Pitfall #8](/pitfalls/).
 </Aside>
 
-### 2. APY Stability (20% weight)
+### 2. APY Stability (14% weight)
 
 Measures how much the current APY diverges from the 30-day (or 1-day) historical APY.
 Large divergence suggests volatile or unsustainable yield.
@@ -65,8 +75,8 @@ The divergence formula is:
 divergence = |apy.total - ref| / max(apy.total, ref)
 ```
 
-Where `ref` is `apy30d` (preferred) or `apy1d` (fallback). If both are null,
-the score defaults to 5 (moderate).
+Where `ref` is `apy30d` (preferred) or `apy1d` (fallback). If both are null, or either
+side is zero, the score defaults to 5 (moderate).
 
 <Aside>
 Short-lived vaults often have `apy1d: null` and `apy30d: null`. Instead of penalizing
@@ -74,29 +84,38 @@ them harshly or rewarding them unfairly, the SDK assigns a neutral score of 5.
 See [Pitfall #18](/pitfalls/).
 </Aside>
 
-### 3. Protocol Maturity (25% weight)
+### 3. Protocol Maturity (18% weight)
 
-Known protocols receive a fixed tier score based on their track record, audit history,
-and TVL across the DeFi ecosystem.
+Known protocols receive a fixed tier score based on track record, audit history, and scale.
+All 27 live protocols carry a tier; the table below is keyed by LI.FI's **unversioned**
+protocol id.
 
-| Protocol | Score |
-|----------|-------|
-| aave | 9 |
-| morpho | 9 |
-| euler | 7 |
-| pendle | 7 |
-| maple | 6 |
-| ethena | 7 |
-| ether.fi-liquid | 7 |
-| etherfi-staking | 7 |
-| upshift | 5 |
-| neverland | 4 |
-| yo | 4 |
-| Unknown | 3 |
+| Tier | Protocols | Score |
+|------|-----------|-------|
+| Blue chip — multi-year record, deep audits, systemic scale | `aave`, `morpho` | 9 |
+| | `yearn` | 8 |
+| Established — long record or very large, well audited | `spark-v2` | 8 |
+| | `euler`, `fluid`, `pendle`, `etherfi-staking` | 7 |
+| | `ethena`, `maple` | 6 |
+| Mid — real adoption, but young, thin, or unaudited | `ipor`, `midas`, `kinetiq`, `hyperlend`, `upshift` | 5 |
+| Small or young — audited, but short record and limited scale | `avant`, `cap`, `neverland`, `yo`, `usdai`, `nest`, `concrete`, `infinifi`, `auto-finance`, `ember` | 4 |
+| Examined and still unknown | `apyx`, `hypurrfi` | 3 |
+| Unknown protocol (fallback) | *anything unlisted* | 3 |
+| Examined, findings adverse | `ample` | 2 |
 
-Unknown protocols default to 3 (high risk) since there is no track record to evaluate.
+Two entries are worth calling out, because they are where size and safety come apart:
 
-### 4. Redeemability (15% weight)
+- **`kinetiq` scores 5 despite $785M TVL** — listed 2025-07 with zero audits. Scale is not
+  a substitute for review.
+- **`ample` scores 2, below the unknown-protocol fallback** — listed 2026-03, zero audits,
+  and lottery-style payout mechanics. Being examined can be worse than being unexamined.
+
+<Aside type="caution">
+Protocol ids are **unversioned**. `aave-v3`, `morpho-v1` and `euler-v2` match nothing and
+return zero results with HTTP `200`. See [Pitfall #19](/pitfalls/).
+</Aside>
+
+### 4. Redeemability (10% weight)
 
 Whether the vault supports withdrawals. Non-redeemable vaults carry additional
 liquidity risk since you may not be able to exit your position.
@@ -106,14 +125,56 @@ liquidity risk since you may not be able to exit your position.
 | Yes (`isRedeemable: true`) | 10 |
 | No (`isRedeemable: false`) | 3 |
 
-### 5. Asset Type (15% weight)
+### 5. Asset Type (10% weight)
 
-Whether the vault holds stablecoins. Stablecoin vaults carry less price risk.
+Whether the vault holds stablecoins, less any impermanent-loss exposure LI.FI tags.
 
 | Asset Type | Score |
 |------------|-------|
 | Has `stablecoin` tag | 9 |
 | No `stablecoin` tag | 5 |
+| *minus* impermanent-loss exposure | −3 (floored at 1) |
+
+### 6. Verification (22% weight)
+
+LI.FI publishes `verificationStatus` on every vault and flags **9.6% of the fleet**
+(68 of 711). The field appears in no spec, changelog, or quickstart, and LI.FI's own
+hosted MCP server does not expose it — but it is LI.FI's own vault-quality signal, so it
+carries the single largest weight here.
+
+| Verification | Score |
+|--------------|-------|
+| Not flagged | 10 |
+| Flagged, reason includes `apy_outlier` | 1 |
+| Flagged, any other reason | 2 |
+
+<Aside type="caution">
+Sort by APY without checking this and a flagged vault lands at the top of your list. The
+highest advertised APY in the entire fleet is flagged `apy_outlier`.
+See [Pitfall #21](/pitfalls/).
+</Aside>
+
+### 7. Reward Dependency (8% weight)
+
+What share of the yield is paid in token incentives rather than earned. Incentives stop;
+lending fees generally do not.
+
+| Reward share of total APY | Score |
+|---------------------------|-------|
+| 0% — no rewards reported | 10 |
+| < 20% | 9 |
+| < 40% | 7 |
+| < 60% | 5 |
+| < 80% | 3 |
+| >= 80% | 2 |
+| **Not reported** (`null`) | 7 |
+
+<Aside>
+`apy.reward` is three-valued and the distinction is load-bearing: `null` means the protocol
+did not report, `0` means it reported none, and these are not the same claim. A `null`
+scores 7 as an *opacity* penalty, not a sustainability verdict. Morpho returns `0`;
+Euler and Aave return `null`.
+</Aside>
 
 ---
 
@@ -122,41 +183,60 @@ Whether the vault holds stablecoins. Stablecoin vaults carry less price risk.
 The final score is a weighted average:
 
 ```
-score = (tvl * 0.25) + (apyStability * 0.20) + (protocol * 0.25)
-      + (redeemability * 0.15) + (assetType * 0.15)
+score = (tvl * 0.18) + (apyStability * 0.14) + (protocol * 0.18)
+      + (redeemability * 0.10) + (assetType * 0.10)
+      + (verification * 0.22) + (rewardDependency * 0.08)
 ```
 
 **Weight rationale:**
 
 | Dimension | Weight | Rationale |
 |-----------|--------|-----------|
-| TVL Magnitude | 25% | Strong signal of trust and liquidity |
-| Protocol Maturity | 25% | Audit history and track record are the strongest safety indicators |
-| APY Stability | 20% | Volatile APY suggests high risk or unsustainable incentives |
-| Redeemability | 15% | Ability to exit is important but secondary |
-| Asset Type | 15% | Price risk matters but is user-preference dependent |
+| Verification | 22% | LI.FI's own quality signal — the only dimension sourced from the vendor's judgment rather than inferred |
+| TVL Magnitude | 18% | Strong signal of trust and liquidity |
+| Protocol Maturity | 18% | Audit history and track record are the strongest safety indicators |
+| APY Stability | 14% | Volatile APY suggests high risk or unsustainable incentives |
+| Redeemability | 10% | Ability to exit is important but secondary |
+| Asset Type | 10% | Price risk matters but is user-preference dependent |
+| Reward Dependency | 8% | Sustainability signal, but a high reward share is a reason to look closer rather than to avoid |
 
 ---
 
-## Example Calculation
+## Example Calculations
 
-Consider an Aave V3 USDC vault on Base with:
-- TVL: $120M
-- APY: 5.23% (30d avg: 5.10%)
-- Protocol: aave
-- Redeemable: true
-- Tags: `['stablecoin']`
+Both examples are real vaults, scored against the live API.
+
+### A clean vault — STEAKUSDC (Morpho, Base)
 
 | Dimension | Raw Score | Weight | Weighted |
 |-----------|-----------|--------|----------|
-| TVL ($120M >= $100M) | 10 | 0.25 | 2.50 |
-| APY Stability (divergence = 2.5%) | 10 | 0.20 | 2.00 |
-| Protocol (aave) | 9 | 0.25 | 2.25 |
-| Redeemability (true) | 10 | 0.15 | 1.50 |
-| Asset Type (stablecoin) | 9 | 0.15 | 1.35 |
-| **Total** | | | **9.6** |
+| TVL ($579.9M >= $100M) | 10 | 0.18 | 1.80 |
+| APY Stability (divergence < 5%) | 10 | 0.14 | 1.40 |
+| Protocol (morpho) | 9 | 0.18 | 1.62 |
+| Redeemability (true) | 10 | 0.10 | 1.00 |
+| Asset Type (stablecoin) | 9 | 0.10 | 0.90 |
+| Verification (not flagged) | 10 | 0.22 | 2.20 |
+| Reward Dependency (0% rewards) | 10 | 0.08 | 0.80 |
+| **Total** | | | **9.7** |
 
-Label: **low** risk (green)
+Label: **low** risk. This is the highest score in the fleet.
+
+### The highest APY in the fleet — USP (Pendle, Ethereum)
+
+Advertised at 106.16% total APY. 92.40 points of that are rewards.
+
+| Dimension | Raw Score | Weight | Weighted |
+|-----------|-----------|--------|----------|
+| TVL ($216K >= $100K) | 3 | 0.18 | 0.54 |
+| APY Stability | 10 | 0.14 | 1.40 |
+| Protocol (pendle) | 7 | 0.18 | 1.26 |
+| Redeemability (true) | 10 | 0.10 | 1.00 |
+| Asset Type (stablecoin) | 9 | 0.10 | 0.90 |
+| Verification (flagged `apy_outlier`) | 1 | 0.22 | 0.22 |
+| Reward Dependency (87% of APY) | 2 | 0.08 | 0.16 |
+| **Total** | | | **5.5** |
+
+Label: **high** risk — despite the best headline number on the platform.
 
 ---
 
@@ -167,20 +247,26 @@ Label: **low** risk (green)
 ```ts
 import { createEarnForge } from '@earnforge/sdk';
 
-const forge = createEarnForge();
+const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY });
 const vault = await forge.vaults.get('morpho:8453:_:0xbeef...');
 const risk = forge.riskScore(vault);
 
-console.log(risk.score);      // 9.6
-console.log(risk.label);      // "low"
-console.log(risk.breakdown);  // { tvl: 10, apyStability: 10, protocol: 9, redeemability: 10, assetType: 9 }
+console.log(risk.score);   // 9.7
+console.log(risk.label);   // "low"
+console.log(risk.flags);   // [] — populated with plain-language reasons when risk is present
+console.log(risk.breakdown);
+// { tvl: 10, apyStability: 10, protocol: 9, redeemability: 10,
+//   assetType: 9, verification: 10, rewardDependency: 10 }
 ```
 
 ### CLI
 
 ```bash
-earnforge risk morpho:8453:_:0xbeef...
+earnforge risk morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
 ```
+
+Prints all seven dimensions plus a `Flags` section naming why a vault carries risk.
+Requires `@earnforge/cli` 1.0.1 or later — 1.0.0 printed five dimensions and no flags.
 
 ### React
 
@@ -189,7 +275,7 @@ import { useRiskScore } from '@earnforge/react';
 
 function RiskDisplay({ vault }) {
   const { data: risk } = useRiskScore(vault);
-  // risk.score, risk.label, risk.breakdown
+  // risk.score, risk.label, risk.breakdown, risk.flags
 }
 ```
 
@@ -197,7 +283,7 @@ function RiskDisplay({ vault }) {
 
 Prompt: "What's the risk score for vault morpho:8453:_:0xbeef...?"
 
-The `get-vault-risk` MCP tool returns the full breakdown.
+The `get-vault-risk` MCP tool returns the full breakdown as validated structured output.
 
 ---
 
@@ -208,11 +294,15 @@ Use the `risk-adjusted` strategy preset to filter for low-risk vaults only:
 ```ts
 const top = await forge.vaults.top({
   asset: 'USDC',
-  strategy: 'risk-adjusted',  // Only vaults with risk score >= 7
+  strategy: 'risk-adjusted',  // score >= 7, flagged vaults excluded
 });
 ```
 
-Or use the `suggest()` engine, which inherently weights allocations by risk score:
+Note that the preset's cutoff of 7 predates the label recalibration, so it admits the
+top of the **medium** band rather than low-risk vaults only. Filter on
+`riskScore(vault).label === 'low'` if you want the stricter reading.
+
+Or use the `suggest()` engine, which weights allocations by risk score:
 
 ```ts
 const allocation = await forge.suggest({
@@ -221,3 +311,6 @@ const allocation = await forge.suggest({
 });
 // Higher-scoring (safer) vaults get larger allocations
 ```
+
+`suggest()` excludes verification-flagged vaults unconditionally. Pass
+`includeFlagged: true` to opt back in.

@@ -82,7 +82,7 @@ All of that is now gated in CI, including a live suite and a daily drift check.
   unknown params are dropped without error, so a `$100M+` filter returned the
   entire unfiltered fleet.
 - **`verificationStatus` is now wired in** — undocumented, in no spec or
-  changelog, present on every vault, and flagging 9.3% of them. It is a
+  changelog, present on every vault, and flagging 9.6% of them. It is a
   weighted risk dimension with a structural invariant: a flagged vault caps at
   7.96, so **no flagged vault can ever read as low risk**, and `suggest()` will
   not allocate into one without `includeFlagged: true`.
@@ -100,7 +100,7 @@ All of that is now gated in CI, including a live suite and a daily drift check.
 ### Notes on LI.FI's documentation
 
 Several published behaviours are wrong, and following them silently produces
-incorrect numbers. Verified against 710 live vaults on Aug 4, 2026:
+incorrect numbers. Verified against 711 live vaults on Aug 4, 2026:
 
 | Documented | Actual |
 |---|---|
@@ -108,7 +108,7 @@ incorrect numbers. Verified against 710 live vaults on Aug 4, 2026:
 | `tvl.usd` is a string | a number |
 | `caps`, `timeLock`, `kyc`, `lpTokens` exist | sent by **zero** vaults |
 | Structured errors on `400` and `404` | only `400` carries `errors[]` |
-| Analytics refresh every 15 minutes | observed floor **87 minutes**, median 90 |
+| Analytics refresh every 15 minutes | one **hourly** batch — the freshest reading in the fleet is over an hour old, the tail ~92 h |
 | "No API key required" | `earn.li.fi` hard-`401`s |
 
 Full detail, with a regression test for each: [PITFALLS.md](./PITFALLS.md).

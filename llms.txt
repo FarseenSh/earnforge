@@ -24,7 +24,7 @@ Response shape:
 {
   "data": [ ...vaults ],
   "nextCursor": "abc123" | null,
-  "total": 710
+  "total": 711
 }
 ```
 

@@ -95,8 +95,8 @@ earnforge top --asset WETH --chain 1 --json
 Get detailed vault info by slug.
 
 ```bash
-earnforge vault 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
-earnforge vault 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
+earnforge vault morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
+earnforge vault morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
 ```
 
 Displays: name, protocol, chain, APY breakdown (total/base/reward), TVL, underlying tokens,
@@ -222,25 +222,70 @@ Doctor Report -- USDC Base Vault
 Calculate risk score for a vault.
 
 ```bash
-earnforge risk 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
-earnforge risk 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
+earnforge risk morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
+earnforge risk morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
 ```
 
 **Example output:**
 
 ```
-Risk Score -- USDC Base Vault
+Risk Score — STEAKUSDC
 
-  Dimension            Score    Weight
-  ---------            -----    ------
-  TVL Magnitude        9/10     25%
-  APY Stability        8/10     20%
-  Protocol Maturity    9/10     25%
-  Redeemability       10/10     15%
-  Asset Type           9/10     15%
-
-  Overall: 8.9/10 (low risk)
+┌───────────────────┬──────────────┐
+│ Dimension         │ Score        │
+├───────────────────┼──────────────┤
+│ TVL Magnitude     │ 10/10        │
+├───────────────────┼──────────────┤
+│ APY Stability     │ 10/10        │
+├───────────────────┼──────────────┤
+│ Protocol Maturity │ 9/10         │
+├───────────────────┼──────────────┤
+│ Redeemability     │ 10/10        │
+├───────────────────┼──────────────┤
+│ Asset Type        │ 9/10         │
+├───────────────────┼──────────────┤
+│ Verification      │ 10/10        │
+├───────────────────┼──────────────┤
+│ Reward Dependency │ 10/10        │
+├───────────────────┼──────────────┤
+│ Composite         │ 9.7/10 (low) │
+└───────────────────┴──────────────┘
 ```
+
+A vault carrying risk also prints a `Flags` section naming *why*. The composite
+alone says something is wrong; the flags say what:
+
+```
+Risk Score — USP
+
+┌───────────────────┬───────────────┐
+│ Dimension         │ Score         │
+├───────────────────┼───────────────┤
+│ TVL Magnitude     │ 3/10          │
+├───────────────────┼───────────────┤
+│ APY Stability     │ 10/10         │
+├───────────────────┼───────────────┤
+│ Protocol Maturity │ 7/10          │
+├───────────────────┼───────────────┤
+│ Redeemability     │ 10/10         │
+├───────────────────┼───────────────┤
+│ Asset Type        │ 9/10          │
+├───────────────────┼───────────────┤
+│ Verification      │ 1/10          │
+├───────────────────┼───────────────┤
+│ Reward Dependency │ 2/10          │
+├───────────────────┼───────────────┤
+│ Composite         │ 5.5/10 (high) │
+└───────────────────┴───────────────┘
+
+Flags
+  ! flagged by LI.FI verification: apy_outlier
+  ! 87% of APY comes from token incentives
+  ! analytics 2660 minutes stale
+```
+
+That vault is the highest advertised APY in the fleet. Requires
+`@earnforge/cli` 1.0.1 or later — 1.0.0 printed five dimensions and no flags.
 
 See the full [Risk Scoring Guide](/risk/) for how each dimension is computed.
 

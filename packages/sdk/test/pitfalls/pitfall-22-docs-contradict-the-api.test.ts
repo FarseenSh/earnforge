@@ -28,7 +28,8 @@ import { parseTvl } from '../../src/schemas/vault.js'
  * Two further contradictions sit outside the spec: the changelog announces
  * structured error bodies for 400 *and* 404, but only 400 carries an `errors[]`
  * array; and the docs state analytics refresh every 15 minutes, while the
- * observed floor across the fleet is 87 minutes with a median of 90.
+ * fleet refreshes in one hourly batch, putting the freshest reading over an
+ * hour old.
  *
  * These assertions pin the *actual* behaviour. If one starts failing, either
  * LI.FI fixed a documentation bug or changed the API — and `pnpm drift` says

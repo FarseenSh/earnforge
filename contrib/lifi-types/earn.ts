@@ -3,7 +3,7 @@
  *
  * Derived from the live API rather than from `earn-openapi.yaml`, which
  * disagrees with the service in several places — each noted inline. Verified
- * against 710 vaults across 19 chains and 27 protocols (Aug 2026).
+ * against 711 vaults across 19 chains and 27 protocols (Aug 2026).
  */
 
 /**
@@ -96,9 +96,11 @@ export interface EarnTvl {
 /**
  * Vault analytics.
  *
- * `updatedAt` is documented as refreshing every 15 minutes. Observed floor is
- * 87 minutes, median 90, so treat it as a coarse staleness signal rather than
- * a freshness guarantee.
+ * `updatedAt` is documented as refreshing every 15 minutes. In practice the
+ * fleet refreshes in one hourly batch — 588 of 711 vaults share a single
+ * `updatedAt` minute — so the freshest reading is over an hour old and a tail
+ * runs to ~92 hours. Treat it as a coarse staleness signal, not a freshness
+ * guarantee.
  */
 export interface EarnAnalytics {
   apy: EarnApy

@@ -59,9 +59,9 @@ LI.FI's own documentation. Verified against 711 live vaults:
 | `tvl.usd` is a string | a number |
 | `caps`, `timeLock`, `kyc`, `lpTokens` exist | sent by **zero** vaults |
 | Structured errors on `400` and `404` | only `400` carries `errors[]` |
-| Analytics refresh every 15 minutes | observed floor **87 minutes**, median 90 |
+| Analytics refresh every 15 minutes | one **hourly** batch — the freshest reading in the fleet is over an hour old, the tail ~92 h |
 | "No API key required" | `earn.li.fi` hard-`401`s |
-| *(undocumented)* | `verificationStatus` flags **9% of the fleet** |
+| *(undocumented)* | `verificationStatus` flags **9.6% of the fleet** |
 
 Plus the silent ones: a stale protocol slug (`morpho-v1`) returns `200` with zero
 results rather than an error, and an unknown query param is dropped — so

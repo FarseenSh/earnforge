@@ -44,7 +44,7 @@
 - `simulate` is described as compiling through Composer against the chain head,
   which is what it now does. It was documented as a dry run "via eth_call".
 
-- Pitfall reference updated to 23 pitfalls, re-verified against 710 live vaults
+- Pitfall reference updated to 23 pitfalls, re-verified against 711 live vaults
   on Aug 4, 2026 — including the two that inverted (#2 auth, #8 TVL type) and
   #15, retained as a synthesised case rather than deleted since the shape is
   still legal.
