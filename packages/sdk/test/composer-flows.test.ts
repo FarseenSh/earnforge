@@ -20,7 +20,7 @@ const VAULT = {
   chainId: 8453,
   address: '0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61',
   name: 'Morpho USDC',
-  protocol: { id: 'morpho', name: 'Morpho' },
+  protocol: { id: 'morpho', name: 'Morpho', url: 'https://morpho.org' },
 }
 
 const USDC = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
@@ -41,7 +41,7 @@ function envelope(data: unknown): Response {
 }
 
 /** Minimal successful compile response. */
-function okResponse(): Response {
+async function okResponse(): Promise<Response> {
   return envelope({
     transactionRequest: { to: '0xabc', data: '0xdead', gasLimit: '210000' },
     userProxy: '0xproxy',
@@ -58,7 +58,10 @@ describe('ComposerFlows', () => {
 
   describe('input validation', () => {
     const flows = () =>
-      createComposerFlows({ apiKey: 'k', fetch: vi.fn(okResponse) })
+      createComposerFlows({
+        apiKey: 'k',
+        fetch: vi.fn(okResponse) as unknown as typeof globalThis.fetch,
+      })
 
     it('rejects a decimal amount rather than sending it', async () => {
       // "1.5" would reach the backend as a malformed uint256. Catching it here

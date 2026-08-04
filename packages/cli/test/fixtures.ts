@@ -16,11 +16,9 @@ export function makeVault(overrides: Partial<Vault> = {}): Vault {
     slug: '8453-0xbeef0001',
     network: 'base',
     protocol: { id: 'aave', name: 'aave', url: 'https://aave.com' },
-    provider: 'aave',
     syncedAt: '2026-04-11T00:00:00Z',
     tags: ['stablecoin'],
     underlyingTokens: [{ symbol: 'USDC', address: '0xusdc', decimals: 6 }],
-    lpTokens: [],
     analytics: {
       apy: { base: 0.04, total: 0.05, reward: 0.01 },
       tvl: { usd: '50000000' },
@@ -45,7 +43,6 @@ export function makeVault2(overrides: Partial<Vault> = {}): Vault {
     chainId: 42161,
     network: 'arbitrum',
     protocol: { id: 'euler', name: 'euler', url: 'https://euler.finance' },
-    provider: 'euler',
     tags: ['lst'],
     underlyingTokens: [{ symbol: 'WETH', address: '0xweth', decimals: 18 }],
     analytics: {
@@ -81,7 +78,6 @@ export function makeHighRiskVault(): Vault {
     chainId: 137,
     network: 'polygon',
     protocol: { name: 'yo-protocol', url: 'https://yo.xyz' },
-    provider: 'yo',
     tags: [],
     underlyingTokens: [{ symbol: 'USDT', address: '0xusdt', decimals: 6 }],
     analytics: {
@@ -110,6 +106,7 @@ export const MOCK_PROTOCOLS: ProtocolDetail[] = [
 ]
 
 export const MOCK_PORTFOLIO: PortfolioResponse = {
+  limit: 50,
   positions: [
     {
       chainId: 8453,

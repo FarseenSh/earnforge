@@ -39,6 +39,7 @@ function createMockForge(): EarnForge {
     protocols: { list: vi.fn().mockResolvedValue(MOCK_PROTOCOLS) },
     portfolio: { get: vi.fn().mockResolvedValue(MOCK_PORTFOLIO) },
     buildDepositQuote: vi.fn().mockResolvedValue(MOCK_QUOTE_RESULT),
+    buildRedeemQuote: vi.fn().mockResolvedValue(MOCK_QUOTE_RESULT),
     preflight: vi.fn().mockReturnValue({
       ok: true,
       issues: [],

@@ -12,6 +12,26 @@ import { SKILL_FILES, SKILL_INDEX } from '../src/skill-content.js'
  * annotations, so a host had no way to validate a result or to know which tools
  * were safe to auto-approve — it had to parse prose and guess.
  */
+/**
+ * Text of the first content entry of a resource read.
+ *
+ * v2 types resource contents as a union of text and blob variants, so `.text`
+ * is not on the base type. Narrowing here rather than casting means a resource
+ * that starts returning a blob fails with a readable message instead of
+ * silently reading `undefined`.
+ */
+function readText(res: {
+  contents: Array<{ uri: string; mimeType?: string; text?: unknown }>
+}): string {
+  const first = res.contents[0]
+  if (!first || typeof first.text !== 'string') {
+    throw new Error(
+      `expected text content, got ${JSON.stringify(first)?.slice(0, 80)}`
+    )
+  }
+  return first.text
+}
+
 describe('MCP protocol surface', () => {
   let client: Client
 
@@ -121,7 +141,7 @@ describe('MCP protocol surface', () => {
       const res = await client.readResource({
         uri: 'skill://earnforge/index.json',
       })
-      const index = JSON.parse(res.contents[0]?.text as string)
+      const index = JSON.parse(readText(res))
       expect(index.name).toBe('earnforge')
       expect(index.entries).toHaveLength(SKILL_INDEX.entries.length)
       for (const entry of index.entries) {
@@ -133,7 +153,7 @@ describe('MCP protocol surface', () => {
       const res = await client.readResource({
         uri: 'skill://earnforge/SKILL.md',
       })
-      const text = res.contents[0]?.text as string
+      const text = readText(res)
       expect(text).toMatch(/^---\n/)
       expect(text).toContain('name: earnforge')
       expect(text).toContain('LIFI_API_KEY')
@@ -144,12 +164,8 @@ describe('MCP protocol surface', () => {
         const res = await client.readResource({
           uri: `skill://earnforge/${name}`,
         })
-        const content = res.contents[0]
-        expect(content?.mimeType).toBe('text/markdown')
-        // Casting the optional chain to `string` and dereferencing it would
-        // throw a TypeError instead of failing the assertion when a reference
-        // is missing entirely — the case most worth reporting clearly.
-        expect(String(content?.text ?? '').length).toBeGreaterThan(50)
+        expect(res.contents[0]?.mimeType).toBe('text/markdown')
+        expect(readText(res).length).toBeGreaterThan(50)
       }
     })
 
@@ -158,7 +174,7 @@ describe('MCP protocol surface', () => {
       const res = await client.readResource({
         uri: 'skill://earnforge/SKILL.md',
       })
-      const text = res.contents[0]?.text as string
+      const text = readText(res)
       expect(text).toContain('>= 8 is low risk')
       expect(text).not.toContain('>= 7 is low risk')
     })

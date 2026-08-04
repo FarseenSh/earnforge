@@ -57,8 +57,11 @@ describe('Pitfall #2: Earn Data API requires auth (inverted Apr 2026)', () => {
   })
 
   it('sends the key as the x-lifi-api-key header on every request', async () => {
+    // Typed with fetch's own signature: a no-arg implementation makes
+    // `mock.calls` an empty tuple, so reading calls[0][1] does not compile.
     const fetchMock = vi.fn(
-      async () => new Response(JSON.stringify(chains), { status: 200 })
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify(chains), { status: 200 })
     )
     vi.stubGlobal('fetch', fetchMock)
 
@@ -66,8 +69,9 @@ describe('Pitfall #2: Earn Data API requires auth (inverted Apr 2026)', () => {
     await client.listChains()
 
     expect(fetchMock).toHaveBeenCalledOnce()
-    const init = fetchMock.mock.calls[0]?.[1] as RequestInit
-    expect((init.headers as Record<string, string>)['x-lifi-api-key']).toBe(
+    const init = fetchMock.mock.calls[0]?.[1]
+    expect(init).toBeDefined()
+    expect((init?.headers as Record<string, string>)['x-lifi-api-key']).toBe(
       'sentinel-key'
     )
   })

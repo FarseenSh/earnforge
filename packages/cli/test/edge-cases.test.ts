@@ -29,6 +29,7 @@ function createEmptyForge(): EarnForge {
     protocols: { list: vi.fn().mockResolvedValue([]) },
     portfolio: { get: vi.fn().mockResolvedValue({ positions: [] }) },
     buildDepositQuote: vi.fn().mockRejectedValue(new Error('No composer key')),
+    buildRedeemQuote: vi.fn().mockRejectedValue(new Error('No composer key')),
     preflight: vi.fn().mockReturnValue({
       ok: true,
       issues: [],

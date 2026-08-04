@@ -83,7 +83,7 @@ function createMockSdk(overrides: Partial<EarnForge> = {}): EarnForge {
     portfolio: {
       get: vi
         .fn<() => Promise<PortfolioResponse>>()
-        .mockResolvedValue({ positions: [] }),
+        .mockResolvedValue({ positions: [], limit: 50 }),
     },
     buildDepositQuote: vi
       .fn<() => Promise<DepositQuoteResult>>()
@@ -189,10 +189,13 @@ function createMockSdk(overrides: Partial<EarnForge> = {}): EarnForge {
     }),
     riskScore: vi.fn<() => RiskScore>().mockReturnValue({
       score: 8.2,
+      flags: [],
       breakdown: {
         tvl: 9,
         apyStability: 8,
         protocol: 9,
+        verification: 10,
+        rewardDependency: 9,
         redeemability: 10,
         assetType: 9,
       },
@@ -228,7 +231,7 @@ function createWrapper(sdk: EarnForge) {
     return createElement(
       QueryClientProvider,
       { client: queryClient },
-      createElement(EarnForgeProvider, { sdk }, children)
+      createElement(EarnForgeProvider, { sdk, children })
     )
   }
 }
@@ -276,7 +279,7 @@ describe('useVaults', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(1)
-    expect(result.current.data![0].slug).toBe('test-usdc-vault')
+    expect(result.current.data?.[0]?.slug).toBe('test-usdc-vault')
     expect(result.current.error).toBeNull()
   })
 
@@ -381,7 +384,7 @@ describe('useEarnTopYield', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(2)
-    expect(result.current.data![0].slug).toBe('top-1')
+    expect(result.current.data?.[0]?.slug).toBe('top-1')
   })
 
   it('12. passes params to SDK', async () => {
@@ -558,7 +561,7 @@ describe('useApyHistory', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.data).toHaveLength(2)
-    expect(result.current.data![0].apy).toBe(0.05)
+    expect(result.current.data?.[0]?.apy).toBe(0.05)
     expect(sdk.getApyHistory).toHaveBeenCalledWith('0xVAULT', 8453)
   })
 

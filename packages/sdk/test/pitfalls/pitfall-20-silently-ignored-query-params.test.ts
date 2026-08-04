@@ -30,12 +30,14 @@ describe('Pitfall #20: unknown query params fail open', () => {
     fn: (client: EarnDataClient) => Promise<unknown>
   ): Promise<URL> {
     const fetchMock = vi.fn(
-      async () => new Response(JSON.stringify(vaultsBase), { status: 200 })
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify(vaultsBase), { status: 200 })
     )
     vi.stubGlobal('fetch', fetchMock)
     const client = new EarnDataClient({ apiKey: 'test' })
     await fn(client)
-    return new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://earn.li.fi')
+    const url = fetchMock.mock.calls[0]?.[0]
+    return new URL(String(url), 'https://earn.li.fi')
   }
 
   it('maps the public minTvl option to the API-correct minTvlUsd', async () => {
