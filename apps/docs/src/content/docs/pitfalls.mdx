@@ -1,5 +1,5 @@
 ---
-title: 18 Pitfalls Guide
+title: 23 Pitfalls Guide
 description: Every production pitfall in the LI.FI Earn API, how the SDK defeats each one, and which test verifies it.
 ---
 
@@ -10,7 +10,7 @@ silent bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pi
 were discovered via live API probing against the full vault set (April 2026).
 
 **EarnForge eliminates every single one at the SDK layer.** Downstream surfaces (CLI, React,
-MCP, bot) never need to think about them.
+MCP, Studio) never need to think about them.
 
 <Aside type="tip">
 All 23 pitfall tests live under `packages/sdk/test/pitfalls/`. Run them with
@@ -29,13 +29,17 @@ All 23 pitfall tests live under `packages/sdk/test/pitfalls/`. Run them with
 | **SDK Mitigation** | Two typed clients: `EarnDataClient` (earn.li.fi) and `ComposerClient` (li.quest) with hard-coded defaults. |
 | **Test** | `pitfall-01-wrong-base-url.test.ts` |
 
-### Pitfall 2 -- Auth on Earn Data API
+### Pitfall 2 -- Auth is required on the Earn Data API
+
+**This pitfall inverted in April 2026.** It previously said the Earn Data API
+takes no auth header. It now hard-`401`s without one — and LI.FI's general API
+docs still say no key is required, which remains true only for `li.quest`.
 
 | | |
 |---|---|
-| **Root Cause** | Sending an `Authorization` or `x-lifi-api-key` header to Earn Data returns 401 or is silently ignored. |
-| **SDK Mitigation** | `EarnDataClient.fetch()` sends zero auth headers. |
-| **Test** | `pitfall-02-auth-on-earn-data.test.ts` |
+| **Root Cause** | `earn.li.fi` returns `401 Missing x-lifi-api-key header` on every endpoint. Code written against the old behaviour fails everywhere at once. |
+| **SDK Mitigation** | `EarnDataClient` requires a key and throws `MissingApiKeyError` naming the portal, rather than surfacing a bare 401. |
+| **Test** | `pitfall-02-auth-required-on-earn-data.test.ts` |
 
 ### Pitfall 3 -- Missing Composer API Key
 
@@ -70,7 +74,7 @@ token -- **not** the underlying USDC/WETH address.
 
 | | |
 |---|---|
-| **Root Cause** | `/v1/earn/vaults` returns max 50 per page. Without `nextCursor` handling you see less than 8% of vaults. |
+| **Root Cause** | `/v1/vaults` returns max 100 per page. Without `nextCursor` handling you see a fraction of the fleet. |
 | **SDK Mitigation** | `EarnDataClient.listAllVaults()` is an async iterator that follows `nextCursor` until exhausted. |
 | **Test** | `pitfall-06-ignoring-pagination.test.ts` |
 
@@ -82,12 +86,14 @@ token -- **not** the underlying USDC/WETH address.
 | **SDK Mitigation** | `AnalyticsSchema` types them as `number \| null`. `getBestApy()` implements a fallback chain: `apy.total` -> `apy30d` -> `apy7d` -> `apy1d` -> `0`. |
 | **Test** | `pitfall-07-null-apy.test.ts` |
 
-### Pitfall 8 -- TVL is a String
+### Pitfall 8 -- `tvl.usd` is a number (it was a string)
+
+**This pitfall also inverted.** The OpenAPI spec still documents a string.
 
 | | |
 |---|---|
-| **Root Cause** | `analytics.tvl.usd` comes as `"12345678.90"` (string), not a number. Arithmetic on it silently produces `NaN`. |
-| **SDK Mitigation** | `parseTvl()` returns `{ raw: string, parsed: number, bigint: bigint }`. All SDK comparisons go through it. |
+| **Root Cause** | `analytics.tvl.usd` was `"12345678.90"` and is now `12345678.90`. Code calling `.split()` or expecting a string crashes; code written for the spec is wrong today. |
+| **SDK Mitigation** | `parseTvl()` accepts either and returns `{ raw, parsed, bigint }`, so a flip back in either direction is a non-event. |
 | **Test** | `pitfall-08-tvl-string.test.ts` |
 
 ### Pitfall 9 -- Decimal Mismatch
@@ -154,7 +160,7 @@ token -- **not** the underlying USDC/WETH address.
 | **SDK Mitigation** | `VaultSchema` types `description` as `z.string().optional()`. All display code uses optional chaining. |
 | **Test** | `pitfall-16-optional-description.test.ts` |
 
-### Pitfall 17 -- `apy.reward` null vs 0
+### Pitfall 17 -- `apy.reward` is three-valued
 
 | | |
 |---|---|
@@ -212,3 +218,43 @@ pnpm vitest run test/pitfalls/
 
 Each test constructs a minimal fixture that triggers the pitfall and asserts the SDK handles
 it without error.
+
+### Pitfall 19 -- Stale protocol slugs return zero results
+
+| | |
+|---|---|
+| **Root Cause** | Protocol ids became unversioned. `protocol=morpho-v1` returns HTTP `200` with an empty list — no error — so a stale slug is indistinguishable from a protocol with no vaults. LI.FI's own MCP server still advertises the versioned ids. |
+| **SDK Mitigation** | Ids are resolved from `/v1/protocols`; a live test asserts every id EarnForge ships still exists upstream. |
+| **Test** | `pitfall-19-stale-protocol-slugs.test.ts` |
+
+### Pitfall 20 -- Unknown query params fail open
+
+| | |
+|---|---|
+| **Root Cause** | Unrecognised params are dropped silently. `minTvl` instead of `minTvlUsd` returns the entire unfiltered fleet, so a "$100M+ TVL" filter appears to work and filters nothing. |
+| **SDK Mitigation** | The client sends `minTvlUsd`, and a test asserts the emitted URL rather than the response. |
+| **Test** | `pitfall-20-silently-ignored-query-params.test.ts` |
+
+### Pitfall 21 -- `verificationStatus` is undocumented
+
+| | |
+|---|---|
+| **Root Cause** | Present on every vault, in no spec or changelog, flagging ~9% as suspect — mostly `zero_apy`, occasionally `apy_outlier`. Nothing surfaces it, so flagged vaults look like any other. |
+| **SDK Mitigation** | A weighted risk dimension. A flagged vault caps at 7.96 and can never read as low risk; `suggest()` excludes them unless `includeFlagged: true`. |
+| **Test** | `pitfall-21-undocumented-verification-status.test.ts` |
+
+### Pitfall 22 -- The docs contradict the API
+
+| | |
+|---|---|
+| **Root Cause** | The OpenAPI spec is wrong in six places and documents fields no vault sends. Following it produces wrong values rather than type errors — the APY case overstates every yield 100×. |
+| **SDK Mitigation** | `detectDrift()` diffs live vs spec vs schema and reports which pair disagrees. CI runs it daily. |
+| **Test** | `pitfall-22-docs-contradict-the-api.test.ts` |
+
+### Pitfall 23 -- Slug format changed
+
+| | |
+|---|---|
+| **Root Cause** | Slugs went from `chainId-address` to `protocol:chainId:_:address`. Stored slugs stop resolving. |
+| **SDK Mitigation** | `parseVaultSlug()` accepts both forms, so previously stored references keep working. |
+| **Test** | `pitfall-23-slug-format-change.test.ts` |

@@ -5,7 +5,7 @@ description: Complete API reference for @earnforge/sdk -- the foundation of Earn
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-`@earnforge/sdk` is the foundation package. Every other EarnForge surface (CLI, React, MCP, bot, skill, studio) is built on top of it.
+`@earnforge/sdk` is the foundation package. Every other EarnForge surface (CLI, React, MCP, skill, Studio) is built on top of it.
 
 ## Installation
 
@@ -35,8 +35,8 @@ The main entry point. Returns an `EarnForge` instance with namespaced methods.
 import { createEarnForge } from '@earnforge/sdk';
 
 const forge = createEarnForge({
-  composerApiKey: process.env.LIFI_API_KEY,  // Optional -- only needed for deposit quotes
-  cache: { ttl: 60_000, maxSize: 200 },      // Optional -- LRU cache config
+  apiKey: process.env.LIFI_API_KEY,     // Required -- earn.li.fi 401s without it
+  cache: { ttl: 60_000, maxSize: 200 }, // Optional -- LRU cache config
 });
 ```
 
@@ -44,16 +44,20 @@ const forge = createEarnForge({
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `composerApiKey` | `string` | `undefined` | LI.FI API key. Required only for `buildDepositQuote()` and `optimizeGasRoutes()`. |
+| `apiKey` | `string` | `process.env.LIFI_API_KEY` | **Required.** One key authenticates both the Earn Data API and Composer. |
+| `composerApiKey` | `string` | falls back to `apiKey` | Only needed if you hold separate keys for the two services. |
 | `earnData` | `EarnDataClientOptions` | `{}` | Override the Earn Data API client options (base URL, headers). |
 | `composerBaseUrl` | `string` | `"https://li.quest"` | Override the Composer API base URL. |
 | `cache.ttl` | `number` | `60000` | Cache time-to-live in milliseconds. |
 | `cache.maxSize` | `number` | `200` | Maximum number of cached entries. |
 
-<Aside type="caution">
-The Earn Data API (`earn.li.fi`) requires **no auth headers** -- sending one returns 401.
-The Composer API (`li.quest`) **requires** an `x-lifi-api-key` header. The SDK handles this
-split automatically.
+<Aside type="caution" title="Auth is mandatory as of April 2026">
+`earn.li.fi` hard-`401`s without an `x-lifi-api-key` header. This **inverts**
+what earlier versions of this page said, and what LI.FI's general API docs
+still say — that no key is required. That remains true for `li.quest`; it has
+not been true for the Earn API since the April rewrite.
+
+One key covers both services. Create one at [portal.li.fi](https://portal.li.fi).
 </Aside>
 
 ---
@@ -62,7 +66,7 @@ split automatically.
 
 ### vaults.list()
 
-Fetch a single page of vaults (max 50 per page, cursor-based pagination).
+Fetch a single page of vaults (max 100 per page, cursor-based pagination).
 
 ```ts
 const page = await forge.vaults.list({
@@ -91,16 +95,18 @@ console.log(`Found ${vaults.length} vaults on Base`);
 ```
 
 <Aside>
-This is the correct way to see all the full vault set. A single `list()` call returns at most 50.
+This is the correct way to see the full vault set. A single `list()` call returns at most 100.
 See [Pitfall #6](/pitfalls/) for why this matters.
 </Aside>
 
 ### vaults.get()
 
-Fetch a single vault by its slug. The slug format is `<chainId>-<vaultAddress>`.
+Fetch a single vault by its slug. Live slugs look like
+`protocol:chainId:_:address`; the legacy `chainId-address` form is still
+accepted so stored references keep resolving.
 
 ```ts
-const vault = await forge.vaults.get('8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9');
+const vault = await forge.vaults.get('morpho:8453:_:0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61');
 console.log(vault.name, vault.analytics.apy.total);
 ```
 
@@ -132,7 +138,8 @@ const top = await forge.vaults.top({
 
 ### chains.list()
 
-Returns all 16 supported chains.
+Returns every chain with at least one indexed vault — 19 as of Aug 2026, and
+rising. Read it rather than hardcoding a list.
 
 ```ts
 const chains = await forge.chains.list();
@@ -141,7 +148,8 @@ const chains = await forge.chains.list();
 
 ### protocols.list()
 
-Returns all 11 supported protocols.
+Returns every indexed protocol — 27 as of Aug 2026. Ids are read from here and
+**never hardcoded**: a stale id returns `200` with zero results, not an error.
 
 ```ts
 const protocols = await forge.protocols.list();
@@ -155,7 +163,7 @@ Fetch all Earn positions for a wallet address.
 ```ts
 const portfolio = await forge.portfolio.get('0xYourWalletAddress');
 for (const position of portfolio.positions) {
-  console.log(position.vault.name, position.balanceUsd);
+  console.log(position.protocolName, position.asset.symbol, position.balanceUsd);
 }
 ```
 
@@ -225,12 +233,185 @@ Compute a composite 0-10 risk score for a vault. Higher score = safer.
 
 ```ts
 const risk = forge.riskScore(vault);
-console.log(risk.score);     // 7.8
-console.log(risk.label);     // "low"
-console.log(risk.breakdown); // { tvl: 9, apyStability: 8, protocol: 9, redeemability: 10, assetType: 9 }
+console.log(risk.score); // 5.5
+console.log(risk.label); // "high"
+console.log(risk.breakdown);
+// { tvl: 3, apyStability: 10, protocol: 7, redeemability: 10,
+//   assetType: 9, verification: 1, rewardDependency: 2 }
+console.log(risk.flags);
+// [ 'flagged by LI.FI verification: apy_outlier',
+//   '87% of APY comes from token incentives',
+//   'analytics 2514 minutes stale' ]
 ```
 
+Seven dimensions, not five — `verification` carries LI.FI's own undocumented
+quality signal, and `rewardDependency` how much of the APY is emissions. The
+`flags` array is the actionable part: the score says something is wrong, the
+flags say what.
+
+The `8` threshold is deliberate. Verification carries 0.22 of the weight, so a
+flagged vault caps at 7.96 — **no flagged vault can ever be labelled low risk.**
+
 See the full [Risk Scoring Guide](/risk/) for dimension details, weights, and thresholds.
+
+---
+
+## Reward Sustainability
+
+Answers the question a headline APY cannot: *is this real, or an incentive that
+ends?*
+
+### rewardSustainability()
+
+```ts
+import { rewardSustainability } from '@earnforge/sdk';
+
+const s = rewardSustainability(vault);
+console.log(s.label);      // "incentive-dependent"
+console.log(s.organicApy); // 13.76  — what remains if emissions stop
+console.log(s.rewardShare) // 0.87
+console.log(s.reasons);
+// [ 'Incentives are 87% of total APY. Organic yield is only 13.76%.' ]
+```
+
+Labels are `organic`, `mostly-organic`, `incentive-heavy`,
+`incentive-dependent`, or `unknown`.
+
+<Aside type="caution" title="null is not zero">
+This works only because `apy.reward` is three-valued and the schema refuses to
+coerce it. `null` means the protocol reported nothing — 143 of Aave's 160
+vaults. `0` means it reported no incentives — 160 of Morpho's 210. A `?? 0`
+transform collapses the two and scores most of Aave as confidently organic
+while knowing nothing about it, so `null` is labelled `unknown` and stays that
+way.
+</Aside>
+
+### analyzeRewardSustainability()
+
+The async form additionally reads the DeFiLlama APY curve, because a decaying
+curve separates *this emission exists* from *this emission is ending*.
+
+```ts
+const s = await analyzeRewardSustainability(vault);
+console.log(s.trend); // { direction: 'decaying', change: -0.41, samples: 30 }
+```
+
+History is advisory — if DeFiLlama has no match, the base score stands rather
+than the call failing.
+
+---
+
+## Composer Flows
+
+`/v1/quote` builds one step at a time, so swap-then-deposit is two transactions
+and the second has to guess what the first returned. A Flow binds the swap's
+`amountOut` handle straight into the deposit's `amountIn` — the exact received
+amount, one transaction, atomic.
+
+### createComposerFlows()
+
+```ts
+import { createComposerFlows } from '@earnforge/sdk';
+
+const flows = createComposerFlows({ apiKey: process.env.LIFI_API_KEY });
+
+const sim = await flows.buildDepositFlow({
+  vault,
+  wallet: '0xYourWallet',
+  fromToken: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // USDC
+  amount: '1000000',   // base units — 1 USDC, never a decimal
+  slippageBps: 100,
+});
+
+if (sim.ok) {
+  console.log(sim.transaction);        // unsigned, ready to sign
+  console.log(sim.producedResources);  // what you would actually receive
+} else {
+  console.log(sim.revert);             // structured revert diagnostics
+}
+```
+
+The slippage guard attaches to the zap, not the swap: `lifi.swap`'s `amountOut`
+declares `providesMinimum` because the aggregator already bakes `minOut` in, and
+a second guard there is a compile-time `guard_error` rather than extra safety.
+
+### vaultRoutability()
+
+Answers what no Earn field does — the vault list is a **superset** of what
+Composer can execute.
+
+```ts
+const r = await flows.vaultRoutability(vault);
+// { canEnter: true, canExit: false, edgeCount: 1 }
+```
+
+Protocols ingested from DeFiLlama appear in the vault list with no routing edges
+at all, and several protocols are deposit-only. So a vault can be listed, carry
+`isTransactional: true`, and still be impossible to enter — or possible to enter
+and impossible to exit.
+
+---
+
+## Aave v3 Lifecycle
+
+Everything else here deals in deposits and withdrawals, where the worst outcome
+is a failed transaction. Borrowing is different: a position can be liquidated
+while you do nothing, so the borrow path is paired with a health-factor
+projection rather than offered bare.
+
+```ts
+import { getAaveAccountData, assertBorrowSafe } from '@earnforge/sdk';
+
+const account = await getAaveAccountData(rpcUrl, AAVE_POOL, wallet);
+console.log(account.healthFactor); // 1.65, or null when there is no debt
+
+// Throws if the borrow would breach the floor, naming the largest that would not.
+const projection = assertBorrowSafe(account, 1_000_00000000n, 1.5);
+console.log(projection.after);             // 1.62
+console.log(projection.maxSafeBorrowBase); // headroom, in oracle base units
+```
+
+`projectBorrow()` is the non-throwing form. A floor at or below `1.0` is
+rejected outright — a position that reaches Aave's liquidation threshold is
+already liquidatable, so a floor there means "warn me once it is too late".
+
+<Aside type="caution" title="Enforced before signing, not on-chain">
+`@lifi/composer-sdk` ships an `AaveGetHealthFactorConfig` type, implying an op
+that could bake a liquidation floor into the calldata. That op is **not in the
+live Compose manifest** — the backend serves borrow, repay, repayWithATokens,
+claimRewards and setEMode, and nothing that reads a health factor.
+
+So this floor is checked against current oracle prices before signing. A price
+move between the check and inclusion can still breach it. It prevents borrowing
+more than a position can carry — not an adverse market.
+</Aside>
+
+---
+
+## Drift Detection
+
+Born from this project shipping broken for three months. Compares three sources
+— the live API, LI.FI's OpenAPI spec, and our schemas — and reports *which pair*
+disagrees, so a vendor documentation bug is distinguishable from ours.
+
+```ts
+import { detectDrift, formatDriftReport } from '@earnforge/sdk';
+
+const report = await detectDrift({ apiKey: process.env.LIFI_API_KEY });
+console.log(formatDriftReport(report));
+console.log(report.ok); // false only when OUR schema breaks
+```
+
+```bash
+pnpm --filter @earnforge/sdk drift
+```
+
+It checks vault fields *and* the response envelope of every endpoint. That
+second part was added after `/v1/portfolio` renamed its array `positions` →
+`data` and a vault-only check reported "no breaking drift" straight through it.
+
+CI runs it daily, so an API change surfaces within a day rather than whenever
+someone next opens a pull request.
 
 ---
 

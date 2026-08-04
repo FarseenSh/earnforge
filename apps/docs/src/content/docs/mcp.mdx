@@ -5,7 +5,7 @@ description: 12 MCP tools for Claude Desktop, Cursor, Windsurf, and any MCP-capa
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-`@earnforge/mcp` exposes 9 Earn-native MCP (Model Context Protocol) tools. Any LLM client
+`@earnforge/mcp` exposes 12 Earn-native MCP (Model Context Protocol) tools. Any LLM client
 that speaks MCP -- Claude Desktop, Cursor, Windsurf, Continue, and others -- can discover and
 call these tools to query vaults, compute risk, build deposit quotes, and more.
 
@@ -119,9 +119,13 @@ Edit `~/.windsurf/mcp.json`:
 }
 ```
 
-<Aside>
-The `LIFI_API_KEY` environment variable is only required for the `quote-vault-deposit` tool.
-All read-only tools work without a key.
+<Aside type="caution" title="Every tool needs a key">
+`LIFI_API_KEY` is required for **all** tools, not just quoting. The Earn Data
+API has hard-`401`ed without a key since April 2026, so the read-only tools need
+one too. Earlier versions of this page said otherwise.
+
+The hosted endpoint above supplies its own, which is why it works with no
+configuration.
 </Aside>
 
 ---
@@ -157,9 +161,9 @@ underlying tokens, protocol, and tags.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `slug` | string | yes | Vault slug: `<chainId>-<vaultAddress>` |
+| `slug` | string | yes | Vault slug: `protocol:chainId:_:address` (legacy `chainId-address` also accepted) |
 
-**Example prompt:** "Get details for vault 8453-0xbeef0e0834849acc03f0089f01f4f1eeb06873c9"
+**Example prompt:** "Get details for vault morpho:8453:_:0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61"
 
 ---
 
@@ -200,18 +204,22 @@ Get DeFi portfolio positions for a wallet address.
 
 ### get-vault-risk
 
-Compute a composite 0-10 risk score for a vault. Dimensions: TVL magnitude, APY stability,
-protocol maturity, redeemability, and asset type.
+Compute a composite 0-10 risk score. Seven dimensions: TVL magnitude, APY
+stability, protocol maturity, redeemability, asset type, LI.FI's
+`verificationStatus`, and reward dependency — plus a `flags` array explaining
+what is wrong in plain language.
 
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `slug` | string | yes | Vault slug: `<chainId>-<vaultAddress>` |
+| `slug` | string | yes | Vault slug: `protocol:chainId:_:address` (legacy `chainId-address` also accepted) |
 
 **Example prompt:** "What's the risk score for the Aave USDC vault on Base?"
 
-**Labels:** >= 7 is "low" risk (safe), 4-6.9 is "medium", < 4 is "high" risk.
+**Labels:** `>= 8` is low risk, `6–7.9` medium, `< 6` high. The boundary is
+deliberate — verification carries 0.22 of the weight, so a flagged vault caps at
+7.96 and can never read as low risk.
 
 ---
 
@@ -223,7 +231,7 @@ Build a deposit quote for an Earn vault. Returns transaction data ready to sign.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `slug` | string | yes | Vault slug: `<chainId>-<vaultAddress>` |
+| `slug` | string | yes | Vault slug: `protocol:chainId:_:address` (legacy `chainId-address` also accepted) |
 | `wallet` | string | yes | Wallet address |
 | `fromAmount` | string | yes | Human-readable amount (e.g. "100" for 100 USDC) |
 | `fromToken` | string | no | Override source token address |
@@ -233,8 +241,8 @@ Build a deposit quote for an Earn vault. Returns transaction data ready to sign.
 **Example prompt:** "Build a quote to deposit 100 USDC into the Aave vault on Base from my wallet 0x..."
 
 <Aside type="caution">
-This tool requires the `LIFI_API_KEY` environment variable. The MCP server will return
-an error if the key is missing.
+Returns an **unsigned** transaction. Nothing here signs or broadcasts — every
+tool is annotated `readOnlyHint`, so a host can auto-approve them safely.
 </Aside>
 
 ---

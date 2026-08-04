@@ -69,85 +69,89 @@ description: >
 
 ## Commands in SKILL.md
 
-The skill defines these command groups:
+The skill documents the CLI's full surface — 19 commands, all accepting `--json`.
 
 ### Vault Discovery
 
 | Command | Description |
 |---------|-------------|
-| `earnforge list [--asset] [--chain] [--min-tvl] [--strategy] [--json]` | List vaults with filters |
-| `earnforge top [--asset] [--chain] [--limit] [--strategy] [--json]` | Top vaults by APY |
-| `earnforge get <slug> [--json]` | Single vault by slug |
+| `earnforge list [--asset] [--chain] [--min-tvl] [--strategy]` | List vaults with filters |
+| `earnforge top --asset <sym> [--chain] [--limit] [--strategy]` | Top vaults by APY |
+| `earnforge vault <slug>` | Single vault, full detail |
+| `earnforge compare <slug> <slug>` | Side-by-side comparison |
 
-### Comparison and Analysis
-
-| Command | Description |
-|---------|-------------|
-| `earnforge compare <slug1> <slug2> [--json]` | Side-by-side vault comparison |
-| `earnforge risk <slug> [--json]` | Full risk score breakdown |
-| `earnforge history <address> <chain-id> [--json]` | 30-day APY history |
-
-### Portfolio and Suggestions
+### Analysis
 
 | Command | Description |
 |---------|-------------|
-| `earnforge suggest <amount> <asset> [--max-vaults] [--max-chains] [--strategy] [--json]` | Portfolio allocation |
-| `earnforge portfolio <wallet> [--json]` | Current wallet positions |
+| `earnforge risk <slug>` | Seven-dimension risk breakdown and flags |
+| `earnforge apy-history <address> <chainId>` | 30-day APY history from DeFiLlama |
+| `earnforge suggest --amount <n> [--asset] [--strategy]` | Portfolio allocation |
+| `earnforge portfolio <wallet>` | Current wallet positions |
 
 ### Deposit and Withdraw
 
 | Command | Description |
 |---------|-------------|
-| `earnforge quote <slug> <amount> <wallet> [--from-chain] [--slippage] [--json]` | Build deposit quote |
-| `earnforge withdraw <slug> <amount> <wallet> [--json]` | Build withdraw quote |
-| `earnforge gas-optimize <slug> <amount> <wallet> [--from-chains] [--json]` | Compare cross-chain deposit costs |
+| `earnforge quote --vault <slug> --amount <n> --wallet <addr>` | Build a deposit quote |
+| `earnforge withdraw --vault <slug> --amount <n> --wallet <addr>` | Build a redeem quote |
+| `earnforge allowance` / `earnforge approve` | ERC-20 allowance check and approval tx |
+| `earnforge simulate --vault <slug> --amount <n> --wallet <addr>` | Simulate against the chain head via Composer |
 
 ### Safety and Monitoring
 
 | Command | Description |
 |---------|-------------|
-| `earnforge doctor <slug> [--wallet] [--json]` | Run pitfall checks |
-| `earnforge watch <slug> [--apy-drop] [--tvl-drop] [--json]` | Monitor APY/TVL changes |
+| `earnforge doctor <slug>` | Run all 23 pitfall checks |
+| `earnforge preflight <slug> <wallet>` | Pre-deposit validation |
+| `earnforge watch <slug> [--apy-drop] [--tvl-drop]` | Monitor APY/TVL changes |
 
 ### Reference Data
 
 | Command | Description |
 |---------|-------------|
-| `earnforge chains [--json]` | List 16 supported chains |
-| `earnforge protocols [--json]` | List 27 protocols |
-| `earnforge strategies [--json]` | List 4 strategy presets |
+| `earnforge chains` | Every chain with an indexed vault |
+| `earnforge protocols` | Every indexed protocol, with risk tiers |
+| `earnforge init <name>` | Scaffold a project with EarnForge wired up |
 
 ---
 
 ## Rules
 
-The `SKILL.md` defines 9 rules that agents must follow:
+`SKILL.md` defines 12 rules agents must follow. The ones that most often go
+wrong:
 
-1. **Never submit transactions.** Only build unsigned quotes. The user signs and broadcasts.
+1. **Never submit transactions.** Only build unsigned quotes; the user signs.
 
-2. **Always check `isTransactional` before quoting.** Non-transactional vaults cannot accept deposits.
+2. **Check ERC-20 allowance before depositing**, using the quote's
+   `approvalAddress` as spender.
 
-3. **Use `vault.address` as `toToken`, not the underlying token address.** This is Pitfall #5.
+3. **Check `isTransactional` before quoting a deposit**, and `isRedeemable`
+   before quoting a withdrawal.
 
-4. **Filter stablecoins by the `stablecoin` tag, not by token symbol.**
+4. **Risk thresholds are 8 / 6** — `>= 8` low, `6–7.9` medium, `< 6` high.
+   Always show the score *and* its flags alongside APY.
 
-5. **Risk score thresholds:** >= 8 is low risk, 6-7.9 is medium, < 6 is high
-   risk. A verification-flagged vault can never reach 8.
+5. **Never recommend a verification-flagged vault without saying so.** LI.FI
+   flags roughly 9% of vaults. A flagged vault can never reach 8, so it can
+   never read as low risk, and `suggest` excludes them by default.
 
-6. **`tvl.usd` is a number** (it was a string, and the OpenAPI spec still says
-   string). Parse with `parseTvl()`, which accepts either.
+6. **APY is already a percentage** (3.84 = 3.84%). Do **not** multiply by 100 —
+   LI.FI's own spec and quickstart say to, and they are wrong; doing so
+   overstates every yield 100×.
 
-7. **`apy1d`, `apy7d`, `apy30d`, `apy.base` and `apy.reward` can all be null.**
-   Use the fallback chain. APY is already a percentage — LI.FI's own spec and
-   quickstart say to multiply by 100, which overstates every yield 100x.
+7. **Never hardcode a protocol id.** A stale one returns `200` with zero
+   results rather than an error, so the failure is silent. Resolve via
+   `earnforge protocols`.
 
-8. **`apy.reward` is null for some protocols.** Normalize to 0 before summing.
+8. **Cross-chain deposits need an explicit `--from-token`**, and are not
+   atomic — a bridge can succeed while the destination deposit fails.
 
-9. **Use chainId (number), not chain name (string), in all API calls.**
-
-<Aside type="tip">
-These rules are the distilled wisdom from the [18 Pitfalls Guide](/pitfalls/). Agents that
-follow them will avoid every known production issue in the LI.FI Earn API.
+<Aside type="caution" title="apy.reward is three-valued">
+Earlier guidance here said to normalise `apy.reward` to `0`. That is wrong and
+has been corrected in the skill: `null` means the protocol reported nothing,
+`0` means it reported no incentives, and collapsing the two destroys the only
+signal separating organic yield from an emission that ends.
 </Aside>
 
 ---
@@ -156,7 +160,7 @@ follow them will avoid every known production issue in the LI.FI Earn API.
 
 ### references/pitfalls.md
 
-All 18 API pitfalls with descriptions and fixes. Agents reference this when debugging
+All 23 API pitfalls with descriptions and fixes. Agents reference this when debugging
 integration issues or understanding why certain guards exist.
 
 ### references/protocols.md

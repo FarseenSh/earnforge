@@ -36,15 +36,24 @@ automatically.
 
 ## EarnForgeProvider
 
-Wrap your application with `EarnForgeProvider` to make the SDK instance available to all hooks.
+Wrap your application with `EarnForgeProvider` to make the SDK instance
+available to all hooks.
+
+The Earn API requires a key, and hooks run in the browser — so the browser must
+never hold it. Proxy through a server route instead; see
+[Studio's implementation](https://github.com/FarseenSh/earnforge/blob/main/apps/studio/src/app/api/earn/%5B...path%5D/route.ts)
+for a route handler with a path allowlist.
 
 ```tsx
 import { createEarnForge } from '@earnforge/sdk';
 import { EarnForgeProvider } from '@earnforge/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// NEVER `NEXT_PUBLIC_` — that ships the key to every visitor's browser, where
+// it is readable from the network tab. Point the SDK at your own route handler
+// and let the server attach the real key.
 const forge = createEarnForge({
-  composerApiKey: process.env.NEXT_PUBLIC_LIFI_API_KEY,
+  earnData: { baseUrl: '/api/earn' },
 });
 const queryClient = new QueryClient();
 
