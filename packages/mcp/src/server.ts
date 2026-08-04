@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { McpServer } from '@modelcontextprotocol/server'
+
 import {
   createEarnForge,
   detectDrift,
@@ -11,6 +11,7 @@ import {
   totalPortfolioUsd,
   type Vault,
 } from '@earnforge/sdk'
+import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import {
   AllocationOut,
