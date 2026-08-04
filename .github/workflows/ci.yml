@@ -28,7 +28,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Astro 7 requires >=22.12. Pinned to 20 until Aug 2026, which built
+          # fine locally on 22 and failed only here — the repo declared no Node
+          # version, so there was nothing to notice the drift. `engines` and
+          # .nvmrc now say the same thing this does.
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
@@ -68,7 +72,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
