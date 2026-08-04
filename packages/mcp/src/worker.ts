@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
+import { createMcpHandler } from '@modelcontextprotocol/server'
 import { createServer } from './server.js'
 
 /**
  * Cloudflare Worker entry point.
  *
- * Uses the Web-standard Streamable HTTP transport, which speaks `Request` and
- * `Response` rather than Node streams — the only variant that runs on Workers.
+ * Built on `createMcpHandler`, the v2 HTTP entry that serves the `2026-07-28`
+ * revision. That revision is stateless by design — no `initialize` handshake,
+ * no `Mcp-Session-Id`, every request carrying its own protocol version in
+ * `_meta` — which is the shape a Worker wants anyway: no sticky routing, no
+ * session store, no cold-start state to rebuild.
  *
- * Deliberately stateless: a fresh transport and server per request, with no
- * session id. That matches where the protocol is heading — the `2026-07-28`
- * revision removes the `initialize` handshake and `Mcp-Session-Id` entirely, so
- * any request can land on any instance. For a Worker that is not a compromise
- * but the natural shape: no sticky routing, no shared session store, no
- * cold-start state to rebuild.
+ * The handler's default `legacy: 'stateless'` also serves 2025-era clients from
+ * the same factory, so upgrading the protocol does not strand hosts that have
+ * not. One endpoint, both eras, one registration path.
  *
  * The API key comes from the Worker environment, so callers never hold a LI.FI
- * credential. Clients may still pass their own via `x-lifi-api-key` to use their
- * own rate-limit budget.
+ * credential. A caller may still pass their own via `x-lifi-api-key` to spend
+ * their own rate-limit budget instead of the Worker's.
  */
 
 export interface Env {
@@ -29,8 +29,40 @@ const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, OPTIONS',
   'access-control-allow-headers':
-    'content-type, mcp-protocol-version, x-lifi-api-key',
+    'content-type, mcp-protocol-version, mcp-method, mcp-name, x-lifi-api-key',
   'access-control-expose-headers': 'mcp-protocol-version',
+}
+
+function withCors(response: Response): Response {
+  const headers = new Headers(response.headers)
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    headers.set(key, value)
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  })
+}
+
+/**
+ * Built once per isolate rather than per request.
+ *
+ * The factory itself still runs per request — that is what keeps the endpoint
+ * stateless — but the handler around it is reused, which is the arrangement the
+ * SDK asks for. The Worker secret only exists inside `fetch`, so construction
+ * is deferred to the first request rather than hoisted to module scope.
+ */
+let handler: ReturnType<typeof createMcpHandler> | undefined
+
+function getHandler(fallbackKey: string | undefined) {
+  handler ??= createMcpHandler(({ requestInfo }) => {
+    // Read the per-caller override here, inside the factory, so one cached
+    // handler still serves callers using their own keys correctly.
+    const callerKey = requestInfo?.headers.get('x-lifi-api-key') ?? undefined
+    return createServer({ apiKey: callerKey ?? fallbackKey })
+  })
+  return handler
 }
 
 export default {
@@ -56,11 +88,12 @@ export default {
       )
     }
 
-    // A caller-supplied key takes precedence, so integrators can spend their own
-    // rate limit rather than sharing the Worker's.
     const apiKey =
       request.headers.get('x-lifi-api-key') ?? env.LIFI_API_KEY ?? undefined
 
+    // Checked here rather than in the factory: a missing key is a deployment
+    // fault, and reporting it as a plain HTTP error is far more legible than a
+    // JSON-RPC error raised from inside a tool call.
     if (!apiKey) {
       return Response.json(
         {
@@ -73,34 +106,14 @@ export default {
       )
     }
 
-    const server = createServer({ apiKey })
-    const transport = new WebStandardStreamableHTTPServerTransport({
-      // Stateless: no session to resume, so any instance can serve any request.
-      sessionIdGenerator: undefined,
-    })
-
+    // No Host/Origin guards here on purpose. Those defend a *localhost* bind
+    // against DNS rebinding — a browser resolving its own domain to 127.0.0.1
+    // to reach a local server as same-origin. A Worker on a public hostname has
+    // no such loopback to impersonate, and this endpoint is meant to be
+    // reachable cross-origin by design.
     try {
-      await server.connect(transport)
-      const response = await transport.handleRequest(request)
-
-      // Deliberately no close() here. The response body may still be streaming
-      // when this returns, and closing the server tears the transport down
-      // mid-stream — which yields a 200 with an empty body, the most
-      // confusing possible failure. The Worker's request scope ends on its
-      // own, so there is nothing to release manually.
-      const headers = new Headers(response.headers)
-      for (const [key, value] of Object.entries(CORS_HEADERS)) {
-        headers.set(key, value)
-      }
-      return new Response(response.body, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      })
+      return withCors(await getHandler(env.LIFI_API_KEY).fetch(request))
     } catch (err) {
-      await server.close().catch(() => {
-        // Cleanup failure must not mask the original error.
-      })
       return Response.json(
         {
           error: 'MCP request failed',

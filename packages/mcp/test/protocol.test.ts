@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createServer } from '../src/server.js'
 import { SKILL_FILES, SKILL_INDEX } from '../src/skill-content.js'

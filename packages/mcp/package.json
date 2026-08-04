@@ -6,12 +6,16 @@
   "description": "Earn-native MCP server for the LI.FI Earn API — 11 tools for vault discovery, risk scoring, allocation, and deposit quoting",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.mts"
+      "import": {
+        "types": "./dist/esm/index.d.mts",
+        "default": "./dist/esm/index.mjs"
+      }
     },
     "./worker": {
-      "import": "./dist/esm/worker.mjs",
-      "types": "./dist/esm/worker.d.mts"
+      "import": {
+        "types": "./dist/esm/worker.d.mts",
+        "default": "./dist/esm/worker.mjs"
+      }
     }
   },
   "bin": {
@@ -32,10 +36,11 @@
   },
   "dependencies": {
     "@earnforge/sdk": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "@types/node": "^25.6.0",
     "tsdown": "^0.22.14",
     "tsx": "^4.23.1",

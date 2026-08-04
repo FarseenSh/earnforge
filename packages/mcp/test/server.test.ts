@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ── Fixture data ────────────────────────────────────────────────────

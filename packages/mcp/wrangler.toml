@@ -16,7 +16,13 @@
 # Then point any MCP client at https://<your-worker>/mcp
 
 name = "earnforge-mcp"
-main = "dist/esm/worker.mjs"
+# Source, not the tsdown bundle in dist/.
+#
+# The dist bundle has already resolved and inlined its dependencies, so the
+# `[alias]` below cannot reach into it — and without that alias the Worker does
+# not boot at all (see the note there). Pointing wrangler at source lets it own
+# the bundling, which is the only place the alias can be applied.
+main = "src/worker.ts"
 compatibility_date = "2026-07-01"
 
 # nodejs_compat is required: the SDK reaches for node: builtins, and the
@@ -26,12 +32,32 @@ compatibility_flags = ["nodejs_compat"]
 [observability]
 enabled = true
 
+# Collapse zod onto a single module graph.
+#
+# `@modelcontextprotocol/core` imports `zod/v4`; this package and
+# `@earnforge/sdk` import `zod`. Both resolve inside the same zod install, but
+# they are different entry files, so the bundler emits two copies of zod's
+# classic build. Their initialisers then interleave: the `lazy()` in one copy
+# runs before the other copy assigns `ZodLazy`, and the Worker dies at module
+# evaluation with `ZodLazy is not a constructor` — before it can serve anything.
+#
+# Node never hits this, because it resolves both specifiers to one live module
+# registry entry. Only a bundled runtime splits them, which is why no test that
+# drives the handler in-process can catch it.
+[alias]
+zod = "zod/v4"
+
 [vars]
 # Non-secret defaults only. The API key is a secret — set it with
 # `wrangler secret put LIFI_API_KEY`, never here, or it lands in version control.
 
-[[routes]]
-# Replace with your own hostname, or delete this block to use the
-# *.workers.dev subdomain.
-pattern = "earnforge-mcp.example.com"
-custom_domain = true
+# Deploys to <name>.<subdomain>.workers.dev by default, which needs no DNS setup.
+#
+# To serve it from your own hostname, uncomment this and set the pattern to a
+# domain in your Cloudflare account. It is left commented rather than filled
+# with a placeholder because `custom_domain = true` on a domain you do not own
+# fails the deploy outright — a placeholder here is not a harmless default.
+#
+# [[routes]]
+# pattern = "mcp.your-domain.com"
+# custom_domain = true

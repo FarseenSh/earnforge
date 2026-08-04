@@ -9,4 +9,6 @@ coverage/
 .env.*.local
 .DS_Store
 .vercel
+# Local miniflare state written by `wrangler dev`.
+.wrangler/
 packages/mcp/src/skill-content.ts

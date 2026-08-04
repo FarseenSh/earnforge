@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { McpServer } from '@modelcontextprotocol/server'
 import {
   createEarnForge,
   detectDrift,
@@ -10,7 +11,6 @@ import {
   totalPortfolioUsd,
   type Vault,
 } from '@earnforge/sdk'
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import {
   AllocationOut,
@@ -138,7 +138,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         '4.63%) — do not multiply by 100. Each result carries a verification ' +
         'block: LI.FI flags roughly 9% of vaults as suspect, and those should ' +
         'not be recommended without saying so.',
-      inputSchema: {
+      inputSchema: z.object({
         chainId: z
           .number()
           .optional()
@@ -171,8 +171,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .boolean()
           .optional()
           .describe('Include verification-flagged vaults. Default false.'),
-      },
-      outputSchema: VaultListOut.shape,
+      }),
+      outputSchema: VaultListOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -210,8 +210,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'with USD prices, reward tokens, protocol, deposit/redeem support, and ' +
         "LI.FI's verification status. To deposit, pass the vault's address as " +
         'toToken and its chainId as toChain to quote-vault-deposit.',
-      inputSchema: { slug: z.string().describe(SLUG_DESC) },
-      outputSchema: VaultSummaryOut.shape,
+      inputSchema: z.object({ slug: z.string().describe(SLUG_DESC) }),
+      outputSchema: VaultSummaryOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -234,8 +234,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'Chains with at least one indexed Earn vault. This is a SUBSET of all ' +
         'LI.FI-supported chains — Composer covers more. Use these chain ids to ' +
         'filter get-earn-vaults rather than hardcoding them.',
-      inputSchema: {},
-      outputSchema: ChainListOut.shape,
+      inputSchema: z.object({}),
+      outputSchema: ChainListOut,
       annotations: readOnly,
     },
     async () => {
@@ -259,8 +259,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         '"morpho", "aave", "euler", not "morpho-v1"/"aave-v3"/"euler-v2". ' +
         'Filtering on a versioned slug returns HTTP 200 with zero results ' +
         'rather than an error, so always resolve the id here first.',
-      inputSchema: {},
-      outputSchema: ProtocolListOut.shape,
+      inputSchema: z.object({}),
+      outputSchema: ProtocolListOut,
       annotations: readOnly,
     },
     async () => {
@@ -290,12 +290,12 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         "A wallet's Earn positions across all protocols. Note that " +
         '`protocolName` and `balanceUsd` are nullable — handle null rather than ' +
         'formatting it into NaN.',
-      inputSchema: {
+      inputSchema: z.object({
         wallet: z
           .string()
           .describe('Wallet address (0x-prefixed, 40 hex chars).'),
-      },
-      outputSchema: PortfolioOut.shape,
+      }),
+      outputSchema: PortfolioOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -331,8 +331,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         '"high" (<6). Higher is safer. Verification is weighted heavily enough ' +
         'that a flagged vault can never be low risk. ALWAYS relay the `flags` ' +
         'array — the score alone hides why.',
-      inputSchema: { slug: z.string().describe(SLUG_DESC) },
-      outputSchema: RiskOut.shape,
+      inputSchema: z.object({ slug: z.string().describe(SLUG_DESC) }),
+      outputSchema: RiskOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -367,7 +367,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'approvalAddress with check-allowance first; ERC-20 deposits fail ' +
         'without sufficient approval. Cross-chain flows are NOT atomic: a bridge ' +
         'can succeed while the destination deposit fails.',
-      inputSchema: {
+      inputSchema: z.object({
         slug: z.string().describe(SLUG_DESC),
         wallet: z.string().describe('Wallet that will execute the deposit.'),
         fromAmount: z
@@ -386,8 +386,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .optional()
           .describe("Defaults to the vault's chain."),
         slippage: z.number().optional().describe('e.g. 0.03 for 3%.'),
-      },
-      outputSchema: QuoteOut.shape,
+      }),
+      outputSchema: QuoteOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -454,7 +454,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'back to an underlying asset. Verifies isRedeemable first — some ' +
         'protocols support deposits only, and withdrawals there must go through ' +
         "the protocol's own interface.",
-      inputSchema: {
+      inputSchema: z.object({
         slug: z.string().describe(SLUG_DESC),
         wallet: z.string(),
         fromAmount: z
@@ -463,8 +463,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         toToken: z.string().optional().describe('Destination token address.'),
         toChain: z.number().optional(),
         slippage: z.number().optional(),
-      },
-      outputSchema: QuoteOut.shape,
+      }),
+      outputSchema: QuoteOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -518,7 +518,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'Read an ERC-20 allowance and build an UNSIGNED approval transaction if ' +
         'it is insufficient. Use the approvalAddress from a deposit quote as the ' +
         'spender. This reads chain state; it does not approve anything.',
-      inputSchema: {
+      inputSchema: z.object({
         rpcUrl: z.string().describe('JSON-RPC endpoint for the chain.'),
         tokenAddress: z.string(),
         owner: z.string().describe('Token holder.'),
@@ -527,8 +527,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .string()
           .describe("Smallest unit — the quote's rawAmount."),
         chainId: z.number(),
-      },
-      outputSchema: AllowanceOut.shape,
+      }),
+      outputSchema: AllowanceOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -574,7 +574,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'Verification-flagged vaults are excluded by default — roughly 9% of the ' +
         'fleet — because a caller asking for an allocation has not asked to be ' +
         'handed a suspect vault.',
-      inputSchema: {
+      inputSchema: z.object({
         amount: z.number().describe('Total USD to allocate.'),
         asset: z.string().optional().describe('Underlying token symbol.'),
         maxChains: z.number().optional().describe('Default 5.'),
@@ -587,8 +587,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .boolean()
           .optional()
           .describe('Opt in to flagged vaults. Default false.'),
-      },
-      outputSchema: AllocationOut.shape,
+      }),
+      outputSchema: AllocationOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -636,7 +636,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'mismatch, gas balance, token balance, underlying tokens, ' +
         'redeemability. Returns a pass/fail report plus the risk score and ' +
         'verification status, so one call answers "is this safe and will it work".',
-      inputSchema: {
+      inputSchema: z.object({
         slug: z.string().describe(SLUG_DESC),
         wallet: z.string(),
         walletChainId: z
@@ -649,8 +649,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .string()
           .optional()
           .describe('Human-readable amount, for the balance check.'),
-      },
-      outputSchema: DoctorOut.shape,
+      }),
+      outputSchema: DoctorOut,
       annotations: readOnly,
     },
     async (params) => {
@@ -691,13 +691,13 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'something. `live-vs-schema` findings mean the SDK is stale; ' +
         '`live-vs-spec` findings mean the documentation is wrong and will ' +
         'mislead anyone reading it.',
-      inputSchema: {
+      inputSchema: z.object({
         sampleSize: z
           .number()
           .optional()
           .describe('Vaults to inspect, max 100. Default 100.'),
-      },
-      outputSchema: DriftOut.shape,
+      }),
+      outputSchema: DriftOut,
       annotations: readOnly,
     },
     async (params) => {
