@@ -4,7 +4,7 @@ Supersedes `TWEET_THREAD.md` (Apr 2026 hackathon draft — every number in it is
 now wrong: 623 vaults, 16 chains, 18 pitfalls, Telegram bot).
 
 First person. LI.FI framed as collaborator, since PR #561 is open with them.
-Every figure verified against the live API on Aug 4, 2026, and re-verified after
+Every figure verified against the live API on Aug 9, 2026, and re-verified after
 the patch releases. All five packages are on the 1.0 line; the patch numbers
 differ per package and will keep moving, so the tweets deliberately say "1.0".
 
@@ -67,7 +67,7 @@ Risk scoring across 7 dimensions:
 TVL · APY stability · protocol maturity · redeemability · asset type ·
 verification status · reward dependency
 
-0–10 composite plus plain-language flags, calibrated on all 712 live vaults.
+0–10 composite plus plain-language flags, calibrated on all 703 live vaults.
 Real scores span 4.1 to 9.7.
 
 ---
@@ -76,10 +76,10 @@ Real scores span 4.1 to 9.7.
 
 The question no yield UI answers: *is this real, or an incentive that ends?*
 
-Highest APY in the entire fleet right now — USP on Pendle, 106.16%:
+Highest APY in the entire fleet right now — USP on Pendle, 106.68%:
 
-  base    13.76%
-  reward  92.40%
+  base    14.33%
+  reward  92.35%
 
 87% of that headline is emissions. `rewardSustainability()` says so.
 
@@ -120,7 +120,7 @@ The docs say APY is a decimal. The quickstart does `apy.total * 100`.
 It's already a percentage. Follow the official example and you render 2919%
 where you mean 29.19%.
 
-Checked across 712 vaults.
+Checked across 703 vaults.
 
 ---
 
@@ -139,7 +139,7 @@ Four more, verified live:
 
 And one that isn't written down anywhere:
 
-`verificationStatus` — undocumented, on every vault, flagging 68 of 712 as
+`verificationStatus` — undocumented, on every vault, flagging 74 of 703 as
 suspect. USP is one: `apy_outlier`.
 
 So the top APY in the fleet is 87% emissions *and* flagged — and nothing shows
@@ -198,19 +198,23 @@ npm i @earnforge/sdk
 - Don't screenshot download counts. The spread across packages is flat enough
   to read as registry mirrors, and it's a claim anyone can check in one click.
 
-**Verified before writing** (Aug 4, 2026)
+**Verified before writing** (Aug 9, 2026)
 
-The fleet moves, and faster than the flagged count suggests: 66 → 67 → 68
-flagged inside a day, and 710 → 711 → 712 vaults across two. The vault total is
-the figure most likely to be stale by the time you post; 19 / 27 / 68 have held.
-Every figure above was re-measured against the live API after the patch releases
-and still holds — 19 / 27 / 68, scores 4.10–9.70, USP still rank 1
-at 106.16% with 87% of it emissions.
+The fleet moves, and not only in the direction you'd expect. Across five days the
+vault total *fell* 712 → 703 and the chain count dropped 19 → 17. Flagged rose
+68 → 74. An earlier draft of this note claimed 19 / 27 / 68 "have held" — two of
+those three were wrong within the week, which is the whole argument for measuring
+instead of quoting. Only the protocol count (27) and the score range (4.10–9.70)
+survived the window unchanged.
+
+Re-measure every figure above before posting. What did hold is the judgment layer:
+USP is still rank 1, still flagged `apy_outlier`, still scores 5.5, still 87%
+emissions — stable even as the fleet underneath it moved.
 
 One number was *removed* rather than refreshed: the thread used to say analytics
 had an "observed floor of 87 minutes". That was never a property of the API, only
 how far into the refresh cycle the sample landed. The fleet updates in one hourly
-batch — 588 of 711 vaults share a single `updatedAt` minute — so the figure reads
+batch — 338 of 703 share a single `analytics.updatedAt` minute — so the figure reads
 differently every time you look. The structural claim replaces it and stays true.
 
 Re-verify tweets 5, 9 and 11 before posting if it has been more than a day:
@@ -220,8 +224,8 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 ```
 
 
-712 vaults · 19 chains · 27 protocols · 68 flagged · 588 mocked tests · 34 live
-scores 4.10–9.70 · sdk 1.0.2 · cli 1.0.2 · react 1.0.1 · mcp 1.0.2 · skill 1.0.3
+703 vaults · 17 chains · 27 protocols · 74 flagged · 588 mocked tests · 34 live
+scores 4.10–9.70 · sdk 1.0.4 · cli 1.0.4 · react 1.0.1 · mcp 1.0.4 · skill 1.0.3
 
-USP (pendle:1:_:0xc83f...86cb) — 106.16% total / 13.76% base / 92.40% reward,
-rank 1 of 712 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
+USP (pendle:1:_:0xc83f...86cb) — 106.68% total / 14.33% base / 92.35% reward,
+rank 1 of 703 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
