@@ -110,11 +110,15 @@ export const PROTOCOL_TIERS: Record<string, number> = {
  * Analytics older than this are treated as stale.
  *
  * LI.FI documents a 15-minute refresh for APY and TVL. In practice the fleet
- * refreshes in one hourly batch — 338 of 703 live vaults share a single
- * `updatedAt` minute — so a documentation-derived threshold would flag the
- * entire fleet and mean nothing.
- * Six hours sits well clear of the observed baseline and isolates vaults whose
- * pipeline has genuinely stalled — roughly 13% of the fleet, up to ~97 hours.
+ * refreshes in one hourly batch firing at :01–:03, so most vaults share a single
+ * `updatedAt` minute and a documentation-derived threshold would flag the entire
+ * fleet and mean nothing.
+ *
+ * Six hours sits well clear of that baseline and isolates vaults whose pipeline
+ * has genuinely stalled. Deliberately not quoting a share of the fleet here: the
+ * batch cycle moves a cohort across any fixed boundary every hour, so the number
+ * differs on every walk. Repeated sampling puts it near a tenth of the fleet,
+ * with a tail past 90 hours.
  */
 const STALE_ANALYTICS_MS = 6 * 60 * 60 * 1000
 

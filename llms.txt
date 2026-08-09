@@ -3,8 +3,8 @@
 > Developer toolkit for the LI.FI Earn API. Handles 23 integration pitfalls
 > so you can focus on building yield products.
 
-All figures below were verified against the live API on Aug 4, 2026:
-711 vaults, 19 chains, 27 protocols, 68 vaults verification-flagged.
+All figures below were verified against the live API on Aug 10, 2026:
+703 vaults, 17 chains, 27 protocols, 74 vaults verification-flagged.
 
 LI.FI rewrote the Earn API in April 2026. Every path moved, auth became
 mandatory, and two documented field types are wrong in the current spec. If you
@@ -32,8 +32,8 @@ Query params:
 - cursor (string) -- pagination cursor from the previous response's nextCursor
 
 Unknown query params are dropped rather than rejected. Sending `minTvl` instead
-of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet — 711 results
-where the filter would have returned 41. A filter that fails open is worse than
+of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet — 703 results
+where the filter would have returned 39. A filter that fails open is worse than
 one that throws, so spell the param exactly.
 
 The same applies to protocol ids: a stale slug like `morpho-v1` returns HTTP 200
@@ -45,8 +45,8 @@ Response shape:
 {
   "data": [ ...vaults ],
   "nextCursor": "morpho:8453:_:0xbeef..." | null,
-  "total": 711,
-  "normalizedAt": "2026-08-04T14:03:50.453Z"
+  "total": 703,
+  "normalizedAt": "2026-08-09T19:24:25.939Z"
 }
 ```
 
@@ -113,7 +113,7 @@ execution duration), and action details.
 - description: OPTIONAL, and usually absent — roughly three quarters of vaults omit it.
 - verificationStatus: "none" | "flagged". UNDOCUMENTED — it appears in no spec,
   changelog or quickstart, and LI.FI's own hosted MCP server does not expose it.
-  Roughly 9-10% of vaults are flagged (68 of 711 when this was written). Sort
+  Roughly 10% of vaults are flagged (74 of 703 when this was written). Sort
   by APY without checking it and a flagged vault lands at the top of your list.
 - verificationStatusBreakdown: array of { reason, result }. Reasons seen live:
   "zero_apy" (most), "apy_outlier".
@@ -134,9 +134,10 @@ execution duration), and action details.
 - analytics.apy1d / apy7d / apy30d: number OR null. Fresh vaults lack history.
 - analytics.tvl.usd: NUMBER. The spec declares it a string. Accept both.
 - analytics.updatedAt: ISO timestamp. The docs describe a 15-minute refresh; in
-  practice the fleet updates in one hourly batch — 588 of 711 vaults share a
-  single updatedAt minute — so the freshest reading is over an hour old and a
-  tail runs to ~92 hours. Treat it as a coarse staleness signal.
+  practice the fleet updates in one hourly batch, so most vaults share a single
+  updatedAt minute and the freshest reading is typically over an hour old. The
+  exact share swings through the batch cycle — do not treat it as a constant —
+  and a tail runs past 90 hours. Treat it as a coarse staleness signal.
 
 Fields the OpenAPI spec documents that NO live vault sends: `caps`, `timeLock`,
 `kyc`, `lpTokens`. Do not code against them.

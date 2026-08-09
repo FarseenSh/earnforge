@@ -4,7 +4,7 @@ Supersedes `TWEET_THREAD.md` (Apr 2026 hackathon draft — every number in it is
 now wrong: 623 vaults, 16 chains, 18 pitfalls, Telegram bot).
 
 First person. LI.FI framed as collaborator, since PR #561 is open with them.
-Every figure verified against the live API on Aug 9, 2026, and re-verified after
+Every figure verified against the live API on Aug 10, 2026, and re-verified after
 the patch releases. All five packages are on the 1.0 line; the patch numbers
 differ per package and will keep moving, so the tweets deliberately say "1.0".
 
@@ -198,7 +198,7 @@ npm i @earnforge/sdk
 - Don't screenshot download counts. The spread across packages is flat enough
   to read as registry mirrors, and it's a claim anyone can check in one click.
 
-**Verified before writing** (Aug 9, 2026)
+**Verified before writing** (Aug 10, 2026)
 
 The fleet moves, and not only in the direction you'd expect. Across five days the
 vault total *fell* 712 → 703 and the chain count dropped 19 → 17. Flagged rose
@@ -211,11 +211,25 @@ Re-measure every figure above before posting. What did hold is the judgment laye
 USP is still rank 1, still flagged `apy_outlier`, still scores 5.5, still 87%
 emissions — stable even as the fleet underneath it moved.
 
+Not every figure is worth re-measuring, though, because not every figure is
+stable enough to quote. Across repeated walks in a single day:
+
+- **Rock steady** — 17 chains, 27 protocols, 39 vaults over $100M TVL. Quote freely.
+- **Drifts by ones** — 703 vaults, 74 flagged, 166 under 1% APY. Fine as a dated
+  snapshot; expect a reader checking tomorrow to see 73 or 75.
+- **Not quotable at all** — the size of the refresh-minute cluster and the share
+  of the fleet past any fixed staleness boundary. Both are functions of where in
+  the hourly cycle you sampled, not properties of the API. Tweet 10 makes the
+  structural claim ("15-min refresh, really one hourly batch") and that is the
+  only form of it that survives being checked.
+
 One number was *removed* rather than refreshed: the thread used to say analytics
 had an "observed floor of 87 minutes". That was never a property of the API, only
 how far into the refresh cycle the sample landed. The fleet updates in one hourly
-batch — 338 of 703 share a single `analytics.updatedAt` minute — so the figure reads
-differently every time you look. The structural claim replaces it and stays true.
+batch firing at :01–:03, so most of the fleet shares one `analytics.updatedAt`
+minute — but how many depends entirely on how far into the hour you sampled.
+Four walks in one day gave 328, 338, 522 and 526. The structural claim replaces
+the number and stays true.
 
 Re-verify tweets 5, 9 and 11 before posting if it has been more than a day:
 
