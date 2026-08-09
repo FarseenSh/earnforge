@@ -40,7 +40,7 @@ Every command supports `--json` for machine-readable output.
 
 ## Flagged vaults are surfaced everywhere
 
-LI.FI flags roughly 9% of vaults through an undocumented `verificationStatus`
+LI.FI flags roughly 10% of vaults through an undocumented `verificationStatus`
 field — usually for `zero_apy`, occasionally `apy_outlier`. `earnforge vault`
 and `earnforge compare` show a verification badge, and `earnforge risk` lists the
 reasons:

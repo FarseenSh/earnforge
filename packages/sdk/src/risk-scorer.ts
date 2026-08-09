@@ -47,7 +47,7 @@ export interface RiskScore {
  *
  * LI.FI's `/v1/protocols` carries only `id`, `name` and `url` — no maturity
  * signal at all — so the tiers are derived from four observable inputs, scored
- * against the live fleet (711 vaults, Aug 2026) and DeFiLlama:
+ * against the live fleet (703 vaults, Aug 2026) and DeFiLlama:
  *
  * 1. **Track record** — how long the protocol has been listed. The single
  *    strongest signal, and the one TVL cannot substitute for.
@@ -110,11 +110,11 @@ export const PROTOCOL_TIERS: Record<string, number> = {
  * Analytics older than this are treated as stale.
  *
  * LI.FI documents a 15-minute refresh for APY and TVL. In practice the fleet
- * refreshes in one hourly batch — 588 of 711 live vaults share a single
+ * refreshes in one hourly batch — 338 of 703 live vaults share a single
  * `updatedAt` minute — so a documentation-derived threshold would flag the
  * entire fleet and mean nothing.
  * Six hours sits well clear of the observed baseline and isolates vaults whose
- * pipeline has genuinely stalled — roughly 2% of the fleet, up to ~92 hours.
+ * pipeline has genuinely stalled — roughly 13% of the fleet, up to ~97 hours.
  */
 const STALE_ANALYTICS_MS = 6 * 60 * 60 * 1000
 
@@ -127,7 +127,7 @@ const STALE_ANALYTICS_MS = 6 * 60 * 60 * 1000
  * - Protocol maturity — track record and audit surface
  * - Redeemability — can the position be exited via Composer
  * - Asset type — stablecoin exposure vs volatile, plus impermanent-loss tag
- * - Verification — LI.FI flags ~9% of the fleet; a flagged vault is a
+ * - Verification — LI.FI flags ~10% of the fleet; a flagged vault is a
  *   near-disqualifying signal and is weighted accordingly
  * - Reward dependency — yield paid in token incentives can stop; yield from
  *   lending fees generally does not

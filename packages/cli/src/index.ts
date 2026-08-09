@@ -1092,7 +1092,7 @@ const forge = createEarnForge({
 export default async function Home() {
   const vaults = await forge.vaults.top({ asset: 'USDC', limit: 10 });
 
-  // LI.FI flags roughly 9% of vaults as suspect via an undocumented
+  // LI.FI flags roughly 10% of vaults as suspect via an undocumented
   // verificationStatus field. Showing them unlabelled is how a broken or
   // outlier vault ends up looking like a recommendation.
   const safe = vaults.filter((v) => !isFlagged(v)).slice(0, 5);

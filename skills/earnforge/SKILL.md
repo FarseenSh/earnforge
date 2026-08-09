@@ -4,7 +4,7 @@ description: >
   Discovers, compares, risk-scores, and builds unsigned deposit and withdrawal
   quotes for DeFi yield vaults across every chain indexed by the LI.FI Earn API.
   Surfaces LI.FI's undocumented verificationStatus signal, which flags roughly
-  9% of vaults as suspect. Includes ERC-20 allowance checking, a 0-10 composite
+  10% of vaults as suspect. Includes ERC-20 allowance checking, a 0-10 composite
   risk score, yield strategy presets, portfolio allocation, and 23 documented
   API pitfalls handled by default. Use when working with DeFi yield, vault APY,
   lending deposits, or the LI.FI Earn API.
@@ -141,7 +141,7 @@ All commands accept `--json` for machine-readable output.
    risk. Always show the score and its flags alongside APY.
 
 8. **Never recommend a verification-flagged vault without saying so.** LI.FI
-   flags roughly 9% of vaults — usually `zero_apy`, sometimes `apy_outlier`.
+   flags roughly 10% of vaults — usually `zero_apy`, sometimes `apy_outlier`.
    `earnforge risk` reports it. A flagged vault can never score >= 8, so it can
    never be low risk, and `suggest` excludes them by default.
 

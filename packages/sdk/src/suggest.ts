@@ -55,7 +55,7 @@ export function suggest(vaults: Vault[], params: SuggestParams): SuggestResult {
   candidates = candidates.filter((v) => v.isTransactional)
 
   // Never allocate real money into a vault LI.FI flagged as suspect. This is
-  // unconditional rather than strategy-driven: ~9% of the fleet is flagged, and
+  // unconditional rather than strategy-driven: ~10% of the fleet is flagged, and
   // a caller asking for an allocation has not asked to be handed one of them.
   // Opt back in explicitly with `includeFlagged`.
   if (!params.includeFlagged) {

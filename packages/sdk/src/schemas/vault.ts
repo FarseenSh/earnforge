@@ -68,8 +68,8 @@ export const PackSchema = z.object({
  *
  * LI.FI's OpenAPI spec, quickstart, and NormalizedVault docs all claim these
  * are decimals (`0.0534` = 5.34%) and all three are wrong — following their
- * quickstart's `* 100` yields a 100x overstatement. Verified against 711 live
- * vaults (Aug 4 2026): min 0, max 106.16, median 3.51.
+ * quickstart's `* 100` yields a 100x overstatement. Verified against 703 live
+ * vaults (9 Aug 2026): min 0, max 106.68, median 3.50.
  *
  * `base` is null on a small number of vaults. `reward` is genuinely
  * three-valued — null (unknown), 0 (no rewards), or a number — and the split
@@ -178,13 +178,13 @@ export const CapsSchema = z.object({
 
 /**
  * Vault schema — derived from live vaults, not from docs. Last re-verified
- * against 711 vaults on Aug 4 2026.
+ * against 703 vaults on 9 Aug 2026.
  *
  * Removed by LI.FI in the Apr 2026 rewrite: `provider`, `lpTokens`. Both were
  * required here and threw on every vault.
  *
  * Undocumented additions LI.FI never announced: `verificationStatus` and
- * `verificationStatusBreakdown`, present on every vault, flagging 9% of the
+ * `verificationStatusBreakdown`, present on every vault, flagging 10% of the
  * fleet. Absent from the OpenAPI spec entirely.
  *
  * Documented-but-nonexistent (`caps`, `timeLock`, `kyc`) are declared optional

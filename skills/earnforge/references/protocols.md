@@ -3,7 +3,7 @@
 Protocols with at least one indexed Earn vault. Generated from
 `GET https://earn.li.fi/v1/protocols`.
 
-27 protocols as of Aug 4, 2026.
+27 protocols as of Aug 9, 2026.
 
 **Read ids from the endpoint; never hardcode them.** Most are unversioned
 (`morpho`, not `morpho-v1`), but that is a convention rather than a rule —

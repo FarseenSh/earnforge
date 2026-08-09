@@ -142,7 +142,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'Search yield vaults across every chain LI.FI Earn indexes. THE primary ' +
         'tool for finding yield. APY values are percentages already (4.63 = ' +
         '4.63%) — do not multiply by 100. Each result carries a verification ' +
-        'block: LI.FI flags roughly 9% of vaults as suspect, and those should ' +
+        'block: LI.FI flags roughly 10% of vaults as suspect, and those should ' +
         'not be recommended without saying so.',
       inputSchema: z.object({
         chainId: z
@@ -577,7 +577,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'Suggest a portfolio allocation',
       description:
         'Split an amount across vaults using a risk-adjusted scoring engine. ' +
-        'Verification-flagged vaults are excluded by default — roughly 9% of the ' +
+        'Verification-flagged vaults are excluded by default — roughly 10% of the ' +
         'fleet — because a caller asking for an allocation has not asked to be ' +
         'handed a suspect vault.',
       inputSchema: z.object({

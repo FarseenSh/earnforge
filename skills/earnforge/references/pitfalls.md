@@ -1,6 +1,6 @@
 # LI.FI Earn API Pitfalls
 
-23 pitfalls, all verified against the live API on Aug 4, 2026 across 711 vaults.
+23 pitfalls, all verified against the live API on Aug 9, 2026 across 703 vaults.
 The SDK handles every one by default.
 
 **Two have inverted since they were first written** and one is obsolete — the API
@@ -23,13 +23,13 @@ LI.FI's API.
 | 12 | Wallet on the wrong chain | Transaction fails | `preflight()` chain comparison |
 | 13 | Vault is not transactional | Quote fails | `isTransactional` guard |
 | 14 | Rate limit is 100 req/min | 429 | Token bucket with async backpressure |
-| 15 | Empty `underlyingTokens` — **obsolete**, 0 of 711 vaults | Crash on `[0]` | Guard retained against a synthesised case |
-| 16 | `description` is optional (~18% of vaults have it) | undefined access | `.optional()` |
+| 15 | Empty `underlyingTokens` — **obsolete**, 0 of 703 vaults | Crash on `[0]` | Guard retained against a synthesised case |
+| 16 | `description` is optional (~23% of vaults have it) | undefined access | `.optional()` |
 | 17 | **`apy.reward` is three-valued**: null, 0, or positive | Lost signal if collapsed | null preserved; `getRewardApy()` coerces on request |
 | 18 | `apy.base` can also be null | Type error | Nullable |
 | 19 | **Stale protocol slugs return 200 with zero results** | Silent empty result set | Unversioned ids; existence checked against the live list |
 | 20 | **Unknown query params are silently dropped** | Filter fails open — returns everything | Correct param names pinned by test |
-| 21 | **`verificationStatus` is undocumented** but flags ~9% of vaults | Recommending a suspect vault | First-class risk dimension; excluded from `suggest` |
+| 21 | **`verificationStatus` is undocumented** but flags ~10% of vaults | Recommending a suspect vault | First-class risk dimension; excluded from `suggest` |
 | 22 | **The docs contradict the API** in six places | 100x APY error if you follow the spec | Schemas generated from live responses |
 | 23 | **Slug format changed** to `protocol:chainId:_:address` | Mis-parsed slugs and cursors | `parseVaultSlug()` accepts both forms |
 
@@ -45,10 +45,10 @@ that genuinely has no vaults. Never hardcode a slug — resolve via
 `earnforge protocols`.
 
 **An unknown query param is dropped, not rejected.** Sending `minTvl` instead of
-`minTvlUsd` returned all 711 vaults instead of 41 — a "$100M+ TVL" filter that
+`minTvlUsd` returned all 703 vaults instead of 39 — a "$100M+ TVL" filter that
 silently returns sub-$20k dust.
 
-**`verificationStatus` is documented nowhere** and flags 68 of 711 vaults, mostly
+**`verificationStatus` is documented nowhere** and flags 74 of 703 vaults, mostly
 for `zero_apy` and once for `apy_outlier`. Sort by APY without checking it and a
 flagged vault lands at the top of the list.
 

@@ -25,8 +25,8 @@ No other changes. It imports nothing.
 ## Provenance
 
 These are not transcribed from `earn-openapi.yaml`. They are derived from the
-live API and cross-checked against it — 711 vaults, 19 chains, 27 protocols, as
-of August 2026 — because the spec and the service disagree in several places.
+live API and cross-checked against it — 703 vaults, 17 chains, 27 protocols, as
+of 9 August 2026 — because the spec and the service disagree in several places.
 Each disagreement is documented inline at the field it affects, so the
 correction travels with the type rather than living in a changelog:
 
@@ -41,7 +41,7 @@ correction travels with the type rather than living in a changelog:
 Plus three behaviours that are in no spec at all:
 
 - **`verificationStatus`** — undocumented, present on every vault, set to
-  `flagged` on ~9% of them. It is LI.FI's own vault-quality signal.
+  `flagged` on ~10% of them. It is LI.FI's own vault-quality signal.
 - **`nextCursor`** is *absent* from the JSON on the final page rather than
   null, so it must be optional as well as nullable.
 - **`apy.reward` is three-valued** — `null` (unreported), `0` (reported as

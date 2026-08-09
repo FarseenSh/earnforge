@@ -18,7 +18,7 @@ import { createEarnForge, riskScore, isFlagged } from '@earnforge/sdk'
 const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY })
 
 for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
-  if (isFlagged(vault)) continue // LI.FI flagged ~9% of vaults as suspect
+  if (isFlagged(vault)) continue // LI.FI flagged ~10% of vaults as suspect
   const risk = riskScore(vault)
   console.log(vault.name, vault.analytics.apy.total, risk.label, risk.flags)
 }
@@ -30,7 +30,7 @@ handled for you.
 ## Why this exists
 
 The Earn API has a number of behaviours that are easy to get wrong, several of
-which contradict LI.FI's own documentation. Verified against 711 live vaults:
+which contradict LI.FI's own documentation. Verified against 703 live vaults (9 Aug 2026):
 
 | Behaviour | What bites you |
 |---|---|
@@ -41,7 +41,7 @@ which contradict LI.FI's own documentation. Verified against 711 live vaults:
 | **`nextCursor` is absent on the last page** | Not null, not empty. A nullable-only schema rejects the final page. |
 | **`apy.reward` is three-valued** | null / 0 / positive, and the split varies *within* a protocol. Collapsing null to 0 loses real signal. |
 | **Unknown query params are ignored** | Sending `minTvl` instead of `minTvlUsd` returns the whole fleet, silently unfiltered. |
-| **`verificationStatus` is undocumented** | Present on every vault, flags ~9% of the fleet. In no spec or changelog. |
+| **`verificationStatus` is undocumented** | Present on every vault, flags ~10% of the fleet. In no spec or changelog. |
 | **`caps`, `timeLock`, `kyc`, `lpTokens`** | Documented in the OpenAPI spec; sent by zero vaults. |
 
 ## What's in it

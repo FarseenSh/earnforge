@@ -197,7 +197,7 @@ describe('Live API — Vault List', () => {
   })
 
   it('flags a meaningful minority of vaults', async () => {
-    // Around 9% of the fleet is flagged. If this hits zero, either LI.FI stopped
+    // Around 10% of the fleet is flagged. If this hits zero, either LI.FI stopped
     // emitting the field or we stopped reading it — both worth knowing.
     const page = await client.listVaults({ limit: 100 })
     const flagged = page.data.filter(isFlagged)

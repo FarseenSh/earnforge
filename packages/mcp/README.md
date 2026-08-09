@@ -118,7 +118,7 @@ out of a text block and guess at.
 `destructiveHint: false`, so a host can auto-approve them instead of prompting on
 every call.
 
-**`verificationStatus` is surfaced.** LI.FI flags roughly 9% of vaults as suspect
+**`verificationStatus` is surfaced.** LI.FI flags roughly 10% of vaults as suspect
 through a field that appears in no spec or changelog — and their own MCP server
 does not expose it. Every vault result here carries the status and its reasons,
 flagged vaults are excluded from allocations by default, and a flagged vault can
