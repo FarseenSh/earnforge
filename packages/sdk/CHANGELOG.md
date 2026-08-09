@@ -1,5 +1,23 @@
 # @earnforge/sdk
 
+## 1.0.5
+
+### Patch Changes
+
+- **Documented live-fleet figures re-measured.** LI.FI de-indexed every vault on
+  Unichain (130) and Scroll (534352), so `/v1/chains` dropped from 19 to 17 and
+  the fleet fell 711 -> 703. No code changed; the numbers quoted in the README
+  and in the schema and risk-scorer rationales did.
+
+  The staleness comment was the one worth fixing. It justified the six-hour
+  threshold by claiming it isolates "roughly 2% of the fleet" — that is now
+  12.7%. The threshold still separates a stalled pipeline from the hourly batch,
+  but the comment no longer understates how much it catches.
+
+  Also corrected: flagged share ~9% -> ~10% (74 of 703), vaults yielding under
+  1% 161 -> 165, vaults over $100M TVL 41 -> 39, APY max 106.16 -> 106.68,
+  median 3.51 -> 3.50, and the refresh-batch cluster 588 of 711 -> 338 of 703.
+
 ## 1.0.4
 
 ### Patch Changes

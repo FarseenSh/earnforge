@@ -1,5 +1,17 @@
 # @earnforge/mcp
 
+## 1.0.5
+
+### Patch Changes
+
+- **The embedded skill bundle listed two dead chains.** `references/chains.md`
+  is compiled into the server at build time, and the copy shipped in 1.0.4 still
+  carried Unichain (130) and Scroll (534352) — LI.FI has since de-indexed every
+  vault on both, so each returns zero. An agent reading the bundle could route
+  to a chain with nothing on it. Regenerated: 17 chains, 703 vaults.
+- Tool descriptions quote the corrected flagged share (~10%, up from ~9%).
+- Picks up `@earnforge/sdk` 1.0.5.
+
 ## 1.0.4
 
 ### Patch Changes

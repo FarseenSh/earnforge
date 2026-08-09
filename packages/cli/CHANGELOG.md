@@ -1,5 +1,13 @@
 # @earnforge/cli
 
+## 1.0.5
+
+### Patch Changes
+
+- README quotes the corrected flagged share (~10% of the fleet, up from ~9%)
+  after LI.FI de-indexed Unichain and Scroll and the fleet moved 711 -> 703.
+- Picks up `@earnforge/sdk` 1.0.5.
+
 ## 1.0.4
 
 ### Patch Changes

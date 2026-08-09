@@ -1,5 +1,17 @@
 # @earnforge/skill
 
+## 1.0.4
+
+### Patch Changes
+
+- **`references/chains.md` listed Unichain and Scroll after LI.FI de-indexed
+  them.** Both return zero vaults now, and `/v1/chains` no longer reports them,
+  so the shipped table named two chains an agent could not use. Regenerated
+  from live: 17 chains, 27 protocols unchanged.
+- `references/pitfalls.md` re-measured against 703 vaults: `verificationStatus`
+  flags 74 (~10%, up from 68/~9%), the `minTvl` fail-open example returns 703
+  instead of 39, and `description` is present on ~23% of vaults rather than 18%.
+
 ## 1.0.3
 
 ### Patch Changes
