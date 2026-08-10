@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { assertAddress, encodeAddressArg } from './address.js'
+
 /**
  * ERC-20 allowance checking and approval transaction building.
  *
@@ -42,8 +44,8 @@ export async function checkAllowance(
   requiredAmount: bigint
 ): Promise<AllowanceResult> {
   // Encode allowance(owner, spender) call
-  const ownerPadded = owner.slice(2).toLowerCase().padStart(64, '0')
-  const spenderPadded = spender.slice(2).toLowerCase().padStart(64, '0')
+  const ownerPadded = encodeAddressArg(owner, 'owner')
+  const spenderPadded = encodeAddressArg(spender, 'spender')
   const calldata = `${ALLOWANCE_SELECTOR}${ownerPadded}${spenderPadded}`
 
   const res = await globalThis.fetch(rpcUrl, {
@@ -87,7 +89,8 @@ export function buildApprovalTx(
   amount: bigint,
   chainId: number
 ): ApprovalTx {
-  const spenderPadded = spender.slice(2).toLowerCase().padStart(64, '0')
+  assertAddress(tokenAddress, 'token')
+  const spenderPadded = encodeAddressArg(spender, 'spender')
   const amountHex = amount.toString(16).padStart(64, '0')
   const data = `${APPROVE_SELECTOR}${spenderPadded}${amountHex}`
 

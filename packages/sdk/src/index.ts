@@ -10,6 +10,7 @@ export {
   LIQUIDATION_THRESHOLD,
   projectBorrow,
 } from './aave-lifecycle.js'
+export { assertAddress, encodeAddressArg } from './address.js'
 export {
   type AllowanceResult,
   type ApprovalTx,

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+
+import { assertAddress, encodeAddressArg } from './address.js'
 import { EarnForgeError } from './errors.js'
 
 /**
@@ -81,7 +83,8 @@ export async function getAaveAccountData(
   poolAddress: string,
   user: string
 ): Promise<AaveAccountData> {
-  const userPadded = user.slice(2).toLowerCase().padStart(64, '0')
+  assertAddress(poolAddress, 'pool')
+  const userPadded = encodeAddressArg(user, 'user')
   const calldata = `${USER_ACCOUNT_DATA_SELECTOR}${userPadded}`
 
   const res = await globalThis.fetch(rpcUrl, {

@@ -661,10 +661,29 @@ program
     'Spender address (from quote.estimate.approvalAddress)'
   )
   .requiredOption('--chain <id>', 'Chain ID', parseInt)
-  .option('--amount <raw>', 'Amount to approve (default: unlimited)')
+  .option('--amount <raw>', 'Exact amount to approve, in the smallest unit')
+  .option('--unlimited', 'Approve MaxUint256 instead of an exact amount', false)
   .option('--json', 'Output as JSON', false)
   .action(async (opts) => {
-    const amount = opts.amount ? BigInt(opts.amount) : MAX_UINT256
+    // Unlimited used to be what you got by omitting `--amount`, which made the
+    // most-exploited approval pattern in DeFi the quiet default of a tool whose
+    // entire pitch is catching foot-guns. It is still one flag away; it is just
+    // no longer something you can pick by accident.
+    if (!opts.amount && !opts.unlimited) {
+      console.error(
+        chalk.red('Specify an amount to approve.') +
+          '\n  --amount <raw>  exact amount in the smallest unit ' +
+          chalk.dim('(from quote.estimate.approvalAddress flows)') +
+          '\n  --unlimited     approve MaxUint256' +
+          chalk.dim(
+            '\n\nAn unlimited allowance stays live after the deposit — the spender can move\nthat token from your wallet until you revoke it.'
+          )
+      )
+      process.exitCode = 1
+      return
+    }
+
+    const amount = opts.unlimited ? MAX_UINT256 : BigInt(opts.amount)
     const tx = buildApprovalTx(opts.token, opts.spender, amount, opts.chain)
 
     outputResult(tx, opts.json, () => {

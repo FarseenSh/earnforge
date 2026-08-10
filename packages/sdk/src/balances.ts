@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { encodeAddressArg } from './address.js'
+
 /**
  * Native and ERC-20 balance reads.
  *
@@ -115,8 +117,7 @@ export async function fetchWalletBalances(
     return { native, token: native }
   }
 
-  const data =
-    BALANCE_OF_SELECTOR + wallet.slice(2).toLowerCase().padStart(64, '0')
+  const data = BALANCE_OF_SELECTOR + encodeAddressArg(wallet, 'wallet')
   const raw = await rpc(rpcUrl, 'eth_call', [
     { to: tokenAddress, data },
     'latest',
