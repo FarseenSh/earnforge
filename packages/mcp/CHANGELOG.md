@@ -1,5 +1,18 @@
 # @earnforge/mcp
 
+## 1.0.6
+
+### Patch Changes
+
+- **Starting without `LIFI_API_KEY` reported "Internal server error".**
+  `serveStdio` builds the server lazily per connection, so the SDK's
+  `MissingApiKeyError` was raised inside the framework's `initialize` handler
+  and came back as `{"code":-32603,"message":"Internal server error"}` — no
+  mention of a key, on the single most likely first-run mistake. The key is
+  checked before serving now, and the process exits 1 with the client config to
+  copy and a pointer to the hosted server, which needs no key of your own.
+- Picks up `@earnforge/sdk` 1.0.6.
+
 ## 1.0.5
 
 ### Patch Changes

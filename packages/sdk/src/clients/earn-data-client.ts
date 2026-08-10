@@ -108,10 +108,16 @@ export class EarnDataClient {
         ? process.env?.LIFI_API_KEY
         : undefined) ??
       ''
-    if (!key) {
+    // Trimmed: a whitespace-only value is what a mis-parsed `.env` line or a
+    // copy-paste with a stray newline produces. Untrimmed it passed this guard,
+    // constructed fine, and failed later as a 401 — which the Earn API applies
+    // inconsistently, so it surfaced as an intermittent failure rather than a
+    // clear "your key is wrong".
+    const trimmed = key.trim()
+    if (!trimmed) {
       throw new MissingApiKeyError()
     }
-    this.apiKey = key
+    this.apiKey = trimmed
     this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
     this.cache = new LRUCache(options.cache)
     this.rateLimiter = new TokenBucketRateLimiter(

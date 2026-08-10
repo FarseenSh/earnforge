@@ -27,6 +27,35 @@ const isMain =
   entrypoint.endsWith('earnforge-mcp')
 
 if (isMain) {
+  /**
+   * Check the key before serving, not while handling a request.
+   *
+   * `serveStdio` calls the factory lazily, per connection, so a
+   * `MissingApiKeyError` from `createServer()` was thrown inside the framework's
+   * `initialize` handler rather than here. The catch below never saw it and the
+   * client received `{"code":-32603,"message":"Internal server error"}` — no
+   * mention of a key, on the single most likely first-run mistake. The SDK's own
+   * message is good; it just never reached anyone.
+   */
+  if (!process.env.LIFI_API_KEY?.trim()) {
+    console.error(
+      'EarnForge MCP: LIFI_API_KEY is not set.\n' +
+        '\n' +
+        'The LI.FI Earn Data API requires a key. Create one at https://portal.li.fi\n' +
+        'then pass it through your MCP client config:\n' +
+        '\n' +
+        '  "earnforge": {\n' +
+        '    "command": "npx",\n' +
+        '    "args": ["-y", "@earnforge/mcp"],\n' +
+        '    "env": { "LIFI_API_KEY": "your-key" }\n' +
+        '  }\n' +
+        '\n' +
+        'Or use the hosted server, which needs no key of your own:\n' +
+        '  https://earnforge-mcp.papermind-ai.workers.dev/mcp\n'
+    )
+    process.exit(1)
+  }
+
   try {
     main()
   } catch (err) {

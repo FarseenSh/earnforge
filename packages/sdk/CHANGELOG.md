@@ -1,5 +1,17 @@
 # @earnforge/sdk
 
+## 1.0.6
+
+### Patch Changes
+
+- **A whitespace-only API key no longer constructs.** `"   "`, a stray newline
+  from a copy-paste, or a mis-parsed `.env` line passed the guard, built a
+  client, and failed later as a 401. Because the Earn API validates keys
+  inconsistently, that surfaced as an intermittent fault rather than "your key
+  is wrong". The key is trimmed now, an empty result throws
+  `MissingApiKeyError` exactly as an absent one does, and a padded but real key
+  is trimmed rather than rejected.
+
 ## 1.0.5
 
 ### Patch Changes

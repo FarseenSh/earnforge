@@ -42,6 +42,27 @@ describe('Pitfall #2: Earn Data API requires auth (inverted Apr 2026)', () => {
     })
   })
 
+  it('rejects a whitespace-only key the same as an absent one', () => {
+    // What a mis-parsed `.env` line or a paste with a trailing newline yields.
+    // Untrimmed this passed the guard and constructed, then failed later as a
+    // 401 — and since the Earn API validates keys inconsistently, that surfaced
+    // as an intermittent fault rather than "your key is wrong".
+    withoutEnvKey(() => {
+      for (const blank of ['   ', '\n', '\t ', ' \r\n']) {
+        expect(() => new EarnDataClient({ apiKey: blank })).toThrow(
+          MissingApiKeyError
+        )
+      }
+    })
+  })
+
+  it('trims a padded key rather than sending the padding', () => {
+    withoutEnvKey(() => {
+      const client = new EarnDataClient({ apiKey: '  real-looking-key\n' })
+      expect(client).toBeInstanceOf(EarnDataClient)
+    })
+  })
+
   it('fails fast at construction rather than at first request', () => {
     // A late 401 from deep inside a paginated walk is much harder to diagnose
     // than a constructor throw, so the key is validated up front.
