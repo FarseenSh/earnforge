@@ -9,6 +9,8 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "verify": "pnpm turbo build && pnpm turbo typecheck && pnpm check && pnpm turbo test",
+    "verify:live": "pnpm --filter @earnforge/sdk test:live && pnpm --filter @earnforge/sdk drift",
     "build": "turbo run build",
     "check": "biome check .",
     "check:fix": "biome check --fix .",
