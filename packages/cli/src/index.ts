@@ -15,7 +15,7 @@ import {
 } from '@earnforge/sdk'
 import chalk from 'chalk'
 import { Command } from 'commander'
-import ora from 'ora'
+import ora, { type Ora } from 'ora'
 import pkg from '../package.json' with { type: 'json' }
 import {
   type DoctorCheck,
@@ -104,6 +104,19 @@ function validateStrategy(s: string): StrategyPreset {
     )
   }
   return s as StrategyPreset
+}
+
+/**
+ * Report a failed command: stop the spinner, print the message, set exit 1.
+ *
+ * Sixteen commands each carried this same three-line catch body. The message
+ * differs; the handling never did, and one copy quietly omitting the exit code
+ * would make a failing command look successful to any script calling it.
+ */
+function fail(spinner: Ora, label: string, err: unknown): void {
+  spinner.fail(label)
+  console.error(chalk.red(err instanceof Error ? err.message : String(err)))
+  process.exitCode = 1
 }
 
 // ── Program ──
@@ -201,9 +214,7 @@ program
         }
       )
     } catch (err) {
-      spinner.fail('Failed to fetch vaults')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch vaults', err)
     }
   })
 
@@ -246,9 +257,7 @@ program
         }
       )
     } catch (err) {
-      spinner.fail('Failed to fetch top vaults')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch top vaults', err)
     }
   })
 
@@ -268,9 +277,7 @@ program
 
       outputResult(vault, opts.json, () => vaultDetail(vault))
     } catch (err) {
-      spinner.fail('Failed to fetch vault')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch vault', err)
     }
   })
 
@@ -319,9 +326,7 @@ program
         }
       )
     } catch (err) {
-      spinner.fail('Failed to compare vaults')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to compare vaults', err)
     }
   })
 
@@ -350,9 +355,7 @@ program
         return `${chalk.bold('Portfolio')}\n\n${portfolioTable(portfolio.positions)}\n\n${chalk.dim(`Total: ${fmtUsd(totalUsd)}`)}`
       })
     } catch (err) {
-      spinner.fail('Failed to fetch portfolio')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch portfolio', err)
     }
   })
 
@@ -491,9 +494,7 @@ program
         )
       }
     } catch (err) {
-      spinner.fail('Failed to build quote')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to build quote', err)
     }
   })
 
@@ -570,9 +571,7 @@ program
         }
       )
     } catch (err) {
-      spinner.fail('Failed to build redeem quote')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to build redeem quote', err)
     }
   })
 
@@ -644,9 +643,7 @@ program
         ].join('\n')
       })
     } catch (err) {
-      spinner.fail('Failed to check allowance')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to check allowance', err)
     }
   })
 
@@ -735,9 +732,7 @@ program
         }
       )
     } catch (err) {
-      spinner.fail('Failed to fetch APY history')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch APY history', err)
     }
   })
 
@@ -805,9 +800,7 @@ program
         () => preflightTable(report)
       )
     } catch (err) {
-      spinner.fail('Preflight failed')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Preflight failed', err)
     }
   })
 
@@ -846,9 +839,7 @@ program
         formatDoctorReport(report, vault.name)
       )
     } catch (err) {
-      spinner.fail('Doctor failed')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Doctor failed', err)
     }
   })
 
@@ -874,9 +865,7 @@ program
           `${chalk.bold(`Risk Score — ${vault.name}`)}\n\n${riskTable(risk)}`
       )
     } catch (err) {
-      spinner.fail('Failed to calculate risk')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to calculate risk', err)
     }
   })
 
@@ -941,9 +930,7 @@ program
         }
       )
     } catch (err) {
-      spinner.fail('Failed to generate suggestions')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to generate suggestions', err)
     }
   })
 
@@ -1037,9 +1024,7 @@ program
         () => `${chalk.bold('Supported Chains')}\n\n${chainTable(chains)}`
       )
     } catch (err) {
-      spinner.fail('Failed to fetch chains')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch chains', err)
     }
   })
 
@@ -1063,9 +1048,7 @@ program
           `${chalk.bold('Supported Protocols')}\n\n${protocolTable(protocols)}`
       )
     } catch (err) {
-      spinner.fail('Failed to fetch protocols')
-      console.error(chalk.red(err instanceof Error ? err.message : String(err)))
-      process.exitCode = 1
+      fail(spinner, 'Failed to fetch protocols', err)
     }
   })
 
