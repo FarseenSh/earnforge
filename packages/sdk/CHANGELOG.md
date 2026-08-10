@@ -1,5 +1,27 @@
 # @earnforge/sdk
 
+## 1.0.7
+
+### Minor Changes
+
+- **`fetchWalletBalances()` and `defaultRpcUrl()`.** `preflight()` is pure and
+  skips the gas and token checks when balances are not supplied — right for a
+  browser caller that already has them from wagmi, wrong for any caller with no
+  wallet connection, which got `ok: true` for a wallet holding nothing. These
+  supply the missing inputs over raw JSON-RPC, with no viem dependency.
+
+  `defaultRpcUrl()` covers 16 of the 17 Earn chains. Each URL was verified by
+  calling `eth_chainId` and confirming the reply matched. Robinhood Chain (4663)
+  returns `undefined` rather than a guess, so callers can ask for an explicit
+  RPC instead of failing on a DNS error.
+
+### Patch Changes
+
+- **`PreflightReport.skipped` names the checks that did not run.** `ok: true`
+  meant "nothing I could check failed", which is indistinguishable from "safe to
+  deposit" unless the report says which checks it managed to perform. Required
+  rather than optional, so a caller cannot omit it by accident.
+
 ## 1.0.6
 
 ### Patch Changes

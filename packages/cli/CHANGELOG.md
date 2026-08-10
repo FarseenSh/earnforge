@@ -1,5 +1,22 @@
 # @earnforge/cli
 
+## 1.0.6
+
+### Patch Changes
+
+- **`preflight` approved wallets it never checked.** It called the SDK's
+  `preflight()` without balances, so the gas and token-balance checks silently
+  did not run and every wallet came back `ok: true` — including one with no gas
+  and no tokens, and a request to deposit 1,000,000 USDC against a balance of
+  30. It reads balances itself now (override with `--rpc`, disable with
+  `--no-balances`), and the JSON output carries `skipped` so a caller can tell
+  "all checks passed" from "some checks did not run".
+- **`allowance` never worked without `--rpc`.** The default RPC was
+  `https://rpc.li.fi/v1/chain/{id}`, a host with no DNS record, so the command
+  failed with a bare "fetch failed". It now uses verified public endpoints, and
+  says which flag to pass for the one Earn chain that has none.
+- Picks up `@earnforge/sdk` 1.0.7.
+
 ## 1.0.5
 
 ### Patch Changes
