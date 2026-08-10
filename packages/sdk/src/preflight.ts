@@ -7,8 +7,27 @@ import type { Vault } from './schemas/index.js'
 export interface PreflightReport {
   ok: boolean
   issues: PreflightIssue[]
+  /**
+   * Checks that could not run because their input was not supplied.
+   *
+   * Balance and chain checks need on-chain reads this function deliberately
+   * does not perform — it stays pure so callers can supply values from wagmi,
+   * viem, a cache, or a test. The cost is that `ok: true` on its own is
+   * ambiguous: it means "nothing I could check failed", not "safe to deposit".
+   * A caller that omits every balance got a clean report for a wallet with no
+   * gas and no tokens, which is the exact false-green this library exists to
+   * prevent. Naming the gaps makes the difference visible without forcing a
+   * network call into a pure function.
+   */
+  skipped: PreflightSkippedCheck[]
   vault: Vault
   wallet: string
+}
+
+/** A check that was not performed, and the input that would enable it. */
+export interface PreflightSkippedCheck {
+  code: 'GAS_BALANCE' | 'TOKEN_BALANCE' | 'CHAIN_MATCH'
+  needs: string
 }
 
 export interface PreflightOptions {
@@ -103,9 +122,30 @@ export function preflight(
     })
   }
 
+  const skipped: PreflightSkippedCheck[] = []
+  if (options.nativeBalance === undefined) {
+    skipped.push({ code: 'GAS_BALANCE', needs: 'nativeBalance' })
+  }
+  if (
+    options.tokenBalance === undefined ||
+    options.depositAmount === undefined
+  ) {
+    skipped.push({
+      code: 'TOKEN_BALANCE',
+      needs:
+        options.depositAmount === undefined
+          ? 'tokenBalance and depositAmount'
+          : 'tokenBalance',
+    })
+  }
+  if (options.walletChainId === undefined) {
+    skipped.push({ code: 'CHAIN_MATCH', needs: 'walletChainId' })
+  }
+
   return {
     ok: issues.filter((i) => i.severity === 'error').length === 0,
     issues,
+    skipped,
     vault,
     wallet,
   }

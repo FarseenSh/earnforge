@@ -19,6 +19,11 @@ export {
 } from './allowance.js'
 export { type ApyDataPoint, getApyHistory } from './apy-history.js'
 export {
+  defaultRpcUrl,
+  fetchWalletBalances,
+  type WalletBalances,
+} from './balances.js'
+export {
   buildDepositQuote,
   type DepositQuoteOptions,
   type DepositQuoteResult,
@@ -57,6 +62,7 @@ export {
 export {
   type PreflightOptions,
   type PreflightReport,
+  type PreflightSkippedCheck,
   preflight,
 } from './preflight.js'
 export * from './rate-limiter.js'

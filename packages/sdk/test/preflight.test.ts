@@ -7,6 +7,47 @@ import { type Vault, VaultSchema } from '../src/schemas/index.js'
 const vault = VaultSchema.parse(vaultSingle)
 const wallet = '0x1234567890abcdef1234567890abcdef12345678'
 
+describe('preflight — what did not get checked', () => {
+  /**
+   * `ok: true` with no balances supplied means "nothing I could check failed",
+   * which is not the same as "safe to deposit". The CLI called this with no
+   * balances at all and printed a clean report for a wallet holding no gas and
+   * no tokens — a false green in the one command whose entire job is to catch
+   * that. The report names its own gaps now, so a caller can tell the two
+   * states apart.
+   */
+  it('reports every check it could not run', () => {
+    const report = preflight(vault, wallet)
+    const codes = report.skipped.map((s) => s.code)
+    expect(codes).toContain('GAS_BALANCE')
+    expect(codes).toContain('TOKEN_BALANCE')
+    expect(codes).toContain('CHAIN_MATCH')
+    // Still `ok` — it found no failures. That is precisely why `skipped` has
+    // to be there for the caller to read.
+    expect(report.ok).toBe(true)
+  })
+
+  it('reports nothing skipped once every input is supplied', () => {
+    const report = preflight(vault, wallet, {
+      walletChainId: vault.chainId,
+      nativeBalance: 10n ** 17n,
+      tokenBalance: 10n ** 12n,
+      depositAmount: '1',
+    })
+    expect(report.skipped).toEqual([])
+  })
+
+  it('still names the token check when only the amount is missing', () => {
+    const report = preflight(vault, wallet, {
+      walletChainId: vault.chainId,
+      nativeBalance: 10n ** 17n,
+      tokenBalance: 10n ** 12n,
+    })
+    const token = report.skipped.find((s) => s.code === 'TOKEN_BALANCE')
+    expect(token?.needs).toContain('depositAmount')
+  })
+})
+
 describe('preflight', () => {
   it('passes for a healthy vault + wallet setup', () => {
     const report = preflight(vault, wallet, {

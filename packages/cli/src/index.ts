@@ -5,7 +5,9 @@ import {
   checkAllowance,
   createComposerFlows,
   createEarnForge,
+  defaultRpcUrl,
   type EarnForge,
+  fetchWalletBalances,
   MAX_UINT256,
   parseTvl,
   type StrategyPreset,
@@ -592,7 +594,13 @@ program
   .action(async (opts) => {
     const spinner = ora('Checking allowance...').start()
     try {
-      const rpcUrl = opts.rpc ?? `https://rpc.li.fi/v1/chain/${opts.chain}`
+      const rpcUrl = opts.rpc ?? defaultRpcUrl(opts.chain)
+      if (!rpcUrl) {
+        spinner.fail(`No default RPC known for chain ${opts.chain}`)
+        console.error(chalk.red('  Pass one with --rpc <url>.'))
+        process.exitCode = 1
+        return
+      }
       const result = await checkAllowance(
         rpcUrl,
         opts.token,
@@ -724,16 +732,45 @@ program
   .option('--amount <human>', 'Deposit amount (human-readable)')
   .option('--wallet-chain <id>', 'Wallet current chain ID', parseInt)
   .option('--cross-chain', 'Flag cross-chain deposit intent', false)
+  .option('--rpc <url>', 'Custom RPC URL for balance reads')
+  .option('--no-balances', 'Skip on-chain balance reads')
   .option('--json', 'Output as JSON', false)
   .action(async (opts) => {
     const spinner = ora('Running preflight checks...').start()
     try {
       const forge = getForge()
       const vault = await forge.vaults.get(opts.vault)
+
+      // Without these the gas and token-balance checks silently do not run, and
+      // the command answers `ok: true` for a wallet holding neither. It has no
+      // wallet connection to read from, so it reads them itself.
+      let nativeBalance: bigint | undefined
+      let tokenBalance: bigint | undefined
+      const rpcUrl = opts.rpc ?? defaultRpcUrl(vault.chainId)
+      if (opts.balances !== false && rpcUrl) {
+        try {
+          const balances = await fetchWalletBalances(
+            rpcUrl,
+            opts.wallet,
+            vault.underlyingTokens[0]?.address
+          )
+          nativeBalance = balances.native
+          tokenBalance = balances.token
+        } catch (err) {
+          // A dead RPC must not masquerade as a passing check.
+          spinner.warn(
+            `Balance reads failed (${err instanceof Error ? err.message : String(err)}) — gas and balance checks skipped`
+          )
+        }
+      }
+
       const report = forge.preflight(vault, opts.wallet, {
         walletChainId: opts.walletChain,
         depositAmount: opts.amount,
         crossChain: opts.crossChain,
+        nativeBalance,
+        tokenBalance,
+        tokenDecimals: vault.underlyingTokens[0]?.decimals,
       })
       spinner.stop()
 
@@ -743,6 +780,7 @@ program
           vault: vault.slug,
           wallet: opts.wallet,
           issues: report.issues,
+          skipped: report.skipped,
         },
         opts.json,
         () => preflightTable(report)

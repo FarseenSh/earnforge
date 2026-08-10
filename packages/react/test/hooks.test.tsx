@@ -184,6 +184,10 @@ function createMockSdk(overrides: Partial<EarnForge> = {}): EarnForge {
     preflight: vi.fn<() => PreflightReport>().mockReturnValue({
       ok: true,
       issues: [],
+      // A browser caller has balances from wagmi, so the realistic mock is one
+      // where nothing was skipped. The field is required precisely so a caller
+      // cannot forget that `ok` alone does not mean every check ran.
+      skipped: [],
       vault: makeVault(),
       wallet: '0xWALLET',
     }),
