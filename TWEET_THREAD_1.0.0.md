@@ -18,7 +18,7 @@ A TypeScript toolkit for the LI.FI Earn API — the layer that tells you *which*
 vault to pick, not just which ones exist.
 
 SDK · CLI · React hooks · MCP server · Agent Skill
-588 tests, all green.
+600+ tests. Every pitfall has a regression test.
 
 npm i @earnforge/sdk
 
@@ -238,7 +238,7 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 ```
 
 
-703 vaults · 17 chains · 27 protocols · 74 flagged · 588 mocked tests · 34 live
+703 vaults · 17 chains · 27 protocols · 74 flagged · 610 mocked tests · 34 live
 scores 4.10–9.70 · sdk 1.1.0 · cli 1.1.0 · react 1.0.1 · mcp 1.0.6 · skill 1.0.4
 
 USP (pendle:1:_:0xc83f...86cb) — 106.68% total / 14.33% base / 92.35% reward,
