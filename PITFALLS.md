@@ -48,8 +48,21 @@ what it did.
 
 This used to read *"don't send auth to the Earn Data API"*, because the endpoint
 was public. It is now the opposite: `earn.li.fi` returns `401` without an
-`x-lifi-api-key` header. Both an empty key and a garbage key are rejected, so the
-header is genuinely validated rather than merely required.
+`x-lifi-api-key` header. A missing header and an empty one are refused on every
+request measured.
+
+**A garbage key is not.** This section previously claimed one was, and that is no
+longer true. Measured 10 Aug 2026, an invalid key was *accepted* on 9 of 15
+requests to `/v1/chains` — returning real data — and `/v1/vaults` behaved the
+same way. Presence of the header is enforced consistently; validity is checked
+on only some fraction of requests, which looks like part of the fleet behind the
+load balancer not validating.
+
+Do not build anything on the assumption that a bad key fails fast. It fails
+roughly half the time, which is worse than either extreme: a key rotated out or
+mistyped will appear to work until it intermittently doesn't. The live suite
+asserts only that validation still happens *at all*, because asserting `401`
+failed ~60% of runs and read like a bug in EarnForge.
 
 The trap is that LI.FI's API reference still states *"All LI.FI APIs do not
 require API key. API key is only needed for higher rate limits."* That remains
