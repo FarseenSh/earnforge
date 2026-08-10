@@ -46,7 +46,7 @@ if (!ENV_KEY || ENV_KEY === PLACEHOLDER_KEY) {
       ENV_KEY === PLACEHOLDER_KEY ? " (found test/setup.ts's placeholder)" : ''
     }. Every live test would fail with a 401 that looks like an API outage.\n` +
       'Run:  LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live\n' +
-      'Or from the repo root:  set -a && . ./.env && set +a && pnpm --filter @earnforge/sdk test:live',
+      'Or from the repo root:  set -a && . ./.env && set +a && pnpm --filter @earnforge/sdk test:live'
   )
 }
 
@@ -78,8 +78,8 @@ describe('Live API — Auth', () => {
       Array.from({ length: 6 }, () =>
         fetch('https://earn.li.fi/v1/chains', {
           headers: { 'x-lifi-api-key': 'not-a-real-key' },
-        }).then((r) => r.status),
-      ),
+        }).then((r) => r.status)
+      )
     )
 
     expect(statuses.some((s) => s === 401)).toBe(true)
