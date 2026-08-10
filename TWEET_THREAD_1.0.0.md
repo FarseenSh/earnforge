@@ -239,7 +239,7 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 
 
 703 vaults · 17 chains · 27 protocols · 74 flagged · 588 mocked tests · 34 live
-scores 4.10–9.70 · sdk 1.0.7 · cli 1.0.6 · react 1.0.1 · mcp 1.0.6 · skill 1.0.4
+scores 4.10–9.70 · sdk 1.1.0 · cli 1.1.0 · react 1.0.1 · mcp 1.0.6 · skill 1.0.4
 
 USP (pendle:1:_:0xc83f...86cb) — 106.68% total / 14.33% base / 92.35% reward,
 rank 1 of 703 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.

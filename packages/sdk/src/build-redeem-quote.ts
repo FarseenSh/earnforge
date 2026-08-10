@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { toSmallestUnit } from './build-deposit-quote.js'
+import { toSmallestUnitNonZero } from './build-deposit-quote.js'
 import type { ComposerClient, QuoteParams } from './clients/index.js'
 import { EarnForgeError } from './errors.js'
 import type { QuoteResponse, Vault } from './schemas/index.js'
@@ -54,7 +54,7 @@ export async function buildRedeemQuote(
 
   // Vault share tokens typically use 18 decimals (confirmed from Composer quote fixture)
   const vaultDecimals = 18
-  const rawAmount = toSmallestUnit(options.fromAmount, vaultDecimals)
+  const rawAmount = toSmallestUnitNonZero(options.fromAmount, vaultDecimals)
 
   // Determine destination token: explicit or first underlying
   const toToken = options.toToken ?? vault.underlyingTokens[0]?.address

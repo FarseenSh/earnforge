@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { toSmallestUnit } from './build-deposit-quote.js'
+import { toSmallestUnitNonZero } from './build-deposit-quote.js'
 import type { ComposerClient } from './clients/index.js'
 import type { QuoteResponse, Vault } from './schemas/index.js'
 
@@ -56,7 +56,7 @@ export async function optimizeGasRoutes(
 ): Promise<GasRoute[]> {
   const fromChains = options.fromChains ?? [vault.chainId]
   const decimals = vault.underlyingTokens[0]?.decimals ?? 18
-  const rawAmount = toSmallestUnit(options.fromAmount, decimals)
+  const rawAmount = toSmallestUnitNonZero(options.fromAmount, decimals)
 
   const defaultFromToken =
     options.fromToken ?? vault.underlyingTokens[0]?.address

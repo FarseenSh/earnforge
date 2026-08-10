@@ -1,5 +1,26 @@
 # @earnforge/cli
 
+## 1.1.0
+
+### Minor Changes
+
+- **`approve` no longer defaults to an unlimited allowance.** Omitting
+  `--amount` gave you `MaxUint256`, making the most-exploited approval pattern
+  in DeFi the quiet default of a tool whose pitch is catching foot-guns. It now
+  requires `--amount <raw>` or an explicit `--unlimited`, and says what an
+  unlimited allowance leaves behind. **Breaking for scripts that relied on the
+  old default** — add `--unlimited` to keep the previous behaviour.
+- Malformed `--token` / `--spender` values are rejected rather than encoded into
+  an approval for a different address. See `@earnforge/sdk` 1.1.0.
+- Amounts below one unit of the token fail locally, naming the smallest amount
+  it can express, instead of returning Composer's schema error.
+
+### Patch Changes
+
+- Sixteen commands each carried an identical catch body; one shared handler
+  replaces them, so a failing command cannot lose its exit code in a copy.
+- Picks up `@earnforge/sdk` 1.1.0.
+
 ## 1.0.6
 
 ### Patch Changes

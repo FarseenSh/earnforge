@@ -6,6 +6,7 @@ import quoteComposer from '../../fixtures/src/quote-composer.json'
 import vaultFlagged from '../../fixtures/src/vault-flagged.json'
 import vaultSingle from '../../fixtures/src/vault-single.json'
 import vaultsBase from '../../fixtures/src/vaults-base.json'
+import { toSmallestUnitNonZero } from '../src/build-deposit-quote.js'
 import {
   AnalyticsSchema,
   ApySchema,
@@ -303,5 +304,33 @@ describe('Edge cases from real fixtures', () => {
     for (const v of withReward) {
       expect(Array.isArray(v.rewardTokens)).toBe(true)
     }
+  })
+})
+
+describe('toSmallestUnitNonZero', () => {
+  /**
+   * `toSmallestUnit` truncates, so any amount below one unit of the token
+   * became "0" and the caller learned about it from Composer:
+   * `/fromAmount must pass "isBigNumberish" keyword validation`. The amount is
+   * not malformed — it is unrepresentable at that token's precision, and the
+   * message has to say which.
+   */
+  it.each([
+    ['0', 6],
+    ['0.0000001', 6],
+    ['0.0000000000000000001', 18],
+  ])('rejects %s at %i decimals', (amount, decimals) => {
+    expect(() => toSmallestUnitNonZero(amount, decimals)).toThrow(
+      /is zero at \d+ decimals/
+    )
+  })
+
+  it('names the smallest representable amount', () => {
+    expect(() => toSmallestUnitNonZero('0.0000001', 6)).toThrow(/0\.000001/)
+  })
+
+  it('passes anything that survives the conversion', () => {
+    expect(toSmallestUnitNonZero('0.000001', 6)).toBe('1')
+    expect(toSmallestUnitNonZero('10', 6)).toBe('10000000')
   })
 })

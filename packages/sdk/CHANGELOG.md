@@ -1,5 +1,30 @@
 # @earnforge/sdk
 
+## 1.1.0
+
+### Minor Changes
+
+- **Addresses are validated before they become calldata.** Five call sites
+  encoded with `value.slice(2).toLowerCase().padStart(64, '0')` and no check.
+  `padStart` left-pads, so malformed input did not fail — it produced a
+  full-width word that decodes as a *different, valid* address. An address
+  missing its `0x` encoded to `0x00aaaa…aaaa`; `0xAAAA` encoded to
+  `0x0000…aaaa`. Calldata was 138 characters either way, so nothing downstream
+  could tell. On `buildApprovalTx` that is an allowance granted to an address
+  the caller never named.
+
+  `assertAddress` / `encodeAddressArg` are exported, and `buildApprovalTx`,
+  `checkAllowance`, `getAaveAccountData` and `fetchWalletBalances` all use them.
+  **Breaking for anyone passing unchecksummed or unprefixed addresses** — those
+  now throw `INVALID_ADDRESS` instead of silently targeting another address.
+
+- **`toSmallestUnitNonZero()` rejects amounts that round away to nothing.**
+  `toSmallestUnit` truncates, which is correct for a converter, so `0.0000001`
+  of a 6-decimal token became `"0"` and the caller learned about it from
+  Composer's `/fromAmount must pass "isBigNumberish" keyword validation`. The
+  quote builders and the gas optimiser use it, and the message names the
+  token's smallest representable amount rather than calling the input invalid.
+
 ## 1.0.7
 
 ### Minor Changes

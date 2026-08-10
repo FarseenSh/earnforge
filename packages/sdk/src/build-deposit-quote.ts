@@ -85,7 +85,7 @@ export async function buildDepositQuote(
     )?.decimals ?? 18
 
   // Convert human amount to smallest unit
-  const rawAmount = toSmallestUnit(options.fromAmount, decimals)
+  const rawAmount = toSmallestUnitNonZero(options.fromAmount, decimals)
 
   const quoteParams: QuoteParams = {
     fromChain,
@@ -111,8 +111,36 @@ export async function buildDepositQuote(
 }
 
 /**
+ * Convert to the smallest unit, rejecting amounts that round away to nothing.
+ *
+ * `toSmallestUnit` truncates, which is right for a converter — but a quote for
+ * zero is not a quote. `0.0000001` of a 6-decimal token became `"0"`, and the
+ * caller found out when Composer answered
+ * `/fromAmount must pass "isBigNumberish" keyword validation`. Naming the
+ * decimals is the part that makes it actionable: the amount is not invalid,
+ * it is invalid *at this precision*.
+ */
+export function toSmallestUnitNonZero(
+  amount: string,
+  decimals: number,
+  label = 'amount'
+): string {
+  const raw = toSmallestUnit(amount, decimals)
+  if (raw === '0') {
+    throw new EarnForgeError(
+      `${label} "${amount}" is zero at ${decimals} decimals. ` +
+        `The smallest amount this token can express is ${fromSmallestUnit('1', decimals)}.`,
+      'INVALID_AMOUNT'
+    )
+  }
+  return raw
+}
+
+/**
  * Convert a human-readable amount to the smallest unit.
  * e.g., "1" with 6 decimals → "1000000" (Pitfall #9)
+ *
+ * Truncates rather than rounds, so a deposit never exceeds what was typed.
  */
 export function toSmallestUnit(amount: string, decimals: number): string {
   if (!amount || !/^\d+(\.\d+)?$/.test(amount)) {

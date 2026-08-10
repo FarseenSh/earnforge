@@ -30,6 +30,7 @@ export {
   type DepositQuoteResult,
   fromSmallestUnit,
   toSmallestUnit,
+  toSmallestUnitNonZero,
 } from './build-deposit-quote.js'
 export {
   buildRedeemQuote,
