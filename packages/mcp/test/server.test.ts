@@ -150,19 +150,34 @@ describe('EarnForge MCP Server', () => {
   // ── Tool registration ─────────────────────────────────────────────
 
   describe('tool registration', () => {
-    it('registers all 9 tools', async () => {
+    /**
+     * The full set, pinned exactly rather than sampled.
+     *
+     * This asserted nine `toContain`s while the server registered twelve, so
+     * `quote-vault-redeem`, `check-allowance` and `check-api-drift` had no
+     * registration coverage at all — and the docs went on claiming nine tools
+     * for months because nothing contradicted them. Comparing the sorted set
+     * fails on an unlisted addition too, which is the half that catches drift.
+     */
+    it('registers exactly the 12 documented tools', async () => {
       const { tools } = await client.listTools()
-      const names = tools.map((t) => t.name)
 
-      expect(names).toContain('get-earn-vaults')
-      expect(names).toContain('get-earn-vault')
-      expect(names).toContain('get-earn-chains')
-      expect(names).toContain('get-earn-protocols')
-      expect(names).toContain('get-earn-portfolio')
-      expect(names).toContain('get-vault-risk')
-      expect(names).toContain('quote-vault-deposit')
-      expect(names).toContain('suggest-allocation')
-      expect(names).toContain('run-doctor')
+      expect(tools.map((t) => t.name).sort()).toEqual(
+        [
+          'check-allowance',
+          'check-api-drift',
+          'get-earn-chains',
+          'get-earn-portfolio',
+          'get-earn-protocols',
+          'get-earn-vault',
+          'get-earn-vaults',
+          'get-vault-risk',
+          'quote-vault-deposit',
+          'quote-vault-redeem',
+          'run-doctor',
+          'suggest-allocation',
+        ].sort()
+      )
     })
 
     it('each tool has a non-empty description', async () => {

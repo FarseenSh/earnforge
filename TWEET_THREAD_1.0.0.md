@@ -4,7 +4,7 @@ Supersedes `TWEET_THREAD.md` (Apr 2026 hackathon draft — every number in it is
 now wrong: 623 vaults, 16 chains, 18 pitfalls, Telegram bot).
 
 First person. LI.FI framed as collaborator, since PR #561 is open with them.
-Every figure verified against the live API on Aug 10, 2026, and re-verified after
+Every figure verified against the live API on Sep 1, 2026, and re-verified after
 the patch releases. All five packages are on the 1.0 line; the patch numbers
 differ per package and will keep moving, so the tweets deliberately say "1.0".
 
@@ -67,7 +67,7 @@ Risk scoring across 7 dimensions:
 TVL · APY stability · protocol maturity · redeemability · asset type ·
 verification status · reward dependency
 
-0–10 composite plus plain-language flags, calibrated on all 703 live vaults.
+0–10 composite plus plain-language flags, calibrated on all 799 live vaults.
 Real scores span 4.1 to 9.7.
 
 ---
@@ -120,7 +120,7 @@ The docs say APY is a decimal. The quickstart does `apy.total * 100`.
 It's already a percentage. Follow the official example and you render 2919%
 where you mean 29.19%.
 
-Checked across 703 vaults.
+Checked across 799 vaults.
 
 ---
 
@@ -139,7 +139,7 @@ Four more, verified live:
 
 And one that isn't written down anywhere:
 
-`verificationStatus` — undocumented, on every vault, flagging 74 of 703 as
+`verificationStatus` — undocumented, on every vault, flagging 75 of 799 as
 suspect. USP is one: `apy_outlier`.
 
 So the top APY in the fleet is 87% emissions *and* flagged — and nothing shows
@@ -212,11 +212,16 @@ USP is still rank 1, still flagged `apy_outlier`, still scores 5.5, still 87%
 emissions — stable even as the fleet underneath it moved.
 
 Not every figure is worth re-measuring, though, because not every figure is
-stable enough to quote. Across repeated walks in a single day:
+stable enough to quote. The bands below were first drawn from repeated walks in a
+single day, and re-checked three weeks later — which moved one of them:
 
-- **Rock steady** — 17 chains, 27 protocols, 39 vaults over $100M TVL. Quote freely.
-- **Drifts by ones** — 703 vaults, 74 flagged, 166 under 1% APY. Fine as a dated
-  snapshot; expect a reader checking tomorrow to see 73 or 75.
+- **Rock steady** — 17 chains, 27 protocols. Held exactly across a month. Quote
+  freely, but note that *composition* churns even when the count does not:
+  `nest` was delisted and `maple` returned between Aug and Sep.
+- **Drifts** — 799 vaults, 75 flagged, 199 under 1% APY, 49 over $100M TVL. Fine
+  as a dated snapshot only. "39 vaults over $100M" sat in the rock-steady band
+  above until it became 49 in three weeks: stable across a *day* is not stable
+  across a *month*, and anything derived from TVL or APY belongs here.
 - **Not quotable at all** — the size of the refresh-minute cluster and the share
   of the fleet past any fixed staleness boundary. Both are functions of where in
   the hourly cycle you sampled, not properties of the API. Tweet 10 makes the
@@ -238,8 +243,13 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 ```
 
 
-703 vaults · 17 chains · 27 protocols · 74 flagged · 610 mocked tests · 34 live
+799 vaults · 17 chains · 27 protocols · 75 flagged · 610 mocked tests · 34 live
 scores 4.10–9.70 · sdk 1.1.0 · cli 1.1.0 · react 1.0.1 · mcp 1.0.6 · skill 1.0.4
 
-USP (pendle:1:_:0xc83f...86cb) — 106.68% total / 14.33% base / 92.35% reward,
-rank 1 of 703 by APY, $216k TVL, flagged apy_outlier, EarnForge score 5.5 high.
+USP (pendle:1:_:0xc83f...86cb) — 415.13% total / 17.69% base / 397.44% reward,
+rank 1 of 799 by APY, $50k TVL, flagged apy_outlier, EarnForge score 4.0 high.
+
+The example holds and the judgment holds — still rank 1, still flagged, still
+scored high, still ~96% emissions — but every one of its *numbers* moved between
+Aug 10 and Sep 1: APY 107% → 415%, TVL $216k → $50k, score 5.5 → 4.0. Re-measure
+this block before posting; the argument survives, the figures do not.

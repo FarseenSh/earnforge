@@ -5,8 +5,8 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-573%20passing-brightgreen)](#testing)
-[![Pitfalls](https://img.shields.io/badge/API%20pitfalls-23-red)](./PITFALLS.md)
+[![Tests](https://img.shields.io/badge/tests-600%2B%20passing-brightgreen)](#testing)
+[![Pitfalls](https://img.shields.io/badge/API%20pitfalls-24-red)](./PITFALLS.md)
 
 > **The judgment layer for the LI.FI Earn API.**
 
@@ -43,7 +43,7 @@ for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
 }
 ```
 
-Auto-pagination, mandatory auth, rate limiting, retry, caching and all 23
+Auto-pagination, mandatory auth, rate limiting, retry, caching and all 24
 documented API quirks are handled for you.
 
 ---
@@ -51,7 +51,7 @@ documented API quirks are handled for you.
 ## Why this exists
 
 The Earn API is easy to get wrong, and several of its behaviours contradict
-LI.FI's own documentation. Verified against 703 live vaults:
+LI.FI's own documentation. Verified against 799 live vaults (Sep 2026):
 
 | What LI.FI documents | What the API does |
 |---|---|
