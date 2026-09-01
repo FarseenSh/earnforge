@@ -78,4 +78,58 @@ describe('CodeGenerator', () => {
     const code = screen.getByTestId('code-generator').querySelector('code')
     expect(code?.textContent).toContain('42161')
   })
+
+  /**
+   * The generated curl has to actually run.
+   *
+   * It did not. Every snippet this tab produced was unrunnable in two ways at
+   * once: it called `/v1/earn/vaults`, the path LI.FI removed in Apr 2026
+   * (`404`), and it announced "no auth needed" while sending no key, which the
+   * live path answers with `401`. Both are pitfalls this project documents,
+   * numbers 1 and 2, shipped inside its own code generator and served in
+   * production for months.
+   *
+   * A snapshot of the string would not have caught it, because the string was
+   * consistent with itself. These assert the two properties that make the
+   * command work against the real API.
+   */
+  describe('the generated curl is runnable', () => {
+    function curlText() {
+      const vault = mockVault({ chainId: 8453 })
+      render(<CodeGenerator vault={vault} onClose={() => {}} />)
+      fireEvent.click(screen.getByTestId('code-tab-curl'))
+      return (
+        screen.getByTestId('code-generator').querySelector('code')
+          ?.textContent ?? ''
+      )
+    }
+
+    it('never emits the pre-Apr-2026 /v1/earn/ path', () => {
+      const text = curlText()
+      // Only the explanatory comment may name the dead path.
+      const calls = text
+        .split('\n')
+        .filter(
+          (l) => l.trimStart().startsWith('curl') || l.includes('https://')
+        )
+        .filter((l) => !l.trimStart().startsWith('#'))
+      expect(calls.join('\n')).not.toContain('/v1/earn/')
+      expect(calls.join('\n')).toContain('earn.li.fi/v1/vaults')
+    })
+
+    it('sends an API key on every earn.li.fi call', () => {
+      const text = curlText()
+      const blocks = text
+        .split(/\n\s*\n/)
+        .filter((b) => b.includes('earn.li.fi'))
+      expect(blocks.length).toBeGreaterThan(0)
+      for (const b of blocks) {
+        expect(b, `missing x-lifi-api-key:\n${b}`).toContain('x-lifi-api-key')
+      }
+    })
+
+    it('does not claim the Earn Data API is unauthenticated', () => {
+      expect(curlText()).not.toMatch(/no auth needed/i)
+    })
+  })
 })

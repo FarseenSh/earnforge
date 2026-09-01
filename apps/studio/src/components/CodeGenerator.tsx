@@ -101,14 +101,18 @@ function generateCurl(vault: Vault): string {
   const fromToken = underlying?.address ?? '0x_FROM_TOKEN'
   const decimals = underlying?.decimals ?? 18
   const fromAmount = `1${'0'.repeat(decimals)}` // 1 token in smallest unit
-  return `# Get vault details (Earn Data API — no auth needed)
-curl -s "https://earn.li.fi/v1/earn/vaults/${vault.chainId}/${vault.address}" | jq '.'
+  return `# Get vault details
+# Paths dropped the /earn segment in Apr 2026, and the Earn Data API now
+# requires a key: /v1/earn/vaults returns 404, and no key returns 401.
+curl -s -H "x-lifi-api-key: YOUR_KEY" \\
+  "https://earn.li.fi/v1/vaults/${vault.chainId}/${vault.address}" | jq '.'
 
 # List vaults on chain ${vault.chainId}
-curl -s "https://earn.li.fi/v1/earn/vaults?chainId=${vault.chainId}" | jq '.data[:5]'
+curl -s -H "x-lifi-api-key: YOUR_KEY" \\
+  "https://earn.li.fi/v1/vaults?chainId=${vault.chainId}" | jq '.data[:5]'
 
-# Build deposit quote (Composer — requires API key, uses GET not POST)
-# toToken = vault address (NOT underlying token) — Pitfall #5
+# Build deposit quote (Composer: requires API key, uses GET not POST)
+# toToken = vault address (NOT underlying token): Pitfall #5
 curl -s -H "x-lifi-api-key: YOUR_KEY" \\
   "https://li.quest/v1/quote?fromChain=${vault.chainId}&toChain=${vault.chainId}&fromToken=${fromToken}&toToken=${vault.address}&fromAddress=0xYOUR_WALLET&toAddress=0xYOUR_WALLET&fromAmount=${fromAmount}" \\
   | jq '.transactionRequest'`

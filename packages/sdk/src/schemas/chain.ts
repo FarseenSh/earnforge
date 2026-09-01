@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { z } from 'zod'
 
-/** Chain schema — from GET /v1/earn/chains */
+/** Chain schema, from `GET /v1/chains`. */
 export const ChainSchema = z.object({
   chainId: z.number(),
   name: z.string(),
