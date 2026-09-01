@@ -61,7 +61,7 @@ description: >
   Discovers, compares, risk-scores, and builds unsigned deposit and withdrawal
   quotes for DeFi yield vaults across every chain indexed by the LI.FI Earn API.
   Surfaces LI.FI's undocumented verificationStatus signal, which flags roughly
-  9% of vaults as suspect. Handles all 23 documented API pitfalls by default.
+  9% of vaults as suspect. Handles all 24 known API pitfalls by default.
 ---
 ```
 
@@ -102,7 +102,7 @@ The skill documents the CLI's full surface — 19 commands, all accepting `--jso
 
 | Command | Description |
 |---------|-------------|
-| `earnforge doctor <slug>` | Run all 23 pitfall checks |
+| `earnforge doctor <slug>` | Run 22 checks — 18 pitfall guards plus 4 environment checks |
 | `earnforge preflight <slug> <wallet>` | Pre-deposit validation |
 | `earnforge watch <slug> [--apy-drop] [--tvl-drop]` | Monitor APY/TVL changes |
 

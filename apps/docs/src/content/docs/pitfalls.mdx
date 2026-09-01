@@ -1,20 +1,21 @@
 ---
-title: 23 Pitfalls Guide
+title: 24 Pitfalls Guide
 description: Every production pitfall in the LI.FI Earn API, how the SDK defeats each one, and which test verifies it.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-The LI.FI Earn API has 18 documented pitfalls that can cause failures, data corruption, or
-silent bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pitfalls 15-18
-were discovered via live API probing against the full vault set (April 2026).
+The LI.FI Earn API has 24 known pitfalls that cause failures, data corruption, or silent
+bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pitfalls 15-24 were
+found by probing the live API — several of them only after they had already broken something
+in production.
 
 **EarnForge eliminates every single one at the SDK layer.** Downstream surfaces (CLI, React,
 MCP, Studio) never need to think about them.
 
 <Aside type="tip">
-All 23 pitfall tests live under `packages/sdk/test/pitfalls/`. Run them with
-`pnpm turbo test --filter=@earnforge/sdk`.
+All 24 pitfall tests live under `packages/sdk/test/pitfalls/`, one named file each. Run them
+with `pnpm turbo test --filter=@earnforge/sdk`.
 </Aside>
 
 ---
@@ -176,49 +177,6 @@ token -- **not** the underlying USDC/WETH address.
 | **SDK Mitigation** | `AnalyticsSchema` types all three as `number \| null`. `getBestApy()` fallback chain skips nulls. `riskScore()` handles missing historical data with a moderate default. |
 | **Test** | `pitfall-18-apy1d-null.test.ts` |
 
----
-
-## Summary Table
-
-| # | Pitfall | SDK Guard |
-|---|---------|-----------|
-| 1 | Wrong base URL | Two typed clients with hard-coded URLs |
-| 2 | Auth on Earn Data | Zero auth headers on EarnDataClient |
-| 3 | Missing Composer key | Constructor throws; `requireComposer()` gate |
-| 4 | POST instead of GET | Hard-coded `method: 'GET'` on ComposerClient |
-| 5 | Wrong toToken | `buildDepositQuote()` wires `toToken = vault.address` |
-| 6 | Ignoring pagination | `listAllVaults()` async iterator follows cursors |
-| 7 | Null APY values | `getBestApy()` fallback chain |
-| 8 | TVL is a string | `parseTvl()` returns typed `{ raw, parsed, bigint }` |
-| 9 | Decimal mismatch | `toSmallestUnit()` / `fromSmallestUnit()` |
-| 10 | Stale quote | LRU cache excludes quotes; TTL on read data |
-| 11 | No gas token | `preflight()` checks native balance |
-| 12 | Chain mismatch | `preflight()` compares wallet chain vs vault chain |
-| 13 | Non-transactional | Both `buildDepositQuote()` and `preflight()` check |
-| 14 | Rate limit | `TokenBucketRateLimiter` at 100 req/min |
-| 15 | Empty underlyingTokens | Schema allows `[]`; explicit `fromToken` required |
-| 16 | Optional description | `z.string().optional()` in schema |
-| 17 | apy.reward null vs 0 | `.nullable().transform(v => v ?? 0)` normalization |
-| 18 | apy1d null | Typed as `number \| null`; fallback chain; moderate default |
-
----
-
-## Running Pitfall Tests
-
-All 18 tests are individually named and live under `packages/sdk/test/pitfalls/`:
-
-```bash
-# Run all SDK tests (including pitfalls)
-pnpm turbo test --filter=@earnforge/sdk
-
-# Run only pitfall tests
-cd packages/sdk
-pnpm vitest run test/pitfalls/
-```
-
-Each test constructs a minimal fixture that triggers the pitfall and asserts the SDK handles
-it without error.
-
 ### Pitfall 19 -- Stale protocol slugs return zero results
 
 | | |
@@ -258,3 +216,60 @@ it without error.
 | **Root Cause** | Slugs went from `chainId-address` to `protocol:chainId:_:address`. Stored slugs stop resolving. |
 | **SDK Mitigation** | `parseVaultSlug()` accepts both forms, so previously stored references keep working. |
 | **Test** | `pitfall-23-slug-format-change.test.ts` |
+
+### Pitfall 24 -- `underlyingTokens` entries can be partial
+
+| | |
+|---|---|
+| **Root Cause** | Pitfall 15 anticipated an *empty* `underlyingTokens` array. What the API actually sends is stranger: a populated array whose entries carry only an `address`, with no `symbol` and no `decimals`. One vault in the fleet did this, and because the schema required both fields, `listAll()` threw partway through — the Studio's vault list read zero in production and `earnforge list` could not complete without a chain filter. |
+| **SDK Mitigation** | `symbol` and `decimals` are optional on the token schema. Consumers that need them resolve on-chain or skip the vault, rather than the whole fleet iteration dying on one entry. |
+| **Test** | `pitfall-24-partial-underlying-tokens.test.ts` |
+
+---
+
+## Summary Table
+
+| # | Pitfall | SDK Guard |
+|---|---------|-----------|
+| 1 | Wrong base URL | Two typed clients with hard-coded URLs |
+| 2 | Auth on Earn Data | Zero auth headers on EarnDataClient |
+| 3 | Missing Composer key | Constructor throws; `requireComposer()` gate |
+| 4 | POST instead of GET | Hard-coded `method: 'GET'` on ComposerClient |
+| 5 | Wrong toToken | `buildDepositQuote()` wires `toToken = vault.address` |
+| 6 | Ignoring pagination | `listAllVaults()` async iterator follows cursors |
+| 7 | Null APY values | `getBestApy()` fallback chain |
+| 8 | TVL is a string | `parseTvl()` returns typed `{ raw, parsed, bigint }` |
+| 9 | Decimal mismatch | `toSmallestUnit()` / `fromSmallestUnit()` |
+| 10 | Stale quote | LRU cache excludes quotes; TTL on read data |
+| 11 | No gas token | `preflight()` checks native balance |
+| 12 | Chain mismatch | `preflight()` compares wallet chain vs vault chain |
+| 13 | Non-transactional | Both `buildDepositQuote()` and `preflight()` check |
+| 14 | Rate limit | `TokenBucketRateLimiter` at 100 req/min |
+| 15 | Empty underlyingTokens | Schema allows `[]`; explicit `fromToken` required |
+| 16 | Optional description | `z.string().optional()` in schema |
+| 17 | apy.reward null vs 0 | `.nullable().transform(v => v ?? 0)` normalization |
+| 18 | apy1d null | Typed as `number \| null`; fallback chain; moderate default |
+| 19 | Stale protocol slugs | Ids resolved from `/v1/protocols`; live test asserts they exist |
+| 20 | Unknown params fail open | Client sends `minTvlUsd`; test asserts the emitted URL |
+| 21 | Undocumented `verificationStatus` | Weighted risk dimension; `suggest()` excludes flagged |
+| 22 | Docs contradict the API | `detectDrift()` diffs live vs spec vs schema, daily in CI |
+| 23 | Slug format changed | `parseVaultSlug()` accepts both forms |
+| 24 | Partial underlyingTokens | `symbol` and `decimals` optional; one vault cannot break the fleet |
+
+---
+
+## Running Pitfall Tests
+
+All 24 tests are individually named and live under `packages/sdk/test/pitfalls/`:
+
+```bash
+# Run all SDK tests (including pitfalls)
+pnpm turbo test --filter=@earnforge/sdk
+
+# Run only pitfall tests
+cd packages/sdk
+pnpm vitest run test/pitfalls/
+```
+
+Each test constructs a minimal fixture that triggers the pitfall and asserts the SDK handles
+it without error.

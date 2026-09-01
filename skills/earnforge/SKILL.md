@@ -101,7 +101,7 @@ All commands accept `--json` for machine-readable output.
   token balance, redeemability.
 
 - `earnforge doctor --vault <slug> [--env] [--json]`
-  Run all 23 pitfall checks on a vault.
+  Run 22 checks on a vault — 18 pitfall guards plus 4 environment checks.
 
 - `earnforge watch --vault <slug> [--apy-drop 20] [--tvl-drop 30] [--json]`
   Monitor a vault for APY/TVL drops. Streams events.

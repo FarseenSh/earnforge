@@ -25,7 +25,7 @@ No other changes. It imports nothing.
 ## Provenance
 
 These are not transcribed from `earn-openapi.yaml`. They are derived from the
-live API and cross-checked against it — 703 vaults, 17 chains, 27 protocols, as
+live API and cross-checked against it — 799 vaults, 17 chains, 27 protocols, as
 of 9 August 2026 — because the spec and the service disagree in several places.
 Each disagreement is documented inline at the field it affects, so the
 correction travels with the type rather than living in a changelog:

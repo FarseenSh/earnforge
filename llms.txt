@@ -3,8 +3,8 @@
 > Developer toolkit for the LI.FI Earn API. Handles 23 integration pitfalls
 > so you can focus on building yield products.
 
-All figures below were verified against the live API on Aug 10, 2026:
-703 vaults, 17 chains, 27 protocols, 74 vaults verification-flagged.
+All figures below were verified against the live API on Sep 1, 2026:
+799 vaults, 17 chains, 27 protocols, 75 vaults verification-flagged.
 
 LI.FI rewrote the Earn API in April 2026. Every path moved, auth became
 mandatory, and two documented field types are wrong in the current spec. If you
@@ -32,7 +32,7 @@ Query params:
 - cursor (string) -- pagination cursor from the previous response's nextCursor
 
 Unknown query params are dropped rather than rejected. Sending `minTvl` instead
-of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet — 703 results
+of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet — 799 results
 where the filter would have returned 39. A filter that fails open is worse than
 one that throws, so spell the param exactly.
 
@@ -45,7 +45,7 @@ Response shape:
 {
   "data": [ ...vaults ],
   "nextCursor": "morpho:8453:_:0xbeef..." | null,
-  "total": 703,
+  "total": 799,
   "normalizedAt": "2026-08-09T19:24:25.939Z"
 }
 ```
@@ -113,7 +113,7 @@ execution duration), and action details.
 - description: OPTIONAL, and usually absent — roughly three quarters of vaults omit it.
 - verificationStatus: "none" | "flagged". UNDOCUMENTED — it appears in no spec,
   changelog or quickstart, and LI.FI's own hosted MCP server does not expose it.
-  Roughly 10% of vaults are flagged (74 of 703 when this was written). Sort
+  Roughly 10% of vaults are flagged (75 of 799 when this was written). Sort
   by APY without checking it and a flagged vault lands at the top of your list.
 - verificationStatusBreakdown: array of { reason, result }. Reasons seen live:
   "zero_apy" (most), "apy_outlier".

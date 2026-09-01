@@ -20,7 +20,7 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 EarnForge is a monorepo of five published packages that wraps the [LI.FI Earn API](https://earn.li.fi) into
 production-grade developer surfaces. It covers **the full vault set across 17 chains and 27 protocols**
 with full pagination, Zod-validated schemas, risk scoring, strategy presets, gas optimization,
-and guards for all 23 documented API pitfalls.
+and guards for all 24 known API pitfalls.
 
 ```bash
 npm i @earnforge/sdk
@@ -42,12 +42,12 @@ for (const vault of top) {
 <CardGrid>
   <Card title="@earnforge/sdk" icon="setting">
     Zod-typed client for Earn Data API + Composer. Risk scoring, strategy presets,
-    portfolio suggestions, gas optimization. 23 pitfall guards built in.
+    portfolio suggestions, gas optimization. 24 pitfall guards built in.
     [Read the SDK docs](/sdk/)
   </Card>
 
   <Card title="@earnforge/cli" icon="laptop">
-    Commander CLI wrapping the SDK. 11 commands, all with `--json` output.
+    Commander CLI wrapping the SDK. 19 commands, all with `--json` output.
     `earnforge doctor` runs 18-pitfall diagnostics.
     [Read the CLI docs](/cli/)
   </Card>

@@ -287,7 +287,7 @@ Run preflight/pitfall checks on a vault before depositing.
 The MCP server uses the `@modelcontextprotocol/sdk` stdio transport. When started, it:
 
 1. Creates an `EarnForge` SDK instance (with caching: 60s TTL, 200 entries)
-2. Registers all 9 tools with Zod-validated parameter schemas
+2. Registers all 12 tools with Zod-validated parameter schemas
 3. Listens on stdin/stdout for MCP JSON-RPC messages
 
 The server name is `earnforge-mcp` and version `0.1.0`. Clients auto-discover the

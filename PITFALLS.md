@@ -2,7 +2,7 @@
 
 Every pitfall here has a dedicated regression test under
 `packages/sdk/test/pitfalls/`, and every claim was verified against the live API
-on **Aug 10, 2026** across 703 vaults. Where LI.FI's documentation says something
+on **Sep 1, 2026** across 799 vaults. Where LI.FI's documentation says something
 different, that difference is itself recorded — six of these exist *because* the
 docs and the API disagree.
 
@@ -30,8 +30,8 @@ what it did.
 | 12 | Chain mismatch | current | `preflight()` chain comparison |
 | 13 | Non-transactional vault | current | `isTransactional` guard |
 | 14 | Rate limit | current | Token bucket, 100 req/min |
-| 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 703 vaults now hit it |
-| 16 | Optional `description` | current | `.optional()` — present on 23% of vaults |
+| 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 799 vaults now hit it |
+| 16 | Optional `description` | current | `.optional()` — present on 34% of vaults |
 | 17 | **`apy.reward` is three-valued** | revised | null preserved, not coerced to 0 |
 | 18 | `apy1d` null | current | Extended fallback chain |
 | 19 | **Stale protocol slugs return zero results** | new | Unversioned ids + upstream existence test |
@@ -39,6 +39,7 @@ what it did.
 | 21 | **`verificationStatus` is undocumented** | new | First-class risk dimension |
 | 22 | **The docs contradict the API** | new | Schemas generated from live responses |
 | 23 | **Slug format changed** | new | `parseVaultSlug()` accepts both forms |
+| 24 | **Partial `underlyingTokens` entries** | new | `symbol`/`decimals` optional; one vault cannot break the fleet |
 
 ---
 
@@ -83,7 +84,7 @@ is what breaks on the next flip, and it has already flipped once.
 ### #17 — Reward semantics revised
 
 The original rule was *"Morpho returns 0, Euler and Aave return null, so
-normalise null to 0."* Across 703 vaults that is too simple in two ways: all three
+normalise null to 0."* Across 799 vaults that is too simple in two ways: all three
 states occur, and the split varies **within** a protocol rather than between
 protocols.
 
@@ -131,7 +132,7 @@ The TVL filter is `minTvlUsd`. We sent `minTvl`. The API returned the entire
 unfiltered fleet with `200` — no rejection, no warning.
 
 ```
-minTvl=100000000     -> 703 results   (silently unfiltered)
+minTvl=100000000     -> 799 results   (silently unfiltered)
 minTvlUsd=100000000  ->  39 results
 ```
 
@@ -146,12 +147,12 @@ Every vault carries `verificationStatus` and `verificationStatusBreakdown`.
 Neither appears in the OpenAPI spec, the changelog, the quickstart, or the
 NormalizedVault reference — and LI.FI's hosted MCP server does not expose them.
 
-They are not cosmetic. **74 of 703 vaults (10.5%)** are `flagged`:
+They are not cosmetic. **75 of 799 vaults (9.4%)** are `flagged`:
 
 | Reason | Count |
 |---|---|
 | `zero_apy` | 73 |
-| `apy_outlier` | 1 |
+| `apy_outlier` | 2 |
 
 A tool ignoring this will rank a flagged vault top of a max-APY list and recommend
 depositing into it — exactly what the flag exists to prevent.
@@ -172,7 +173,7 @@ responses rather than from the specification.
 |---|---|
 | APY is "expressed as a decimal (`0.0534` = 5.34%)" | already a percentage |
 | `tvl.usd` is a string | a number |
-| `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 703 vaults send any |
+| `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 799 vaults send any |
 
 The APY one costs money. The quickstart compounds it by multiplying by 100, so
 **following LI.FI's official example overstates every yield 100×** — a 29% vault
@@ -205,12 +206,36 @@ stopped producing them.
 ## #15 is obsolete, and stays anyway
 
 Pitfall #15 was found via a UNIBTC vault reporting no underlying tokens. Zero of
-703 live vaults now have an empty array, so the case cannot be driven from a
+799 live vaults now have an empty array, so the case cannot be driven from a
 fixture.
 
 The guard remains, tested against a synthesised vault. The shape is still legal,
 and LI.FI has reintroduced dropped shapes before — `tvl.usd` went string → number
 and the spec still claims string.
+
+---
+
+## #24 — and then the array came back, half-filled
+
+Keeping #15's guard was the right call for the wrong reason. The array never went
+empty again. What the API actually started sending was stranger: a *populated*
+`underlyingTokens` whose entries carry only an `address` — no `symbol`, no
+`decimals`.
+
+`morpho:1:_:0xb5ce3ca2c774b72955c25875022fdd91f7a7b938` (KPK-WARS-YIELD) is the
+live example. Because the schema required both fields, `listAll()` threw a
+ZodError partway through the fleet, and everything iterating every vault died with
+it: the Studio's vault list read **zero** in production, and `earnforge list`
+without a chain filter could not complete.
+
+One vault in seven hundred, and it survived every check — the drift detector
+samples 100 vaults, the fixtures stop at two pages, and the live tests assert
+shape on a handful. The bad vault sat around index 300.
+
+`symbol` and `decimals` are now optional. The lesson is narrower than "validate
+less": a field being present on every vault you sampled is not the same as it
+being required, and the distance between those two claims is one vault in the
+fleet. It is still exactly one today.
 
 ---
 
@@ -268,7 +293,7 @@ No breaking drift — our schema still matches the live API.
 ## Running the suite
 
 ```bash
-pnpm --filter @earnforge/sdk test            # mocked, includes all 23 pitfalls
+pnpm --filter @earnforge/sdk test            # mocked, includes all 24 pitfalls
 LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live
 LIFI_API_KEY=... pnpm --filter @earnforge/sdk drift
 ```

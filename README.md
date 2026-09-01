@@ -178,15 +178,19 @@ coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor
 
 ## Testing
 
-| Suite | Count |
+**600+ mocked tests across five suites, plus 34 live integration tests.** Exact
+counts are deliberately not quoted here — they moved on almost every commit and
+went stale three times before this note replaced them. `pnpm turbo test` prints
+the current numbers.
+
+| Suite | Covers |
 |---|---|
-| SDK (incl. 23 pitfall regressions) | 294 |
-| CLI | 109 |
-| MCP (incl. `2026-07-28` wire + Worker surface) | 62 |
-| Studio | 62 |
-| React | 46 |
-| **Total** | **573** |
-| Live API integration | **34** |
+| SDK | Schemas, risk scoring, strategies, quoting, drift — plus one named regression per pitfall, all 24 |
+| CLI | Every command, snapshot-tested in both human and `--json` modes |
+| MCP | The `2026-07-28` wire protocol and the Worker surface |
+| Studio | Vault explorer, filters, risk badges |
+| React | All 10 data hooks, including error and loading states |
+| Live API | 34 integration tests against the real Earn API, run daily in CI |
 
 ```bash
 pnpm turbo test                                    # mocked
