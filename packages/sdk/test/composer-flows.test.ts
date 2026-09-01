@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it, vi } from 'vitest'
+import type { DepositFlowParams } from '../src/composer-flows.js'
 import {
   ComposerFlowError,
   createComposerFlows,
@@ -10,7 +11,7 @@ import {
  * Composer Flow tests.
  *
  * These assert the request EarnForge composes and the guarantees it enforces
- * before anything reaches the network — the input validation, the guard
+ * before anything reaches the network. The input validation, the guard
  * placement, and the routability read. Compilation itself is the backend's
  * job and is stubbed; what matters here is that we never hand it something
  * malformed and never sign something unsimulated.
@@ -20,7 +21,7 @@ const USDC = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
 
 /**
  * `underlyingTokens` is load-bearing here, not decoration. The fixture used to
- * omit it, which no live vault does — and that omission hid a bug for a whole
+ * omit it, which no live vault does, and that omission hid a bug for a whole
  * release: the swap was composed to output the vault SHARE token, so the zap
  * ran share -> share and Composer refused the program with "No routing edge
  * found". Compilation is stubbed in these tests, so the flow "passed" while
@@ -37,7 +38,7 @@ const VAULT = {
 const WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
 
 /**
- * Every Compose API response is wrapped in a `{ data }` envelope — the client
+ * Every Compose API response is wrapped in a `{ data }` envelope. The client
  * rejects a bare payload with "Unexpected response format".
  */
 function envelope(data: unknown): Response {
@@ -61,7 +62,7 @@ async function okResponse(): Promise<Response> {
 }
 
 describe('ComposerFlows', () => {
-  it('requires an API key — the Compose API rejects anonymous callers', () => {
+  it('requires an API key. The Compose API rejects anonymous callers', () => {
     expect(() => createComposerFlows({ apiKey: '' })).toThrow(ComposerFlowError)
     expect(() => createComposerFlows({ apiKey: '' })).toThrow(/portal\.li\.fi/)
   })
@@ -141,6 +142,81 @@ describe('ComposerFlows', () => {
       return JSON.parse(call[1].body) as Record<string, unknown>
     }
 
+    /**
+     * Regression: omitting `fromToken` composed a swap from the zero address.
+     *
+     * The input resource fell through to `native(chainId)` and the
+     * "input is the vault asset" check required `fromToken` to be *defined*,
+     * so the plainest possible call (deposit the vault's own asset) emitted
+     * a `lifi.swap` from `0x0000…0000`. Composer rejected the program before
+     * compiling it:
+     *
+     *   422 preparation_error: no_route_error on op `swap`
+     *   "No route available for swap 0x0000…0000 → 0x8335…2913"
+     *
+     * That is every vault and every wallet, so `buildDepositFlow` and
+     * `earnforge simulate` could never succeed against the real API. The
+     * mocked suite stayed green because compilation is stubbed here. It
+     * asserted the shape of a request the backend would always refuse.
+     *
+     * The assertion is on the *node list*, not on the request succeeding,
+     * because a stub will always succeed.
+     */
+    async function captureWith(params: Partial<DepositFlowParams>) {
+      const fetchMock = vi.fn(okResponse)
+      await createComposerFlows({
+        apiKey: 'k',
+        fetch: fetchMock as unknown as typeof globalThis.fetch,
+      }).buildDepositFlow({
+        vault: VAULT,
+        wallet: WALLET,
+        amount: '1000000',
+        ...params,
+      } as DepositFlowParams)
+      const call = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { body: string },
+      ]
+      return JSON.parse(call[1].body) as {
+        flow: { nodes: { id: string; op: string }[] }
+      }
+    }
+
+    it('composes no swap when fromToken is omitted', async () => {
+      const body = await captureWith({})
+      const ops = body.flow.nodes.map((n) => n.op)
+      expect(ops).not.toContain('lifi.swap')
+      expect(ops).toEqual(['lifi.zap'])
+    })
+
+    it('composes no swap when fromToken is explicitly the vault asset', async () => {
+      const body = await captureWith({ fromToken: USDC })
+      expect(body.flow.nodes.map((n) => n.op)).toEqual(['lifi.zap'])
+    })
+
+    it('still composes a swap for a different input token', async () => {
+      const body = await captureWith({
+        fromToken: '0x4200000000000000000000000000000000000006',
+      })
+      expect(body.flow.nodes.map((n) => n.op)).toEqual([
+        'lifi.swap',
+        'lifi.zap',
+      ])
+    })
+
+    it('treats the zero address as native rather than an ERC-20 at 0x0', async () => {
+      const body = await captureWith({ fromToken: `0x${'0'.repeat(40)}` })
+      // An explicit native deposit is a real swap into the vault asset.
+      expect(body.flow.nodes.map((n) => n.op)).toEqual([
+        'lifi.swap',
+        'lifi.zap',
+      ])
+      const inputs = (
+        body.flow as unknown as { inputs: Record<string, unknown> }
+      ).inputs
+      expect(JSON.stringify(inputs)).toContain('native')
+    })
+
     it('binds the swap output into the deposit input', async () => {
       // This is the whole point of a Flow: the deposit uses the exact amount
       // the swap returned, not an estimate made before it ran. If these are
@@ -152,7 +228,7 @@ describe('ComposerFlows', () => {
     })
 
     it('guards the zap, not the swap', async () => {
-      // lifi.swap's amountOut declares providesMinimum — the aggregator bakes
+      // lifi.swap's amountOut declares providesMinimum. The aggregator bakes
       // minOut in from its own slippage config. A second guard there is a
       // compile-time guard_error, so the guard belongs on the zap.
       const body = await capture()
@@ -167,7 +243,7 @@ describe('ComposerFlows', () => {
       // The bug this pins: pointing the swap at `vault.address` makes the zap's
       // input and output the same resource, and Composer rejects the program
       // with "No routing edge found from erc20:<vault> to erc20:<vault>". It is
-      // not a routing edge case — the flow cannot compile for any vault.
+      // not a routing edge case. The flow cannot compile for any vault.
       const fetchMock = vi.fn(okResponse)
       await createComposerFlows({
         apiKey: 'k',
@@ -234,7 +310,7 @@ describe('ComposerFlows', () => {
     })
   })
 
-  describe('routability — the Earn list is a superset of what Composer runs', () => {
+  describe('routability. The Earn list is a superset of what Composer runs', () => {
     function flowsWithPacks(packs: unknown) {
       const fetchMock = vi.fn(async () => envelope(packs))
       return createComposerFlows({

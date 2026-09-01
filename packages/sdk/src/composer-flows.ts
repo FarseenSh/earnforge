@@ -13,7 +13,7 @@ import { EarnForgeError } from './errors.js'
 import type { Vault } from './schemas/vault.js'
 
 /**
- * Composer Flows — atomic multi-step positions, and the routing truth behind
+ * Composer Flows: atomic multi-step positions, and the routing truth behind
  * them.
  *
  * Two things this exists for, neither of which the quote endpoint can do.
@@ -28,7 +28,7 @@ import type { Vault } from './schemas/vault.js'
  * actually route: June 2026 began ingesting protocols from DeFiLlama that have
  * no Composer routing edges at all. So a vault can be listed, carry
  * `isTransactional: true`, and still be impossible to enter. `/compose/zap-packs`
- * is the only thing that knows the difference — see {@link routableProtocols}.
+ * is the only thing that knows the difference: see {@link routableProtocols}.
  */
 
 const DEFAULT_BASE_URL = 'https://composer.li.quest'
@@ -37,7 +37,7 @@ const DEFAULT_BASE_URL = 'https://composer.li.quest'
 const DEFAULT_SLIPPAGE_BPS = 100
 
 export interface ComposerFlowsOptions {
-  /** LI.FI API key. Required — the Compose API rejects anonymous callers. */
+  /** LI.FI API key. Required. The Compose API rejects anonymous callers. */
   apiKey: string
   /** Override the Compose API host. */
   baseUrl?: string
@@ -101,6 +101,15 @@ function asAddress(value: string, label: string): `0x${string}` {
   return value as `0x${string}`
 }
 
+/**
+ * The zero address is how LI.FI denotes a chain's native asset, and it appears
+ * in `underlyingTokens` on native-staking vaults. It is not an ERC-20, so it
+ * has to become a `native` resource rather than `erc20(0x0)`.
+ */
+function isNativeAddress(value: string): boolean {
+  return value.toLowerCase() === `0x${'0'.repeat(40)}`
+}
+
 /** Amounts cross the wire as base-unit integer strings, never decimals. */
 function asBaseUnitAmount(value: string): IntegerString {
   if (!/^\d+$/.test(value)) {
@@ -158,8 +167,8 @@ export class ComposerFlows {
    * the swap produces the vault's underlying asset, and the zap turns that
    * asset into vault shares. Pointing the swap at the share token instead makes
    * the zap's input and output the same resource, and Composer rejects the
-   * program with `No routing edge found from erc20:<vault> to erc20:<vault>` —
-   * the flow can never compile, for any vault, from any input token.
+   * program with `No routing edge found from erc20:<vault> to erc20:<vault>`.
+   * The flow can never compile, for any vault, from any input token.
    *
    * The slippage guard goes on the *zap*, not the swap: `lifi.swap`'s
    * `amountOut` port declares `providesMinimum`, because the aggregator already
@@ -171,9 +180,34 @@ export class ComposerFlows {
     const chainId = vault.chainId
     const slippageBps = params.slippageBps ?? DEFAULT_SLIPPAGE_BPS
 
-    const inputResource = params.fromToken
-      ? resources.erc20(asAddress(params.fromToken, 'fromToken'), chainId)
-      : resources.native(chainId)
+    // The asset the vault actually accepts. Every live vault reports one; the
+    // fallback exists so an unreported asset degrades to "zap straight from the
+    // input" rather than composing a swap whose destination we had to guess.
+    const underlying = vault.underlyingTokens?.[0]?.address
+
+    // Omitting `fromToken` means "I hold the vault's own asset". That is the
+    // default `buildDepositQuote()` already applies, and the one the CLI
+    // documents as "default: the vault asset".
+    //
+    // This used to fall through to `resources.native(chainId)`, so *every*
+    // plain deposit composed a swap from the zero address into the vault asset.
+    // Composer rejected the program before it compiled:
+    //
+    //   422 preparation_error: no_route_error on op `swap`
+    //   "No route available for swap 0x0000…0000 → 0x8335…2913"
+    //
+    // It failed for every vault and every wallet, so `buildDepositFlow`, and
+    // `earnforge simulate` on top of it: could never succeed. The amount made
+    // it worse: callers scale it by the *vault asset's* decimals, so the swap
+    // asked for 100 USDC worth of wei.
+    const inputToken = params.fromToken ?? underlying
+
+    // Treat the zero address as native rather than an ERC-20 at 0x0, so an
+    // explicit native deposit still composes a real swap leg.
+    const inputResource =
+      inputToken !== undefined && !isNativeAddress(inputToken)
+        ? resources.erc20(asAddress(inputToken, 'fromToken'), chainId)
+        : resources.native(chainId)
 
     const builder = this.sdk.flow(chainId, {
       name: `earnforge-deposit-${vault.address}`,
@@ -185,16 +219,11 @@ export class ComposerFlows {
       chainId
     )
 
-    // The asset the vault actually accepts. Every live vault reports one; the
-    // fallback exists so an unreported asset degrades to "zap straight from the
-    // input" rather than composing a swap whose destination we had to guess.
-    const underlying = vault.underlyingTokens?.[0]?.address
-
-    // Nothing to swap when the caller already holds the vault's asset.
+    // Nothing to swap when the input already is the vault's asset.
     const inputIsVaultAsset =
       underlying !== undefined &&
-      params.fromToken !== undefined &&
-      params.fromToken.toLowerCase() === underlying.toLowerCase()
+      inputToken !== undefined &&
+      inputToken.toLowerCase() === underlying.toLowerCase()
 
     const swap =
       underlying !== undefined && !inputIsVaultAsset
@@ -309,7 +338,7 @@ function toSimulation(result: ComposeCompileResult): FlowSimulation {
     producedResources: result.producedResources,
     approvals: result.approvals,
   }
-  // `priceImpact` is only carried on the success branch — a reverting
+  // `priceImpact` is only carried on the success branch: a reverting
   // simulation never got far enough to measure one.
   return result.status === 'success'
     ? { ok: true, ...base, priceImpact: result.priceImpact }

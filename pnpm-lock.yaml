@@ -237,11 +237,11 @@ importers:
   packages/sdk:
     dependencies:
       '@lifi/compose-spec':
-        specifier: 0.2.0
-        version: 0.2.0
+        specifier: 0.4.1
+        version: 0.4.1
       '@lifi/composer-sdk':
-        specifier: ^0.2.0
-        version: 0.2.0(@lifi/compose-spec@0.2.0)(typescript@7.0.2)
+        specifier: ^0.4.1
+        version: 0.4.1(@lifi/compose-spec@0.4.1)(typescript@7.0.2)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -1406,15 +1406,15 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lifi/compose-spec@0.2.0':
-    resolution: {integrity: sha512-riuD6fg1IAzA6yBMebbj5zXpTGwHVbd+qt+eUBZFNQdIgd+4Ac32JBepmyKKs1zqxWv210CLQgvnwHjM1XKoyA==}
+  '@lifi/compose-spec@0.4.1':
+    resolution: {integrity: sha512-dUeHLY+sVCJk1cLZSHECOzKhX6LUkfDUg9Mxot+XAHcvjIP5jbymopwhXslMYWJHmfaEah5DkFd4fR96ecNHbQ==}
     engines: {node: '>=24'}
 
-  '@lifi/composer-sdk@0.2.0':
-    resolution: {integrity: sha512-o+/PU4Dx/hSN5nVg53247oHpWw/hArx9C2BnMPjzYG1JNhXW0aIRI2jtfDIsdsKB0UPEaX6ouBZcWMUWfJhE/A==}
+  '@lifi/composer-sdk@0.4.1':
+    resolution: {integrity: sha512-2tm7hkWHpMGEzvDk7vgikL069AChHeXx9izMnobCI0F7x1U+yZxxV7MfOh07ZvtvXfQjMmEfc3426usR6FLlzA==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@lifi/compose-spec': 0.2.0
+      '@lifi/compose-spec': 0.4.1
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -4615,6 +4615,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -4896,6 +4897,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   github-slugger@2.0.0:
@@ -8924,14 +8926,14 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lifi/compose-spec@0.2.0':
+  '@lifi/compose-spec@0.4.1':
     dependencies:
       effect: 3.22.1
       zod: 4.4.3
 
-  '@lifi/composer-sdk@0.2.0(@lifi/compose-spec@0.2.0)(typescript@7.0.2)':
+  '@lifi/composer-sdk@0.4.1(@lifi/compose-spec@0.4.1)(typescript@7.0.2)':
     dependencies:
-      '@lifi/compose-spec': 0.2.0
+      '@lifi/compose-spec': 0.4.1
       abitype: 1.2.3(typescript@7.0.2)(zod@4.4.3)
       effect: 3.22.1
       zod: 4.4.3
@@ -12067,7 +12069,7 @@ snapshots:
       eslint: 9.39.4(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.4(jiti@2.7.0))
@@ -12100,7 +12102,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -12115,7 +12117,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.4(jiti@2.7.0))(typescript@7.0.2))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
