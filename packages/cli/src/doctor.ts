@@ -41,13 +41,22 @@ export function runDoctorChecks(
     detail: 'SDK uses correct base URLs (earn.li.fi / li.quest)',
   })
 
-  // Pitfall #2: Sending auth to Earn Data API
+  // Pitfall #2, which inverted in Apr 2026.
+  //
+  // This check used to assert the opposite: "Earn Data API requires no
+  // authentication", passing unconditionally. That was true when it was
+  // written and has been false since April, when `earn.li.fi` began hard-401ing
+  // without a key. A diagnostic that teaches the inverted rule is worse than no
+  // diagnostic, and this one contradicted both PITFALLS.md and `EarnDataClient`,
+  // which has required a key for releases.
   checks.push({
     id: 2,
-    pitfall: 'No auth for Earn Data',
-    description: 'Earn Data API (earn.li.fi) requires no authentication',
-    passed: true, // SDK handles this
-    detail: 'SDK sends no auth headers to earn.li.fi',
+    pitfall: 'Auth required on Earn Data',
+    description: 'Earn Data API (earn.li.fi) requires x-lifi-api-key',
+    passed: opts.hasApiKey,
+    detail: opts.hasApiKey
+      ? 'SDK sends x-lifi-api-key to earn.li.fi'
+      : 'LIFI_API_KEY is NOT set. earn.li.fi returns 401 on every endpoint',
   })
 
   // Pitfall #3: Missing Composer API key
@@ -58,7 +67,7 @@ export function runDoctorChecks(
     passed: opts.hasApiKey,
     detail: opts.hasApiKey
       ? 'LIFI_API_KEY is set'
-      : 'LIFI_API_KEY is NOT set — quote/deposit commands will fail',
+      : 'LIFI_API_KEY is NOT set. Quote/deposit commands will fail',
   })
 
   // Pitfall #4: Using POST for Composer quote
@@ -84,7 +93,7 @@ export function runDoctorChecks(
   checks.push({
     id: 6,
     pitfall: 'Pagination via nextCursor',
-    description: 'Vault list is paginated — must follow nextCursor',
+    description: 'Vault list is paginated, must follow nextCursor',
     passed: hasNextCursorLogic,
     detail: 'SDK auto-paginates via listAllVaults()',
   })
@@ -101,15 +110,23 @@ export function runDoctorChecks(
     detail: `apy.total = ${apyTotal.toFixed(2)}%`,
   })
 
-  // Pitfall #8: TVL.usd is a string
+  // Pitfall #8, which inverted: `tvl.usd` was a string and is now a number,
+  // while the OpenAPI spec still declares a string.
+  //
+  // This asserted `typeof === 'string'` and so reported a FAILURE on every
+  // healthy live vault: `doctor` told users their vault was broken because the
+  // API had been fixed. Pinning either type is the actual mistake, since it has
+  // already flipped once. What matters is that `parseTvl()` normalises whatever
+  // arrives into a usable number.
   const tvl = parseTvl(vault.analytics.tvl)
-  const tvlIsString = typeof vault.analytics.tvl.usd === 'string'
+  const tvlType = typeof vault.analytics.tvl.usd
   checks.push({
     id: 8,
-    pitfall: 'TVL.usd is a string',
-    description: 'tvl.usd comes as a string, must parse to number',
-    passed: tvlIsString,
-    detail: `tvl.usd type=${typeof vault.analytics.tvl.usd}, parsed=${tvl.parsed}`,
+    pitfall: 'tvl.usd type varies',
+    description:
+      'tvl.usd is a number live and a string in the spec: never pin one',
+    passed: Number.isFinite(tvl.parsed),
+    detail: `tvl.usd arrived as ${tvlType}, parseTvl() normalised it to ${tvl.parsed}`,
   })
 
   // Pitfall #9: Decimal mismatch
@@ -123,7 +140,7 @@ export function runDoctorChecks(
     passed: hasDecimals,
     detail: hasDecimals
       ? `Decimals: ${decimals} (${vault.underlyingTokens[0]?.symbol ?? 'symbol not reported'})`
-      : 'No underlyingTokens — decimals unknown, must specify fromToken manually',
+      : 'No underlyingTokens: decimals unknown, must specify fromToken manually',
   })
 
   // Pitfall #10: Chain ID is a number, not name
@@ -143,7 +160,7 @@ export function runDoctorChecks(
     description:
       'Wallet must have native gas on the vault chain for tx execution',
     passed: true, // Cannot check from vault data alone; informational
-    detail: `Vault is on chain ${vault.chainId} — ensure wallet has native gas`,
+    detail: `Vault is on chain ${vault.chainId}: ensure wallet has native gas`,
   })
 
   // Pitfall #12: Chain mismatch (wallet vs vault)
@@ -153,7 +170,7 @@ export function runDoctorChecks(
     description:
       'Wallet chain must match vault chain (or use cross-chain route)',
     passed: true, // Informational in vault-only mode
-    detail: `Vault on chain ${vault.chainId} — ensure wallet is on same chain or use bridge`,
+    detail: `Vault on chain ${vault.chainId}: ensure wallet is on same chain or use bridge`,
   })
 
   // Pitfall #13: Non-transactional vault
@@ -163,8 +180,8 @@ export function runDoctorChecks(
     description: 'Vault must be isTransactional=true to deposit via Composer',
     passed: vault.isTransactional,
     detail: vault.isTransactional
-      ? 'Vault is transactional — deposits supported'
-      : 'Vault is NOT transactional — cannot deposit via API',
+      ? 'Vault is transactional: deposits supported'
+      : 'Vault is NOT transactional: cannot deposit via API',
   })
 
   // Pitfall #14: Not redeemable
@@ -175,7 +192,7 @@ export function runDoctorChecks(
     passed: vault.isRedeemable,
     detail: vault.isRedeemable
       ? 'Vault is redeemable'
-      : 'Vault is NOT redeemable — funds may be locked',
+      : 'Vault is NOT redeemable: funds may be locked',
   })
 
   // Pitfall #15: Empty underlyingTokens
@@ -184,11 +201,11 @@ export function runDoctorChecks(
     id: 15,
     pitfall: 'underlyingTokens[]',
     description:
-      'Some vaults have empty underlyingTokens — must specify fromToken manually',
+      'Some vaults have empty underlyingTokens, must specify fromToken manually',
     passed: hasUnderlyingTokens,
     detail: hasUnderlyingTokens
       ? `Underlying: ${vault.underlyingTokens.map((t) => t.symbol ?? '?').join(', ')}`
-      : 'underlyingTokens is EMPTY — you must pass fromToken explicitly',
+      : 'underlyingTokens is EMPTY. You must pass fromToken explicitly',
   })
 
   // Pitfall #16: description is optional
@@ -198,8 +215,8 @@ export function runDoctorChecks(
     id: 16,
     pitfall: 'description optional',
     description:
-      '~14% of vaults lack a description field — do not assume it exists',
-    passed: true, // Always passes — it's fine if missing
+      'Two thirds of vaults have no description field: never assume it exists',
+    passed: true, // Always passes. It's fine if missing
     detail: hasDescription
       ? `Description present: "${vault.description!.slice(0, 60)}..."`
       : 'No description (this is expected for some vaults)',
@@ -210,7 +227,7 @@ export function runDoctorChecks(
     id: 17,
     pitfall: 'apy.reward nullable',
     description:
-      'apy.reward is null for some protocols (Morpho) — normalize to 0',
+      'apy.reward is three-valued (null, 0, positive): never collapse null to 0',
     passed: typeof vault.analytics.apy.reward === 'number',
     detail: `apy.reward = ${vault.analytics.apy.reward} (type: ${typeof vault.analytics.apy.reward})`,
   })
@@ -227,11 +244,11 @@ export function runDoctorChecks(
   checks.push({
     id: 18,
     pitfall: 'Historical APY nullable',
-    description: 'apy1d, apy7d, apy30d can all be null — use fallback chain',
-    passed: true, // Always passes — null is expected; SDK handles fallback
+    description: 'apy1d, apy7d, apy30d can all be null: use fallback chain',
+    passed: true, // Always passes. Null is expected; SDK handles fallback
     detail:
       nullApyFields.length > 0
-        ? `Null fields: ${nullApyFields.join(', ')} — SDK uses fallback chain`
+        ? `Null fields: ${nullApyFields.join(', ')}: SDK uses fallback chain`
         : 'All historical APY fields present',
   })
 
@@ -256,9 +273,7 @@ export function formatDoctorReport(
   const lines: string[] = []
 
   lines.push(
-    chalk.bold.underline(
-      `EarnForge Doctor${vaultName ? ` — ${vaultName}` : ''}`
-    )
+    chalk.bold.underline(`EarnForge Doctor${vaultName ? `${vaultName}` : ''}`)
   )
   lines.push('')
 
@@ -295,7 +310,7 @@ export function runEnvChecks(): DoctorReport {
   checks.push({
     id: 1,
     pitfall: 'LIFI_API_KEY',
-    description: 'Composer API key for quote/deposit operations',
+    description: 'One key authenticates both earn.li.fi and li.quest',
     passed: hasApiKey,
     detail: hasApiKey ? 'LIFI_API_KEY is set' : 'LIFI_API_KEY is NOT set',
   })
@@ -313,9 +328,11 @@ export function runEnvChecks(): DoctorReport {
   checks.push({
     id: 3,
     pitfall: 'Earn Data API',
-    description: 'earn.li.fi is the read-only API (no auth needed)',
-    passed: true,
-    detail: 'earn.li.fi — public, no API key required',
+    description: 'earn.li.fi is the read API, and it requires a key',
+    passed: hasApiKey,
+    detail: hasApiKey
+      ? 'earn.li.fi will use LIFI_API_KEY for x-lifi-api-key header'
+      : 'earn.li.fi returns 401 without LIFI_API_KEY. Every read fails',
   })
 
   checks.push({
@@ -325,7 +342,7 @@ export function runEnvChecks(): DoctorReport {
     passed: hasApiKey,
     detail: hasApiKey
       ? 'li.quest will use LIFI_API_KEY for x-lifi-api-key header'
-      : 'li.quest requires LIFI_API_KEY — set it to use quote/deposit',
+      : 'li.quest requires LIFI_API_KEY: set it to use quote/deposit',
   })
 
   const passed = checks.filter((c) => c.passed).length
@@ -337,7 +354,7 @@ export function runEnvChecks(): DoctorReport {
 export function formatEnvReport(report: DoctorReport): string {
   const lines: string[] = []
 
-  lines.push(chalk.bold.underline('EarnForge Doctor — Environment'))
+  lines.push(chalk.bold.underline('EarnForge Doctor: Environment'))
   lines.push('')
 
   for (const check of report.checks) {

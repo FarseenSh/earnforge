@@ -21,7 +21,7 @@ export function makeVault(overrides: Partial<Vault> = {}): Vault {
     underlyingTokens: [{ symbol: 'USDC', address: '0xusdc', decimals: 6 }],
     analytics: {
       apy: { base: 0.04, total: 0.05, reward: 0.01 },
-      tvl: { usd: '50000000' },
+      tvl: { usd: 50_000_000 },
       apy1d: 0.048,
       apy7d: 0.049,
       apy30d: 0.051,
@@ -47,7 +47,7 @@ export function makeVault2(overrides: Partial<Vault> = {}): Vault {
     underlyingTokens: [{ symbol: 'WETH', address: '0xweth', decimals: 18 }],
     analytics: {
       apy: { base: 0.03, total: 0.08, reward: 0.05 },
-      tvl: { usd: '120000000' },
+      tvl: { usd: 120_000_000 },
       apy1d: null,
       apy7d: 0.075,
       apy30d: 0.082,
@@ -82,7 +82,7 @@ export function makeHighRiskVault(): Vault {
     underlyingTokens: [{ symbol: 'USDT', address: '0xusdt', decimals: 6 }],
     analytics: {
       apy: { base: 0.8, total: 0.9, reward: 0.1 },
-      tvl: { usd: '50000' },
+      tvl: { usd: 50_000 },
       apy1d: 0.5,
       apy7d: null,
       apy30d: null,

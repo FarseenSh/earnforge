@@ -21,6 +21,48 @@ describe('runDoctorChecks', () => {
     expect(report.checks).toHaveLength(18)
   })
 
+  /**
+   * `doctor` reported a failure on every healthy live vault.
+   *
+   * Check #8 asserted `typeof tvl.usd === 'string'`, which was true when it was
+   * written and has been false since the field flipped to a number. So the
+   * diagnostic whose whole job is catching pitfalls told users their vault was
+   * broken because the API had been fixed.
+   *
+   * The mocked suite could not see it: these fixtures still carried the old
+   * string form, so the check agreed with a snapshot of the past while
+   * disagreeing with production. The fixtures now use numbers, as the live API
+   * and the SDK's own fixtures do, and the check no longer pins either type.
+   */
+  it('passes cleanly on a vault carrying the live number-typed tvl', () => {
+    const vault = makeVault()
+    expect(typeof vault.analytics.tvl.usd).toBe('number')
+
+    const report = runDoctorChecks(vault, { hasApiKey: true })
+    const failures = report.checks.filter((c) => !c.passed)
+    expect(failures.map((f) => `#${f.id} ${f.pitfall}`)).toEqual([])
+  })
+
+  it('accepts a string tvl too, since the spec still declares one', () => {
+    const vault = makeVault()
+    const asString = {
+      ...vault,
+      analytics: { ...vault.analytics, tvl: { usd: '50000000' } },
+    } as typeof vault
+
+    const report = runDoctorChecks(asString, { hasApiKey: true })
+    expect(report.checks.find((c) => c.id === 8)?.passed).toBe(true)
+  })
+
+  it('fails the auth check when no API key is present', () => {
+    // Pitfall #2 inverted: this used to pass unconditionally while asserting
+    // that earn.li.fi needed no auth.
+    const report = runDoctorChecks(makeVault(), { hasApiKey: false })
+    const authCheck = report.checks.find((c) => c.id === 2)
+    expect(authCheck?.passed).toBe(false)
+    expect(authCheck?.detail).toMatch(/401/)
+  })
+
   it('all checks pass for a healthy vault with API key', () => {
     const vault = makeVault()
     const report = runDoctorChecks(vault, { hasApiKey: true })
@@ -76,7 +118,7 @@ describe('runDoctorChecks', () => {
     const vault = makeVault({
       analytics: {
         apy: { base: 100, total: 500, reward: 400 },
-        tvl: { usd: '1000000' },
+        tvl: { usd: 1_000_000 },
         apy1d: null,
         apy7d: null,
         apy30d: null,
@@ -100,7 +142,7 @@ describe('runDoctorChecks', () => {
     const vault = makeVault({
       analytics: {
         apy: { base: 0.04, total: 0.05, reward: 0.01 },
-        tvl: { usd: '50000000' },
+        tvl: { usd: 50_000_000 },
         apy1d: null,
         apy7d: null,
         apy30d: null,
