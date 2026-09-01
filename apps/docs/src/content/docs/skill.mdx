@@ -12,7 +12,7 @@ and use EarnForge correctly.
 
 ## Installation
 
-The quickest way — installs into whichever agent you use, and works with
+The quickest way: installs into whichever agent you use, and works with
 Claude Code, Cursor, Codex, Gemini CLI and a dozen others:
 
 ```bash
@@ -27,7 +27,7 @@ npm i @earnforge/skill
 
 It is also served over MCP as resources under `skill://earnforge/*`, so
 connecting to the [MCP server](/mcp/) gives an agent the tools *and* these
-instructions over one connection — no install at all.
+instructions over one connection. No install at all.
 
 The installed package contains:
 
@@ -69,7 +69,7 @@ description: >
 
 ## Commands in SKILL.md
 
-The skill documents the CLI's full surface — 19 commands, all accepting `--json`.
+The skill documents the CLI's full surface: 19 commands, all accepting `--json`.
 
 ### Vault Discovery
 
@@ -102,7 +102,7 @@ The skill documents the CLI's full surface — 19 commands, all accepting `--jso
 
 | Command | Description |
 |---------|-------------|
-| `earnforge doctor <slug>` | Run 22 checks — 18 pitfall guards plus 4 environment checks |
+| `earnforge doctor --vault <slug>` | Run 22 checks: 18 pitfall guards plus 4 environment checks |
 | `earnforge preflight <slug> <wallet>` | Pre-deposit validation |
 | `earnforge watch <slug> [--apy-drop] [--tvl-drop]` | Monitor APY/TVL changes |
 
@@ -129,14 +129,14 @@ wrong:
 3. **Check `isTransactional` before quoting a deposit**, and `isRedeemable`
    before quoting a withdrawal.
 
-4. **Risk thresholds are 8 / 6** — `>= 8` low, `6–7.9` medium, `< 6` high.
+4. **Risk thresholds are 8 / 6**: `>= 8` low, `6–7.9` medium, `< 6` high.
    Always show the score *and* its flags alongside APY.
 
 5. **Never recommend a verification-flagged vault without saying so.** LI.FI
    flags roughly 9% of vaults. A flagged vault can never reach 8, so it can
    never read as low risk, and `suggest` excludes them by default.
 
-6. **APY is already a percentage** (3.84 = 3.84%). Do **not** multiply by 100 —
+6. **APY is already a percentage** (3.84 = 3.84%). Do **not** multiply by 100.
    LI.FI's own spec and quickstart say to, and they are wrong; doing so
    overstates every yield 100×.
 
@@ -145,7 +145,7 @@ wrong:
    `earnforge protocols`.
 
 8. **Cross-chain deposits need an explicit `--from-token`**, and are not
-   atomic — a bridge can succeed while the destination deposit fails.
+   atomic: a bridge can succeed while the destination deposit fails.
 
 <Aside type="caution" title="apy.reward is three-valued">
 Earlier guidance here said to normalise `apy.reward` to `0`. That is wrong and

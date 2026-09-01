@@ -3,7 +3,7 @@
 24 pitfalls, all verified against the live API on Sep 1, 2026 across 799 vaults.
 The SDK handles every one by default.
 
-**Two have inverted since they were first written** and one is obsolete — the API
+**Two have inverted since they were first written** and one is obsolete. The API
 changed underneath them. Six exist because LI.FI's documentation contradicts
 LI.FI's API.
 
@@ -23,30 +23,30 @@ LI.FI's API.
 | 12 | Wallet on the wrong chain | Transaction fails | `preflight()` chain comparison |
 | 13 | Vault is not transactional | Quote fails | `isTransactional` guard |
 | 14 | Rate limit is 100 req/min | 429 | Token bucket with async backpressure |
-| 15 | Empty `underlyingTokens` — **obsolete**, 0 of 799 vaults | Crash on `[0]` | Guard retained against a synthesised case |
+| 15 | Empty `underlyingTokens`: **obsolete**, 0 of 799 vaults | Crash on `[0]` | Guard retained against a synthesised case |
 | 16 | `description` is optional (~23% of vaults have it) | undefined access | `.optional()` |
 | 17 | **`apy.reward` is three-valued**: null, 0, or positive | Lost signal if collapsed | null preserved; `getRewardApy()` coerces on request |
 | 18 | `apy.base` can also be null | Type error | Nullable |
 | 19 | **Stale protocol slugs return 200 with zero results** | Silent empty result set | Unversioned ids; existence checked against the live list |
-| 20 | **Unknown query params are silently dropped** | Filter fails open — returns everything | Correct param names pinned by test |
+| 20 | **Unknown query params are silently dropped** | Filter fails open: returns everything | Correct param names pinned by test |
 | 21 | **`verificationStatus` is undocumented** but flags ~10% of vaults | Recommending a suspect vault | First-class risk dimension; excluded from `suggest` |
 | 22 | **The docs contradict the API** in six places | 100x APY error if you follow the spec | Schemas generated from live responses |
 | 23 | **Slug format changed** to `protocol:chainId:_:address` | Mis-parsed slugs and cursors | `parseVaultSlug()` accepts both forms |
-| 24 | **`underlyingTokens` entries can be partial** — address only, no `symbol`/`decimals` | One vault aborts the whole fleet walk | Both fields optional on the token schema |
+| 24 | **`underlyingTokens` entries can be partial**: address only, no `symbol`/`decimals` | One vault aborts the whole fleet walk | Both fields optional on the token schema |
 
 ## The ones that will bite hardest
 
 **APY is a percentage.** `4.63` means 4.63%. LI.FI's OpenAPI spec says these are
-decimals and the quickstart multiplies by 100 — following the official example
+decimals and the quickstart multiplies by 100: following the official example
 overstates every yield **100×**. A 29% vault renders as 2919%.
 
 **A stale protocol slug fails silently.** `?protocol=morpho-v1` returns HTTP 200
 with `total: 0`. There is no error to catch, so it looks identical to a protocol
-that genuinely has no vaults. Never hardcode a slug — resolve via
+that genuinely has no vaults. Never hardcode a slug: resolve via
 `earnforge protocols`.
 
 **An unknown query param is dropped, not rejected.** Sending `minTvl` instead of
-`minTvlUsd` returned all 799 vaults instead of 49 — a "$100M+ TVL" filter that
+`minTvlUsd` returned all 799 vaults instead of 49: a "$100M+ TVL" filter that
 silently returns sub-$20k dust.
 
 **`verificationStatus` is documented nowhere** and flags 75 of 799 vaults, mostly
@@ -58,7 +58,7 @@ flagged vault lands at the top of the list.
 Per LI.FI's own limitations page: a bridge can succeed while the destination
 deposit fails, leaving the user holding tokens on the destination chain rather
 than a vault position. Always poll status and handle the failed case. Simulation
-cannot prevent every revert either — state can change between simulate and
+cannot prevent every revert either: state can change between simulate and
 execute, including a vault filling up.
 
 Full detail with a regression test for each: `PITFALLS.md` in the repository root.

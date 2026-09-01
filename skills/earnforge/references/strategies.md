@@ -69,16 +69,16 @@ Pass `--strategy` to `earnforge suggest` to apply a preset:
 
 ```bash
 # Conservative allocation for $100K USDC
-earnforge suggest 100000 USDC --strategy conservative
+earnforge suggest --amount 100000 --asset USDC --strategy conservative
 
 # Max yield for $1K ETH
-earnforge suggest 1000 ETH --strategy max-apy
+earnforge suggest --amount 1000 --asset ETH --strategy max-apy
 
 # Diversified across chains
-earnforge suggest 50000 USDC --strategy diversified --max-chains 5
+earnforge suggest --amount 50000 --asset USDC --strategy diversified --max-chains 5
 
 # Only low-risk vaults
-earnforge suggest 25000 USDC --strategy risk-adjusted
+earnforge suggest --amount 25000 --asset USDC --strategy risk-adjusted
 ```
 
 Strategies can be combined with `--max-vaults` and `--max-chains` to further constrain the allocation.

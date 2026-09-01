@@ -27,7 +27,7 @@ metadata:
       - name: LIFI_API_KEY
         required: true
         description: >
-          LI.FI API key from https://portal.li.fi. Mandatory — the Earn Data API
+          LI.FI API key from https://portal.li.fi. Mandatory. The Earn Data API
           returns 401 without it.
 ---
 
@@ -52,7 +52,7 @@ All commands accept `--json` for machine-readable output.
 - `earnforge list [--asset USDC] [--chain 8453] [--min-tvl 1000000] [--strategy conservative] [--json]`
   List vaults with optional filters. Supports pagination.
 
-- `earnforge top --asset USDC [--chain 8453] [--limit 10] [--strategy max-apy] [--json]`
+- `earnforge top --asset USDC [--chain 8453] [--limit 10] [--json]`
   Top vaults sorted by APY descending.
 
 - `earnforge vault <slug> [--json]`
@@ -64,7 +64,7 @@ All commands accept `--json` for machine-readable output.
   Full risk score breakdown (0-10 scale) across seven dimensions: TVL magnitude,
   APY stability, protocol maturity, redeemability, asset type, LI.FI's
   verification status, and reward dependency. Also returns a `flags` array of
-  plain-language concerns — always relay these, not just the number.
+  plain-language concerns: always relay these, not just the number.
 
 - `earnforge apy-history <slug> [--json]`
   30-day APY history from DeFiLlama yields API.
@@ -81,17 +81,17 @@ All commands accept `--json` for machine-readable output.
 
 - `earnforge quote --vault <slug> --amount 100 --wallet 0x... [--from-chain 1] [--optimize-gas] [--json]`
   Build an unsigned deposit quote. Validates all pitfalls before quoting.
-  **Check allowance before executing** — the response includes `approvalAddress`.
+  **Check allowance before executing**. The response includes `approvalAddress`.
 
 - `earnforge withdraw --vault <slug> --amount 100 --wallet 0x... [--to-token 0x...] [--json]`
   Build an unsigned redeem/withdraw quote. Checks `isRedeemable` first.
 
-- `earnforge allowance --token 0x... --owner 0x... --spender 0x... --amount 1000000 --rpc-url <url> --chain-id 8453 [--json]`
+- `earnforge allowance --token 0x... --owner 0x... --spender 0x... --amount 1000000 --chain 8453 [--rpc <url>] [--json]`
   Check ERC-20 token allowance. Returns whether approval is sufficient and
   builds an unsigned approval tx if not. Use `approvalAddress` from the
   deposit quote as the `--spender`.
 
-- `earnforge approve --token 0x... --spender 0x... --amount 1000000 --chain-id 8453 [--json]`
+- `earnforge approve --token 0x... --spender 0x... --chain 8453 (--amount 1000000 | --unlimited) [--json]`
   Build an unsigned ERC-20 approval transaction.
 
 ### Safety & Monitoring
@@ -101,7 +101,7 @@ All commands accept `--json` for machine-readable output.
   token balance, redeemability.
 
 - `earnforge doctor --vault <slug> [--env] [--json]`
-  Run 22 checks on a vault — 18 pitfall guards plus 4 environment checks.
+  Run 22 checks on a vault: 18 pitfall guards plus 4 environment checks.
 
 - `earnforge watch --vault <slug> [--apy-drop 20] [--tvl-drop 30] [--json]`
   Monitor a vault for APY/TVL drops. Streams events.
@@ -109,14 +109,14 @@ All commands accept `--json` for machine-readable output.
 - `earnforge simulate --vault <slug> --amount 100 --wallet 0x... [--from-token 0x...] [--slippage-bps 100] [--allow-revert] [--json]`
   Simulate a deposit against the current chain head using Composer's own
   simulator, which sees allowances, balances and protocol state. Runs preflight
-  first. Exits non-zero and returns revert diagnostics if it would fail — report
+  first. Exits non-zero and returns revert diagnostics if it would fail. Report
   that to the user rather than presenting the transaction as ready.
 
 ### Reference Data
 
-- `earnforge chains [--json]` — chains with at least one indexed vault
-- `earnforge protocols [--json]` — protocols with unversioned ids and URLs
-- `earnforge init <name>` — Scaffold a new project with EarnForge wired up
+- `earnforge chains [--json]`: chains with at least one indexed vault
+- `earnforge protocols [--json]`: protocols with unversioned ids and URLs
+- `earnforge init <name>`: Scaffold a new project with EarnForge wired up
 
 ## Rules
 
@@ -141,14 +141,14 @@ All commands accept `--json` for machine-readable output.
    risk. Always show the score and its flags alongside APY.
 
 8. **Never recommend a verification-flagged vault without saying so.** LI.FI
-   flags roughly 10% of vaults — usually `zero_apy`, sometimes `apy_outlier`.
+   flags roughly 10% of vaults: usually `zero_apy`, sometimes `apy_outlier`.
    `earnforge risk` reports it. A flagged vault can never score >= 8, so it can
    never be low risk, and `suggest` excludes them by default.
 
-9. **APY values are already percentages** (3.84 = 3.84%). Do NOT multiply by 100
-   — LI.FI's own OpenAPI spec and quickstart say to, and they are wrong; doing so
+9. **APY values are already percentages** (3.84 = 3.84%). Do NOT multiply by 100.
+   LI.FI's own OpenAPI spec and quickstart say to, and they are wrong; doing so
    overstates every yield 100x. `apy1d/apy7d/apy30d` can be null, and so can
-   `apy.base` and `apy.reward` — use the fallback chain.
+   `apy.base` and `apy.reward`: use the fallback chain.
 
 10. **Never hardcode a protocol slug.** Ids are unversioned (`morpho`, not
     `morpho-v1`) and a stale slug returns HTTP 200 with zero results rather than
@@ -156,15 +156,15 @@ All commands accept `--json` for machine-readable output.
 
 11. **Cross-chain deposits require explicit `--from-token`.** The vault's
     underlying token address is on the vault's chain, not the source chain. And
-    cross-chain flows are not atomic — a bridge can succeed while the destination
+    cross-chain flows are not atomic: a bridge can succeed while the destination
     deposit fails, so always poll status and handle the failed case.
 
 12. **Use chainId (number), not chain name, in all API paths.**
 
 ## References
 
-- [references/pitfalls.md](references/pitfalls.md) — All 23 API pitfalls
-- [references/protocols.md](references/protocols.md) — protocols with risk tiers
-- [references/chains.md](references/chains.md) — chains with chainIds
-- [references/examples.md](references/examples.md) — Worked examples
-- [references/strategies.md](references/strategies.md) — 4 yield strategy presets
+- [references/pitfalls.md](references/pitfalls.md). All 23 API pitfalls
+- [references/protocols.md](references/protocols.md): protocols with risk tiers
+- [references/chains.md](references/chains.md): chains with chainIds
+- [references/examples.md](references/examples.md): Worked examples
+- [references/strategies.md](references/strategies.md): 4 yield strategy presets

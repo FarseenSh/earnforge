@@ -1,6 +1,7 @@
 # Worked Examples
 
-8 end-to-end examples demonstrating common EarnForge workflows.
+10 end-to-end examples demonstrating common EarnForge workflows. Every command
+here is executed against the real CLI by the live suite.
 
 ## 1. List Vaults by Asset
 
@@ -29,7 +30,7 @@ earnforge top --asset USDC --limit 5
 Side-by-side comparison of Morpho vs Aave USDC vaults:
 
 ```bash
-earnforge compare morpho:8453:_:0xbeef... 1-0xaave... --json
+earnforge compare morpho:8453:_:0xbeef... aave:1:_:0x9277... --json
 ```
 
 Output includes APY difference, TVL ratio, risk score delta, and protocol tier comparison.
@@ -39,7 +40,7 @@ Output includes APY difference, TVL ratio, risk score delta, and protocol tier c
 Quote depositing 1000 USDC into a Base vault:
 
 ```bash
-earnforge quote morpho:8453:_:0xbeef... 1000 0xYourWallet --json
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 1000 --wallet 0xYourWallet --json
 ```
 
 The SDK automatically:
@@ -55,7 +56,7 @@ Returns an unsigned transaction for the user to sign.
 Get a diversified allocation for $50,000 in USDC:
 
 ```bash
-earnforge suggest 50000 USDC --max-vaults 5 --max-chains 3 --strategy diversified --json
+earnforge suggest --amount 50000 --asset USDC --max-chains 3 --strategy diversified --json
 ```
 
 ```json
@@ -76,7 +77,7 @@ earnforge suggest 50000 USDC --max-vaults 5 --max-chains 3 --strategy diversifie
 Build a redeem quote to exit a position:
 
 ```bash
-earnforge withdraw morpho:8453:_:0xbeef... 500 0xYourWallet --json
+earnforge withdraw --vault morpho:8453:_:0xbeef... --amount 500 --wallet 0xYourWallet --json
 ```
 
 Checks `isRedeemable` and `redeemPacks` before building the quote. Warns if the vault is non-redeemable.
@@ -86,13 +87,15 @@ Checks `isRedeemable` and `redeemPacks` before building the quote. Warns if the 
 Deposit from Ethereum into a Base vault using LI.FI routing:
 
 ```bash
-earnforge quote morpho:8453:_:0xbeef... 1000 0xYourWallet --from-chain 1 --json
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 1000 --wallet 0xYourWallet --from-chain 1 --json
 ```
 
-The Composer API handles the bridge + swap + deposit in a single quote. Use `gas-optimize` to compare costs across source chains:
+The Composer API handles the bridge + swap + deposit in a single quote. To
+compare costs across source chains, add `--optimize-gas` to the same `quote`
+command. There is no separate `gas-optimize` command:
 
 ```bash
-earnforge gas-optimize morpho:8453:_:0xbeef... 1000 0xYourWallet --from-chains 1,10,8453 --json
+earnforge quote --vault morpho:8453:_:0xbeef... --amount 1000 --wallet 0xYourWallet --optimize-gas --json
 ```
 
 ## 7. Risk Analysis
@@ -105,31 +108,49 @@ earnforge risk morpho:8453:_:0xbeef... --json
 
 ```json
 {
-  "score": 7.8,
-  "label": "low",
+  "slug": "morpho:8453:_:0xbeef...",
+  "name": "STEAKUSDC",
+  "score": 9.7,
   "breakdown": {
-    "tvl": 8,
-    "apyStability": 8,
+    "tvl": 10,
+    "apyStability": 10,
     "protocol": 9,
     "redeemability": 10,
-    "assetType": 9
-  }
+    "assetType": 9,
+    "verification": 10,
+    "rewardDependency": 10
+  },
+  "label": "low",
+  "flags": []
 }
 ```
 
-Dimensions:
-- **TVL Magnitude** (25% weight): Higher TVL = lower risk. $100M+ = 10/10.
-- **APY Stability** (20% weight): Small divergence between apy1d/apy30d/total = more stable.
-- **Protocol Maturity** (25% weight): Known blue-chip protocols score higher.
-- **Redeemability** (15% weight): Non-redeemable = liquidity risk (3/10).
-- **Asset Type** (15% weight): Stablecoin tag = lower asset risk (9/10).
+Seven dimensions, weighted:
+
+| Dimension | Weight | What it reads |
+|---|---|---|
+| `verification` | 0.22 | LI.FI's own `verificationStatus`. The heaviest input. |
+| `tvl` | 0.18 | Deeper liquidity, more scrutiny. $100M+ scores 10. |
+| `protocol` | 0.18 | Track record and audit surface, not size. |
+| `apyStability` | 0.14 | Divergence between current and trailing APY. |
+| `redeemability` | 0.10 | Exitable via Composer, or a liquidity trap. |
+| `assetType` | 0.10 | Stablecoin exposure vs volatile, plus IL risk. |
+| `rewardDependency` | 0.08 | Yield from incentives can stop; lending fees usually do not. |
+
+`verification` carries 0.22 deliberately: a flagged vault caps at **7.96** even
+with a perfect showing everywhere else, so **no flagged vault can ever be
+labelled low risk**. Labels are `low >= 8`, `medium >= 6`, `high` below that.
+
+`flags` is a plain-language array: `"96% of APY comes from token incentives"`,
+`"TVL under $100k"`, `"flagged by LI.FI verification: apy_outlier"`: ordered
+roughly by severity.
 
 ## 8. Portfolio Suggestion with Strategy
 
 Use the conservative strategy for a safe allocation:
 
 ```bash
-earnforge suggest 100000 USDC --strategy conservative --json
+earnforge suggest --amount 100000 --asset USDC --strategy conservative --json
 ```
 
 The conservative strategy applies these filters:
@@ -149,7 +170,7 @@ earnforge quote --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0xYour --j
 # Note the approvalAddress in the response
 
 # Step 2: Check if approval is needed
-earnforge allowance --token 0xUSDC --owner 0xYour --spender 0xApprovalAddr --amount 100000000 --rpc-url https://mainnet.base.org --chain-id 8453 --json
+earnforge allowance --token 0xUSDC --owner 0xYour --spender 0xApprovalAddr --amount 100000000 --chain 8453 --rpc https://mainnet.base.org --json
 # If sufficient: false, sign the approvalTx first
 
 # Step 3: Execute deposit (user signs the transactionRequest from step 1)
@@ -159,7 +180,7 @@ The SDK's `buildDepositQuote()` handles toToken, decimals, and pitfall validatio
 
 ## 10. Withdraw from a Vault
 
-Withdrawal reverses the deposit — fromToken is the vault share token, toToken is the underlying.
+Withdrawal reverses the deposit: fromToken is the vault share token, toToken is the underlying.
 
 ```bash
 # Check if vault is redeemable
@@ -169,4 +190,4 @@ earnforge vault morpho:8453:_:0xbeef... --json | jq '.isRedeemable'
 earnforge withdraw --vault morpho:8453:_:0xbeef... --amount 50 --wallet 0xYour --json
 ```
 
-The Composer uses the same `/v1/quote` endpoint with swapped tokens. Cross-chain withdrawals are supported — add `--to-chain` and `--to-token` for the destination.
+The Composer uses the same `/v1/quote` endpoint with swapped tokens. Cross-chain withdrawals are supported: add `--to-chain` and `--to-token` for the destination.

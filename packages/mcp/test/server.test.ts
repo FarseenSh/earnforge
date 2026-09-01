@@ -84,8 +84,8 @@ const mockForge = {
   composerClient: null,
 }
 
-// Only the factory is mocked. The pure helpers — parseTvl, isFlagged,
-// flagReasons, positionBalanceUsd, totalPortfolioUsd, detectDrift — keep their
+// Only the factory is mocked. The pure helpers (parseTvl, isFlagged,
+// flagReasons, positionBalanceUsd, totalPortfolioUsd, detectDrift) keep their
 // real implementations, so a change in how the server derives a summary is
 // caught here rather than hidden behind a stub.
 vi.mock('@earnforge/sdk', async (importOriginal) => {
@@ -155,7 +155,7 @@ describe('EarnForge MCP Server', () => {
      *
      * This asserted nine `toContain`s while the server registered twelve, so
      * `quote-vault-redeem`, `check-allowance` and `check-api-drift` had no
-     * registration coverage at all — and the docs went on claiming nine tools
+     * registration coverage at all, and the docs went on claiming nine tools
      * for months because nothing contradicted them. Comparing the sorted set
      * fails on an unlisted addition too, which is the half that catches drift.
      */
