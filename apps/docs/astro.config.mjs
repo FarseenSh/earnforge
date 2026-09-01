@@ -32,7 +32,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'Risk Scoring', link: '/risk/' },
-            { label: '18 Pitfalls', link: '/pitfalls/' },
+            { label: '24 Pitfalls', link: '/pitfalls/' },
           ],
         },
       ],
