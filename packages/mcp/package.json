@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/mcp",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Farseen Shaikh",
@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/FarseenSh/earnforge/issues"
   },
-  "description": "Earn-native MCP server for the LI.FI Earn API — 12 tools for vault discovery, risk scoring, allocation, and deposit quoting",
+  "description": "Earn-native MCP server for the LI.FI Earn API: 12 tools for vault discovery, risk scoring, allocation, and deposit quoting",
   "keywords": [
     "lifi",
     "earn",

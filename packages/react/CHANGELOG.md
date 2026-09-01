@@ -1,5 +1,11 @@
 # @earnforge/react
 
+## 1.0.2
+
+### Patch Changes
+
+- Package description wording only. No runtime change.
+
 ## 1.0.1
 
 ### Patch Changes

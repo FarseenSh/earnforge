@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/skill",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Farseen Shaikh",
@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/FarseenSh/earnforge/issues"
   },
-  "description": "Agent Skill for the LI.FI Earn API — vault discovery, risk scoring, and deposit quoting via the earnforge CLI",
+  "description": "Agent Skill for the LI.FI Earn API: vault discovery, risk scoring, and deposit quoting via the earnforge CLI",
   "keywords": [
     "lifi",
     "earn",
@@ -33,6 +33,6 @@
   "scripts": {
     "prepack": "cp -R ../../skills/earnforge/SKILL.md ../../skills/earnforge/references .",
     "postpack": "rm -rf SKILL.md references",
-    "test": "echo 'Skill package has no tests — content only'"
+    "test": "echo 'Skill package has no tests, content only'"
   }
 }

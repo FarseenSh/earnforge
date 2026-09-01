@@ -1,5 +1,37 @@
 # @earnforge/cli
 
+## 1.2.0
+
+### Minor Changes
+
+- **`doctor` reported a failure on every healthy vault.** Check 8 asserted
+  `typeof tvl.usd === 'string'`. That inverted when the field became a number,
+  so the diagnostic whose job is catching pitfalls told users their vault was
+  broken because the API had been fixed. It now asserts what actually matters,
+  that `parseTvl()` normalises whichever type arrives, and passes on both.
+
+- **`doctor` taught the inverted auth rule.** Check 2 read "Earn Data API
+  requires no authentication" and passed unconditionally. `earn.li.fi` has
+  hard-401ed without a key since April 2026, and `EarnDataClient` has required
+  one for releases, so the check contradicted both the docs and the SDK.
+  `doctor --env` said "earn.li.fi: public, no API key required" and now says
+  the opposite.
+
+  **Behaviour change:** `doctor` and `doctor --env` exit non-zero without
+  `LIFI_API_KEY`, where they previously passed.
+
+- **`simulate` works.** It depends on `buildDepositFlow`, which could not
+  compile a program at all. See `@earnforge/sdk` 1.2.0.
+
+### Patch Changes
+
+- Failures print what the cause chain knows. Composer answers a rejected program
+  with `422 preparation_error` and a `failedOps` array naming the op and the
+  reason; only `err.message` was printed, so "1 of 1 prepared op(s) failed"
+  arrived with no way to reach the sentence explaining it.
+- Every `earnforge` command printed in the docs is now parsed against commander
+  in CI, so an invocation that cannot run fails the build.
+
 ## 1.1.0
 
 ### Minor Changes

@@ -1,5 +1,33 @@
 # @earnforge/skill
 
+## 1.1.0
+
+### Minor Changes
+
+- **Six documented commands could not run.** An agent following this skill got
+  `error: unknown command` or a missing-option error, with no way to tell "I
+  used it wrong" from "this tool is broken":
+
+  | Documented | Reality |
+  |---|---|
+  | `earnforge gas-optimize …` | no such command; it is `quote --optimize-gas` |
+  | `allowance --rpc-url --chain-id` | `--rpc` and `--chain` |
+  | `approve --chain-id` | `--chain`, plus `--amount` or `--unlimited` |
+  | `quote <slug> <amount> <wallet>` | flag-based |
+  | `suggest <amount> <asset>` | flag-based |
+  | `withdraw <slug> <amount> <wallet>` | flag-based |
+
+  `top --strategy` and `suggest --max-vaults` were documented and do not exist.
+  A CI test now parses every command in this skill against the real commander
+  program, so a documented invocation that cannot run fails the build.
+
+- **The risk model was documented with five dimensions and the wrong weights.**
+  It has seven. `verification` carries 0.22, which is what makes a flagged vault
+  cap at 7.96 and never read as low risk.
+
+- Fleet figures re-measured: 799 vaults, 75 flagged, 27 protocols, 17 chains.
+  `nest` left the index and `maple` returned.
+
 ## 1.0.4
 
 ### Patch Changes

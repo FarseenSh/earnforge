@@ -1,5 +1,39 @@
 # @earnforge/sdk
 
+## 1.2.0
+
+### Minor Changes
+
+- **`buildDepositFlow()` could never succeed.** Omitting `fromToken` fell
+  through to `resources.native(chainId)`, and the "input is already the vault
+  asset" check required `fromToken` to be *defined*. So the plainest possible
+  call, depositing the vault's own asset, composed a swap from the zero address
+  into that asset. Composer refused the program before compiling it:
+
+  ```
+  422 preparation_error, no_route_error on op `swap`
+  "No route available for swap 0x0000…0000 -> 0x8335…2913"
+  ```
+
+  Every vault, every wallet, every call, including `earnforge simulate` built on
+  top of it. Omitting `fromToken` now means the vault asset, matching
+  `buildDepositQuote()` and what the CLI documents, and the zero address is
+  treated as native rather than an ERC-20 at `0x0`, so an explicit native
+  deposit composes a real swap leg for the first time.
+
+  The mocked suite stayed green throughout because compilation is stubbed there:
+  it asserted the shape of a request the backend would always reject. A live
+  Composer suite now covers `li.quest`, which nothing did before.
+
+- **`@lifi/compose-spec` and `@lifi/composer-sdk` move 0.2.0 to 0.4.1.**
+  `^0.2.0` resolves to `>=0.2.0 <0.3.0`, so the pin could never have picked up
+  0.3 or 0.4 on its own.
+
+### Patch Changes
+
+- `detectDrift` report text no longer uses em dashes, so the strings the docs
+  quote and the strings the program prints stay identical.
+
 ## 1.1.0
 
 ### Minor Changes

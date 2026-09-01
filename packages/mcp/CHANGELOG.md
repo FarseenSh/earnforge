@@ -1,5 +1,20 @@
 # @earnforge/mcp
 
+## 1.1.0
+
+### Minor Changes
+
+- Serves `@earnforge/skill` 1.1.0, which fixes six CLI invocations that could
+  not run. These reach agents as `skill://earnforge/**` resources, so the broken
+  versions were being served from production.
+
+### Patch Changes
+
+- `registers all 9 tools` asserted nine `toContain`s while the server registers
+  twelve, leaving `quote-vault-redeem`, `check-allowance` and `check-api-drift`
+  with no registration coverage at all. It now pins the sorted set, so an
+  unlisted addition fails too.
+
 ## 1.0.6
 
 ### Patch Changes
