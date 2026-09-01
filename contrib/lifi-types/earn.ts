@@ -2,7 +2,7 @@
  * Types for the LI.FI Earn Data API (`earn.li.fi`).
  *
  * Derived from the live API rather than from `earn-openapi.yaml`, which
- * disagrees with the service in several places. Each noted inline. Verified
+ * disagrees with the service in several places, each noted inline. Verified
  * against 799 vaults across 17 chains and 27 protocols (1 Sep 2026).
  */
 
@@ -63,12 +63,12 @@ export interface EarnPack {
  * The OpenAPI spec, the quickstart and the how-it-works page all describe
  * these as decimals, and the quickstart multiplies by 100. They are wrong:
  * doing so overstates every yield by 100x. Values above 1 are common, and
- * a normaliser keyed on "below 1 means decimal" would misread the 165 vaults
- * that legitimately yield under 1%.
+ * a normaliser keyed on "below 1 means decimal" would misread every vault
+ * that legitimately yields under 1%, of which there are always some.
  *
  * `reward` is three-valued and the distinction is load-bearing:
- * - `null`. The protocol reported nothing. Unknown, not zero.
- * - `0`. The protocol reported that there are no incentives.
+ * - `null`: the protocol reported nothing. Unknown, not zero.
+ * - `0`: the protocol reported that there are no incentives.
  * - `> 0`: incentives, as a percentage.
  *
  * The split varies *within* a protocol, so it cannot be inferred from
