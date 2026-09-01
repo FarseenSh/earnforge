@@ -10,8 +10,8 @@ import { program } from '../src/index.js'
  * Every `earnforge ...` command printed in the docs must exist and parse.
  *
  * This is a regression test for a whole class of bug rather than one instance.
- * The agent-facing skill — published as `@earnforge/skill` and served live by
- * the MCP Worker as `skill://earnforge/references/*` — accumulated four
+ * The agent-facing skill: published as `@earnforge/skill` and served live by
+ * the MCP Worker as `skill://earnforge/references/*`, accumulated four
  * invocations that could never work:
  *
  *   earnforge gas-optimize <slug> <amount> <wallet>   no such command
@@ -23,7 +23,7 @@ import { program } from '../src/index.js'
  *
  * Nothing caught them because documentation is prose to a test suite. An agent
  * following the skill got `error: unknown command` and could not tell "I used
- * it wrong" from "this tool is broken" — the worst failure mode for the one
+ * it wrong" from "this tool is broken", the worst failure mode for the one
  * surface whose entire audience is machines.
  *
  * Commander is the oracle: the same `program` the binary runs. Flags and
@@ -54,7 +54,7 @@ interface Invocation {
 /**
  * Pull `earnforge <cmd> ...` lines out of markdown.
  *
- * Placeholders (`0xbeef...`, `<slug>`) are never executed — only the command
+ * Placeholders (`0xbeef...`, `<slug>`) are never executed: only the command
  * name and flag names are checked, which is what actually rots.
  */
 function collect(): Invocation[] {
@@ -108,7 +108,7 @@ describe('documented CLI commands', () => {
   it('every documented command exists', () => {
     const unknown = invocations
       .filter((i) => !commands.has(i.command))
-      .map((i) => `${i.file}:${i.line} — "${i.command}" :: ${i.raw}`)
+      .map((i) => `${i.file}:${i.line}: "${i.command}" :: ${i.raw}`)
 
     expect(unknown, 'documented commands that do not exist').toEqual([])
   })
@@ -124,7 +124,7 @@ describe('documented CLI commands', () => {
       for (const flag of inv.flags) {
         if (!known.has(flag)) {
           bad.push(
-            `${inv.file}:${inv.line} — "${inv.command}" has no ${flag} :: ${inv.raw}`
+            `${inv.file}:${inv.line}: "${inv.command}" has no ${flag} :: ${inv.raw}`
           )
         }
       }
@@ -154,7 +154,7 @@ describe('documented CLI commands', () => {
         .trim()
       if (tail.length > 0) {
         bad.push(
-          `${inv.file}:${inv.line} — "${inv.command}" takes no positional args but got "${tail}"`
+          `${inv.file}:${inv.line}: "${inv.command}" takes no positional args but got "${tail}"`
         )
       }
     }

@@ -6,12 +6,12 @@
  * catch. `buildDepositFlow` composed a swap from the zero address on every
  * plain deposit, and Composer refused the program with:
  *
- *   422 preparation_error — no_route_error on op `swap`
+ *   422 preparation_error: no_route_error on op `swap`
  *   "No route available for swap 0x0000…0000 → 0x8335…2913"
  *
  * That is every vault, every wallet, every call. It shipped in a published
  * release and stayed there, because `composer-flows.test.ts` stubs compilation
- * — it asserts the request we compose, which proves we still send what we meant
+ *. It asserts the request we compose, which proves we still send what we meant
  * to send, not that LI.FI still accepts it.
  *
  * The daily drift job did not help either: until this file existed, the entire
@@ -43,7 +43,7 @@ if (!ENV_KEY || ENV_KEY === PLACEHOLDER_KEY) {
 
 const KEY = ENV_KEY
 
-/** A funded, well-known address. Nothing is signed or sent — compile only. */
+/** A funded, well-known address. Nothing is signed or sent: compile only. */
 const WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
 
 /** WETH on Base, used to force a real swap leg. */
@@ -57,7 +57,7 @@ const flows = createComposerFlows({ apiKey: KEY })
  *
  * A pinned vault slug is a snapshot, and snapshots are what turned the Earn
  * live suite red twice. This picks a large, transactional, unflagged
- * stablecoin vault on Base — if none exists the fleet has changed in a way
+ * stablecoin vault on Base: if none exists the fleet has changed in a way
  * worth failing on.
  */
 let vault: Vault
@@ -74,13 +74,13 @@ beforeAll(async () => {
   if (!candidate) {
     throw new Error(
       'No transactional, unflagged, >$1M vault with a known underlying token ' +
-        'on Base — the fleet shape changed.'
+        'on Base. The fleet shape changed.'
     )
   }
   vault = candidate
 }, 60_000)
 
-describe('Live Composer — routing reads', () => {
+describe('Live Composer: routing reads', () => {
   it('returns routing edges for indexed protocols', async () => {
     const edges = await flows.routingEdges()
     expect(edges.length).toBeGreaterThan(0)
@@ -94,14 +94,14 @@ describe('Live Composer — routing reads', () => {
   })
 })
 
-describe('Live Composer — deposit flows compile', () => {
+describe('Live Composer: deposit flows compile', () => {
   /**
    * The regression this file was written for.
    *
    * Omitting `fromToken` means "I hold the vault's own asset", so the program
-   * is a single zap. Composing a swap here is what produced the `no_route_error`
-   * — and because it failed at *prepare*, `allowRevert` could not surface it
-   * either.
+   * is a single zap. Composing a swap here is what produced the
+   * `no_route_error`, and because it failed at *prepare*, `allowRevert` could
+   * not surface it either.
    */
   it('compiles a plain deposit with no fromToken', async () => {
     const sim = await flows.buildDepositFlow({
@@ -144,7 +144,7 @@ describe('Live Composer — deposit flows compile', () => {
   }, 90_000)
 })
 
-describe('Live Composer — the /v1/quote path', () => {
+describe('Live Composer. The /v1/quote path', () => {
   /**
    * Flows and `/v1/quote` are different endpoints on different hosts, and only
    * one of them was ever covered. Both ship, so both are checked.
