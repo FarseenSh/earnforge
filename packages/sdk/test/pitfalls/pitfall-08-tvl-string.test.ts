@@ -5,10 +5,10 @@ import { VaultListResponseSchema } from '../../src/schemas/index.js'
 import { parseTvl, TvlSchema } from '../../src/schemas/vault.js'
 
 /**
- * Pitfall #8 — INVERTED as of Apr 2026.
+ * Pitfall #8: INVERTED as of Apr 2026.
  *
  * `tvl.usd` used to arrive as a decimal string, so the original guard parsed it
- * to a number. It is now a JSON number on every live vault — while LI.FI's
+ * to a number. It is now a JSON number on every live vault, while LI.FI's
  * OpenAPI spec still documents it as a string.
  *
  * Because both representations are attested by some source, `TvlSchema` accepts

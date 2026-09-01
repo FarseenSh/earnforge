@@ -2,7 +2,7 @@
 import type { KnipConfig } from 'knip'
 
 // knip 6 derives entry points from each package's `exports`/`bin`, so the
-// per-workspace `entry` lists that used to live here are redundant — and a
+// per-workspace `entry` lists that used to live here are redundant, and a
 // stale one silently hides real dead code rather than reporting it.
 const config: KnipConfig = {
   workspaces: {
@@ -12,7 +12,7 @@ const config: KnipConfig = {
     },
   },
   // `contrib/` holds code written for someone else's repository, in their
-  // house style. It is intentionally unreferenced here — that is the point.
+  // house style. It is intentionally unreferenced here. That is the point.
   ignore: ['apps/**', 'contrib/**'],
 }
 

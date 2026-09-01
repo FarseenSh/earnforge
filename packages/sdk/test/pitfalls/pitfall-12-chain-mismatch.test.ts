@@ -7,7 +7,7 @@ import { VaultSchema } from '../../src/schemas/index.js'
 describe('Pitfall #12: Chain mismatch', () => {
   const vault = VaultSchema.parse(vaultSingle) // chainId 8453 (Base)
 
-  it('preflight warns (not errors) on cross-chain — Composer handles bridging', () => {
+  it('preflight warns (not errors) on cross-chain. Composer handles bridging', () => {
     const report = preflight(vault, '0x1', { walletChainId: 1 })
     expect(report.issues.some((i) => i.code === 'CHAIN_MISMATCH')).toBe(true)
     expect(

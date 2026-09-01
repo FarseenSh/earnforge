@@ -2,7 +2,7 @@
  * Types for the LI.FI Earn Data API (`earn.li.fi`).
  *
  * Derived from the live API rather than from `earn-openapi.yaml`, which
- * disagrees with the service in several places — each noted inline. Verified
+ * disagrees with the service in several places. Each noted inline. Verified
  * against 799 vaults across 17 chains and 27 protocols (1 Sep 2026).
  */
 
@@ -58,7 +58,7 @@ export interface EarnPack {
 }
 
 /**
- * APY breakdown. **All values are percentages** — `4.63` means 4.63%.
+ * APY breakdown. **All values are percentages**: `4.63` means 4.63%.
  *
  * The OpenAPI spec, the quickstart and the how-it-works page all describe
  * these as decimals, and the quickstart multiplies by 100. They are wrong:
@@ -67,9 +67,9 @@ export interface EarnPack {
  * that legitimately yield under 1%.
  *
  * `reward` is three-valued and the distinction is load-bearing:
- * - `null` — the protocol reported nothing. Unknown, not zero.
- * - `0` — the protocol reported that there are no incentives.
- * - `> 0` — incentives, as a percentage.
+ * - `null`. The protocol reported nothing. Unknown, not zero.
+ * - `0`. The protocol reported that there are no incentives.
+ * - `> 0`: incentives, as a percentage.
  *
  * The split varies *within* a protocol, so it cannot be inferred from
  * `protocol.id`. Coercing `null` to `0` destroys the only signal that
@@ -158,7 +158,7 @@ export interface EarnVault {
   depositPacks: EarnPack[]
   redeemPacks: EarnPack[]
   /**
-   * Vault quality signal — undocumented, but present on every vault and set to
+   * Vault quality signal: undocumented, but present on every vault and set to
    * `flagged` on roughly 10% of them.
    */
   verificationStatus?: string
@@ -174,8 +174,8 @@ export interface EarnVault {
 /**
  * A page of vaults.
  *
- * `nextCursor` is **absent from the JSON** on the final page — not null, not an
- * empty string — so it must be both optional and nullable. Callers should treat
+ * `nextCursor` is **absent from the JSON** on the final page, not null, not an
+ * empty string, so it must be both optional and nullable. Callers should treat
  * missing and null identically when paginating.
  */
 export interface EarnVaultListResponse {

@@ -18,14 +18,14 @@ function analytics(reward: number | null) {
 }
 
 /**
- * Pitfall #17 — apy.reward is three-valued, and the split is per-vault.
+ * Pitfall #17: apy.reward is three-valued, and the split is per-vault.
  *
  * The original framing was "Morpho returns 0, Euler/Aave return null, so
  * normalise null to 0." Measured across 799 live vaults that is too simple in
  * two ways.
  *
  * First, all three states occur: null, exact 0, and a positive number. Second,
- * the split varies WITHIN a protocol rather than between protocols — morpho
+ * the split varies WITHIN a protocol rather than between protocols: morpho
  * shows 193 zeros alongside 32 non-zeros; aave shows 144 nulls alongside 17
  * non-zeros.
  *
@@ -60,7 +60,7 @@ describe('Pitfall #17: apy.reward null vs 0 vs number', () => {
     expect(isRewardApyUnknown(analytics(0))).toBe(false)
   })
 
-  it('apy.base is nullable too — a live vault reports null', () => {
+  it('apy.base is nullable too: a live vault reports null', () => {
     const apy = ApySchema.parse({ base: null, total: 0, reward: null })
     expect(apy.base).toBeNull()
   })

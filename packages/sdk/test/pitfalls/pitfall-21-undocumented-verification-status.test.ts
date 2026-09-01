@@ -12,13 +12,13 @@ import { flagReasons, isFlagged } from '../../src/schemas/vault.js'
 import { suggest } from '../../src/suggest.js'
 
 /**
- * Pitfall #21 — `verificationStatus` exists, matters, and is documented nowhere.
+ * Pitfall #21: `verificationStatus` exists, matters, and is documented nowhere.
  *
  * Every vault carries `verificationStatus` and `verificationStatusBreakdown`.
  * Neither appears in the OpenAPI spec, the changelog, the quickstart, or the
  * NormalizedVault reference. LI.FI's own hosted MCP server does not expose them.
  *
- * They are not cosmetic. Roughly 10% of the fleet is `flagged` — mostly
+ * They are not cosmetic. Roughly 10% of the fleet is `flagged`: mostly
  * `zero_apy`, occasionally `apy_outlier`. A tool that ignores the field will
  * happily rank a flagged vault top of a max-APY list and recommend depositing
  * into it, which is precisely the case the flag exists to prevent.

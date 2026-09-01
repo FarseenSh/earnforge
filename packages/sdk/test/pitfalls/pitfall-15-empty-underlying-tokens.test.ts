@@ -37,7 +37,7 @@ describe('Pitfall #15: Empty underlyingTokens array', () => {
       }),
     } as unknown as ComposerClient
 
-    // Should not throw — fromToken is explicitly provided
+    // Should not throw: fromToken is explicitly provided
     const result = await buildDepositQuote(
       emptyUtVault,
       {

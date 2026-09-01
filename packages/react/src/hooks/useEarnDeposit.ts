@@ -54,9 +54,9 @@ export interface UseEarnDepositParams {
   fromToken?: string
   fromChain?: number
   slippage?: number
-  /** JSON-RPC URL for the source chain — needed for allowance checking */
+  /** JSON-RPC URL for the source chain: needed for allowance checking */
   rpcUrl?: string
-  /** wagmi's sendTransactionAsync function — pass from useSendTransaction() */
+  /** wagmi's sendTransactionAsync function: pass from useSendTransaction() */
   sendTransactionAsync?: (params: {
     to: `0x${string}`
     data: `0x${string}`
@@ -198,7 +198,7 @@ export function useEarnDeposit(
               return
             }
           } else {
-            // Cannot auto-approve without sendTransactionAsync — expose the tx for manual sending
+            // Cannot auto-approve without sendTransactionAsync: expose the tx for manual sending
             // The caller should check state.approvalTx and handle it
             return
           }

@@ -4,16 +4,16 @@ import vaultsBase from '../../../fixtures/src/vaults-base.json'
 import { EarnDataClient } from '../../src/clients/index.js'
 
 /**
- * Pitfall #20 — unknown query parameters are silently dropped.
+ * Pitfall #20: unknown query parameters are silently dropped.
  *
  * The vault list filter is `minTvlUsd`. We sent `minTvl`. The API did not
- * reject it, did not warn, and did not 400 — it returned the entire unfiltered
+ * reject it, did not warn, and did not 400. It returned the entire unfiltered
  * fleet with HTTP 200.
  *
  * The consequence for a yield tool is specific and bad: asking for "vaults with
  * at least $100M TVL" returned the entire fleet including sub-$20k dust, and
- * every downstream consumer — `suggest()`, strategy presets, the CLI's
- * `--min-tvl` — happily operated on the wrong candidate set. Verified live:
+ * every downstream consumer: `suggest()`, strategy presets, the CLI's
+ * `--min-tvl`: happily operated on the wrong candidate set. Verified live:
  * `minTvl=100000000` yields all 799 results, `minTvlUsd=100000000` yields 49.
  *
  * The lesson generalises past this one parameter. A filter that fails open is

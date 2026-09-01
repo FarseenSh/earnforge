@@ -17,7 +17,7 @@ describe('Strategy presets', () => {
     expect(s.name).toBe('conservative')
     expect(s.filters.tags).toContain('stablecoin')
     expect(s.filters.minTvlUsd).toBe(50_000_000)
-    // Unversioned ids — `?protocol=morpho-v1` matches nothing since Apr 2026.
+    // Unversioned ids: `?protocol=morpho-v1` matches nothing since Apr 2026.
     expect(s.filters.protocols).toContain('aave')
     expect(s.filters.protocols).toContain('morpho')
     expect(s.filters.excludeFlagged).toBe(true)

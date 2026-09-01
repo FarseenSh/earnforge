@@ -5,7 +5,7 @@ import { EarnDataClient } from '../../src/clients/index.js'
 describe('Pitfall #1: Wrong base URL', () => {
   it('EarnDataClient defaults to earn.li.fi, not li.quest', () => {
     const client = new EarnDataClient()
-    // The client stores baseUrl internally — verify it won't hit li.quest
+    // The client stores baseUrl internally: verify it won't hit li.quest
     // by checking that a list call uses the correct domain
     expect(client).toBeDefined()
     // The EarnDataClient constructor defaults to https://earn.li.fi

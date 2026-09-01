@@ -16,11 +16,11 @@ import { program } from '../src/index.js'
  * `npm install && npm run dev` immediately above that.
  *
  * Nothing caught it because no test had ever run the scaffolder, let alone
- * built its output — the generated *content* had been reviewed and corrected
+ * built its output. The generated *content* had been reviewed and corrected
  * in 1.0.0 while the file layout that decides whether any of it runs had not.
  *
  * These assert the structure Next.js requires. They cannot prove the project
- * builds — that needs a real install — but they fail on the specific mistake
+ * builds (that needs a real install) but they fail on the specific mistake
  * that shipped.
  */
 describe('earnforge init', () => {

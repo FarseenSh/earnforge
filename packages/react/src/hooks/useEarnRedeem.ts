@@ -38,7 +38,7 @@ export interface UseEarnRedeemParams {
   /** Destination chain. Defaults to vault chain. */
   toChain?: number
   slippage?: number
-  /** wagmi's sendTransactionAsync function — pass from useSendTransaction() */
+  /** wagmi's sendTransactionAsync function: pass from useSendTransaction() */
   sendTransactionAsync?: (params: {
     to: `0x${string}`
     data: `0x${string}`
@@ -102,7 +102,7 @@ export function useEarnRedeem(
         ...INITIAL_STATE,
         phase: 'error',
         error: new Error(
-          `Vault ${params.vault.slug} is not redeemable — withdrawals are not supported.`
+          `Vault ${params.vault.slug} is not redeemable: withdrawals are not supported.`
         ),
       })
       return

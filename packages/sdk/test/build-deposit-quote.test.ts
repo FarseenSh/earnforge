@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { fromSmallestUnit, toSmallestUnit } from '../src/build-deposit-quote.js'
 
-describe('toSmallestUnit (Pitfall #9 — decimal mismatch)', () => {
+describe('toSmallestUnit (Pitfall #9: decimal mismatch)', () => {
   it('converts 1 USDC (6 decimals) to 1000000', () => {
     expect(toSmallestUnit('1', 6)).toBe('1000000')
   })

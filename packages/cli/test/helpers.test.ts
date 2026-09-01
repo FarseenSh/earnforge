@@ -32,7 +32,7 @@ describe('fmtUsd', () => {
 })
 
 // Thresholds are 8 / 6, matching the SDK's riskLabel(). Recalibrated against
-// the live fleet — scores span 4.1-9.7, so the old 7 / 4 cuts left "high"
+// the live fleet: scores span 4.1-9.7, so the old 7 / 4 cuts left "high"
 // unreachable. The 8 cut also guarantees no flagged vault reads as low risk.
 describe('riskLabelPlain', () => {
   it('returns low for score >= 8', () => {
@@ -51,7 +51,7 @@ describe('riskLabelPlain', () => {
   })
 })
 
-describe('fmtPct — nullable', () => {
+describe('fmtPct: nullable', () => {
   it('renders null and undefined as N/A rather than 0.00%', () => {
     // apy.reward is genuinely null on many vaults; showing 0.00% would assert
     // "no incentives" when the protocol reported nothing at all.
@@ -83,7 +83,7 @@ describe('riskTable', () => {
   it('renders every dimension the scorer produces', () => {
     // The table listed five of seven for an entire release: `verification`
     // and `rewardDependency` arrived with risk scorer v2 and were never added,
-    // so the CLI silently omitted LI.FI's own quality signal — the reason v2
+    // so the CLI silently omitted LI.FI's own quality signal. The reason v2
     // exists. Asserting on the key count means the next added dimension fails
     // here rather than going unnoticed.
     const out = riskTable(risk)

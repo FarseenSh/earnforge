@@ -23,7 +23,7 @@ import {
 } from '../schemas/index.js'
 
 /**
- * Earn Data API base URL — earn.li.fi, distinct from Composer's li.quest.
+ * Earn Data API base URL: earn.li.fi, distinct from Composer's li.quest.
  *
  * Paths dropped the `/earn` segment in Apr 2026: `/v1/earn/vaults` is now
  * `/v1/vaults`. The old paths return 404, not a redirect.
@@ -38,7 +38,7 @@ const MAX_PAGE_SIZE = 100
 
 export interface EarnDataClientOptions {
   /**
-   * LI.FI API key. Required — the Earn Data API 401s without one. Falls back
+   * LI.FI API key. Required. The Earn Data API 401s without one. Falls back
    * to `process.env.LIFI_API_KEY` when omitted.
    */
   apiKey?: string
@@ -81,7 +81,7 @@ function describeError(status: number, body: string): string {
     const detail = fields
       .map((f) => `${f.path.join('.') || '(root)'}: ${f.message}`)
       .join('; ')
-    return `${status} validation failed — ${detail}`
+    return `${status} validation failed: ${detail}`
   }
   try {
     const parsed = JSON.parse(body) as { message?: string }
@@ -110,7 +110,7 @@ export class EarnDataClient {
       ''
     // Trimmed: a whitespace-only value is what a mis-parsed `.env` line or a
     // copy-paste with a stray newline produces. Untrimmed it passed this guard,
-    // constructed fine, and failed later as a 401 — which the Earn API applies
+    // constructed fine, and failed later as a 401, which the Earn API applies
     // inconsistently, so it surfaced as an intermittent failure rather than a
     // clear "your key is wrong".
     const trimmed = key.trim()
@@ -226,7 +226,7 @@ export class EarnDataClient {
 
   /**
    * Get a single vault by chainId + address.
-   * chainId must be the numeric id — a chain name returns 400.
+   * chainId must be the numeric id: a chain name returns 400.
    */
   async getVault(chainId: number, address: string): Promise<Vault> {
     if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {

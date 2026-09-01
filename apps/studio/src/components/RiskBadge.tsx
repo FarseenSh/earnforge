@@ -13,7 +13,7 @@ interface RiskBadgeProps {
  *
  * This component used to re-derive it with its own `>= 7` / `>= 4` cutoffs.
  * Risk scorer v2 moved the thresholds to 8 and 6, so a vault scoring 7.5 got a
- * green badge reading "medium" — the colour said safe while the word beside it
+ * green badge reading "medium". The colour said safe while the word beside it
  * said otherwise. Reading `label` means the two cannot disagree again, whatever
  * the thresholds become next.
  */

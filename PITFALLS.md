@@ -3,7 +3,7 @@
 Every pitfall here has a dedicated regression test under
 `packages/sdk/test/pitfalls/`, and every claim was verified against the live API
 on **Sep 1, 2026** across 799 vaults. Where LI.FI's documentation says something
-different, that difference is itself recorded — six of these exist *because* the
+different, that difference is itself recorded: six of these exist *because* the
 docs and the API disagree.
 
 Two of the original eighteen have **inverted** since they were written, and one is
@@ -16,7 +16,7 @@ what it did.
 
 | # | Pitfall | Status | Handled by |
 |---|---------|--------|-----------|
-| 1 | Wrong base URL — `earn.li.fi` vs `li.quest` | current | Two typed clients with correct defaults |
+| 1 | Wrong base URL: `earn.li.fi` vs `li.quest` | current | Two typed clients with correct defaults |
 | 2 | **Auth is required** on the Earn Data API | **inverted** | `x-lifi-api-key` header + `MissingApiKeyError` |
 | 3 | Missing Composer API key | current | Constructor validation + `requireComposer()` |
 | 4 | POST instead of GET on `/v1/quote` | current | Hard-coded `GET` |
@@ -31,7 +31,7 @@ what it did.
 | 13 | Non-transactional vault | current | `isTransactional` guard |
 | 14 | Rate limit | current | Token bucket, 100 req/min |
 | 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 799 vaults now hit it |
-| 16 | Optional `description` | current | `.optional()` — present on 34% of vaults |
+| 16 | Optional `description` | current | `.optional()`: present on 34% of vaults |
 | 17 | **`apy.reward` is three-valued** | revised | null preserved, not coerced to 0 |
 | 18 | `apy1d` null | current | Extended fallback chain |
 | 19 | **Stale protocol slugs return zero results** | new | Unversioned ids + upstream existence test |
@@ -45,7 +45,7 @@ what it did.
 
 ## The three that changed
 
-### #2 — Auth inverted
+### #2: Auth inverted
 
 This used to read *"don't send auth to the Earn Data API"*, because the endpoint
 was public. It is now the opposite: `earn.li.fi` returns `401` without an
@@ -54,7 +54,7 @@ request measured.
 
 **A garbage key is not.** This section previously claimed one was, and that is no
 longer true. Measured 10 Aug 2026, an invalid key was *accepted* on 9 of 15
-requests to `/v1/chains` — returning real data — and `/v1/vaults` behaved the
+requests to `/v1/chains` (returning real data) and `/v1/vaults` behaved the
 same way. Presence of the header is enforced consistently; validity is checked
 on only some fraction of requests, which looks like part of the fleet behind the
 load balancer not validating.
@@ -72,16 +72,16 @@ true for `li.quest` and is false for `earn.li.fi`.
 `EarnDataClient` throws `MissingApiKeyError` at construction rather than letting a
 `401` surface from deep inside a paginated walk.
 
-### #8 — TVL type inverted
+### #8: TVL type inverted
 
 `tvl.usd` used to arrive as a decimal string. It is now a JSON number on every
-live vault — while the OpenAPI spec still declares it a string.
+live vault, while the OpenAPI spec still declares it a string.
 
 Because both representations are attested by some source, `TvlSchema` accepts
 either and `parseTvl()` normalises to `{ raw, parsed, bigint }`. Pinning one type
 is what breaks on the next flip, and it has already flipped once.
 
-### #17 — Reward semantics revised
+### #17: Reward semantics revised
 
 The original rule was *"Morpho returns 0, Euler and Aave return null, so
 normalise null to 0."* Across 799 vaults that is too simple in two ways: all three
@@ -90,10 +90,10 @@ protocols.
 
 | Protocol | null | 0 | positive |
 |---|---|---|---|
-| morpho | — | 160 | 50 |
-| yearn | — | 89 | 7 |
-| aave | 143 | — | 17 |
-| pendle | 70 | — | 5 |
+| morpho | 0 | 160 | 50 |
+| yearn | 0 | 89 | 7 |
+| aave | 143 | 0 | 17 |
+| pendle | 70 | 0 | 5 |
 
 Collapsing null to 0 destroys real information: "the protocol reported no
 incentives" and "the protocol reported nothing" are different facts, and
@@ -104,18 +104,18 @@ reward-sustainability analysis needs both. The schema preserves null;
 
 ## The four new ones
 
-### #19 — Stale protocol slugs return zero results, not an error
+### #19: Stale protocol slugs return zero results, not an error
 
 The Apr 2026 rewrite dropped version suffixes: `morpho-v1` → `morpho`,
 `aave-v3` → `aave`, `euler-v2` → `euler`. `maple` left the index entirely.
 
 The failure mode is what makes this dangerous. Filtering on a slug that no longer
-exists does not `400` — it returns `200` with `total: 0`. A stale slug is
+exists does not `400`. It returns `200` with `total: 0`. A stale slug is
 indistinguishable from "this protocol has no vaults."
 
 This bit us directly. The risk scorer's protocol tiers were keyed on versioned
 slugs, so every Aave and Morpho vault fell through to the unknown-protocol default
-of 3 — scoring the two largest, most audited protocols on the platform as if
+of 3: scoring the two largest, most audited protocols on the platform as if
 nobody had heard of them.
 
 It also hit DeFiLlama matching, where the mapping was wrong twice over: the keys
@@ -126,10 +126,10 @@ Fixing both took APY-history coverage from **14.3% to 96.6%**.
 > LI.FI's own hosted MCP server still advertises `morpho-v1`, `aave-v3` and
 > `euler-v2` to agents.
 
-### #20 — Unknown query params fail open
+### #20: Unknown query params fail open
 
 The TVL filter is `minTvlUsd`. We sent `minTvl`. The API returned the entire
-unfiltered fleet with `200` — no rejection, no warning.
+unfiltered fleet with `200`. No rejection, no warning.
 
 ```
 minTvl=100000000     -> 799 results   (silently unfiltered)
@@ -141,11 +141,11 @@ and get sub-$20k dust back, while every downstream consumer operates on the wron
 candidate set and looks perfectly healthy. A filter that fails open is worse than
 one that throws.
 
-### #21 — `verificationStatus` is undocumented but load-bearing
+### #21: `verificationStatus` is undocumented but load-bearing
 
 Every vault carries `verificationStatus` and `verificationStatusBreakdown`.
 Neither appears in the OpenAPI spec, the changelog, the quickstart, or the
-NormalizedVault reference — and LI.FI's hosted MCP server does not expose them.
+NormalizedVault reference, and LI.FI's hosted MCP server does not expose them.
 
 They are not cosmetic. **75 of 799 vaults (9.4%)** are `flagged`:
 
@@ -155,14 +155,14 @@ They are not cosmetic. **75 of 799 vaults (9.4%)** are `flagged`:
 | `apy_outlier` | 2 |
 
 A tool ignoring this will rank a flagged vault top of a max-APY list and recommend
-depositing into it — exactly what the flag exists to prevent.
+depositing into it: exactly what the flag exists to prevent.
 
 EarnForge treats it as a first-class risk dimension weighted at 0.22, which
 creates a structural guarantee: **a flagged vault cannot score ≥ 8, so it can
 never be labelled low risk.** `suggest()` excludes flagged vaults unless you pass
 `includeFlagged: true`.
 
-### #22 — The docs contradict the API
+### #22. The docs contradict the API
 
 This subsumes the rest, and it is why schemas here are generated from live
 responses rather than from the specification.
@@ -176,25 +176,25 @@ responses rather than from the specification.
 | `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 799 vaults send any |
 
 The APY one costs money. The quickstart compounds it by multiplying by 100, so
-**following LI.FI's official example overstates every yield 100×** — a 29% vault
+**following LI.FI's official example overstates every yield 100×**: a 29% vault
 renders as 2919%.
 
 **Missing from the spec:** `verificationStatus`, `verificationStatusBreakdown`,
-`underlyingTokens[].priceUsd` — all present on every vault.
+`underlyingTokens[].priceUsd`. All present on every vault.
 
 **Outside the spec:** the changelog announces structured error bodies for `400`
 *and* `404`, but only `400` carries an `errors[]` array. And the docs state
 analytics refresh every 15 minutes, while the fleet actually refreshes in a
-single **hourly** batch — most vaults share one `updatedAt` minute, though the
-exact share swings through the cycle — so the freshest reading available is over
+single **hourly** batch: most vaults share one `updatedAt` minute, though the
+exact share swings through the cycle, so the freshest reading available is over
 an hour old, with a tail past 90 hours.
 The precise staleness you observe is just how far into the hour you sampled;
 what is stable is that it is never 15 minutes.
 
-### #23 — Slug format changed
+### #23: Slug format changed
 
 `8453-0xee8f...` became `morpho:8453:_:0xee8f...`. Code splitting on `-` to
-recover a chain id and address mis-parses every slug — and since `nextCursor` *is*
+recover a chain id and address mis-parses every slug, and since `nextCursor` *is*
 a slug, cursor validation against the old shape rejects valid pagination tokens.
 
 `parseVaultSlug()` accepts both forms, because slugs get stored in bookmarks,
@@ -210,16 +210,16 @@ Pitfall #15 was found via a UNIBTC vault reporting no underlying tokens. Zero of
 fixture.
 
 The guard remains, tested against a synthesised vault. The shape is still legal,
-and LI.FI has reintroduced dropped shapes before — `tvl.usd` went string → number
+and LI.FI has reintroduced dropped shapes before: `tvl.usd` went string → number
 and the spec still claims string.
 
 ---
 
-## #24 — and then the array came back, half-filled
+## #24, and then the array came back, half-filled
 
 Keeping #15's guard was the right call for the wrong reason. The array never went
 empty again. What the API actually started sending was stranger: a *populated*
-`underlyingTokens` whose entries carry only an `address` — no `symbol`, no
+`underlyingTokens` whose entries carry only an `address`. No `symbol`, no
 `decimals`.
 
 `morpho:1:_:0xb5ce3ca2c774b72955c25875022fdd91f7a7b938` (KPK-WARS-YIELD) is the
@@ -228,7 +228,7 @@ ZodError partway through the fleet, and everything iterating every vault died wi
 it: the Studio's vault list read **zero** in production, and `earnforge list`
 without a chain filter could not complete.
 
-One vault in seven hundred, and it survived every check — the drift detector
+One vault in seven hundred, and it survived every check. The drift detector
 samples 100 vaults, the fixtures stop at two pages, and the live tests assert
 shape on a handful. The bad vault sat around index 300.
 
@@ -247,33 +247,33 @@ changes. Three independent reasons:
 1. Every test mocked the API against April fixtures, so it verified our agreement
    with a snapshot of the past.
 2. The live tests were excluded from CI to stop flakiness.
-3. `test:live` used `vitest run --include`, which is not a valid Vitest 4 flag —
-   **the script had never executed.**
+3. `test:live` used `vitest run --include`, which is not a valid Vitest 4 flag.
+   **The script had never executed.**
 
 CI now gates on typecheck, lint, the mocked suite, the live suite, and a schema
 drift check, plus a daily scheduled run.
 
 ## Drift detection
 
-Validating against LI.FI's OpenAPI spec does not work either — as #22 shows, the
+Validating against LI.FI's OpenAPI spec does not work either, as #22 shows, the
 spec is wrong in six places and silent about three real fields. Failing CI on
 deviation from it would raise false alarms and miss the true ones.
 
 So `pnpm --filter @earnforge/sdk drift` compares **three** sources and reports
 which pair disagrees:
 
-1. the live API — what is served
-2. the OpenAPI spec — what LI.FI documents
-3. our Zod schema — what we parse
+1. the live API: what is served
+2. the OpenAPI spec: what LI.FI documents
+3. our Zod schema: what we parse
 
 A disagreement between (1) and (3) is our bug and fails the build. Between (1) and
-(2) it is a documentation bug — reported but not fatal, because it will mislead
+(2) it is a documentation bug: reported but not fatal, because it will mislead
 anyone reading the docs and that is worth telling users about.
 
 ```
 $ pnpm --filter @earnforge/sdk drift
 
-Schema drift check — 100 live vaults vs OpenAPI spec
+Schema drift check: 100 live vaults vs OpenAPI spec
 
 WARNING (2)
   [live-vs-spec] analytics.apy
@@ -287,7 +287,7 @@ INFO (4)
   [live-vs-spec] caps / timeLock / kyc / lpTokens
     Documented in the OpenAPI spec but sent by no live vault.
 
-No breaking drift — our schema still matches the live API.
+No breaking drift. Our schema still matches the live API.
 ```
 
 ## Running the suite

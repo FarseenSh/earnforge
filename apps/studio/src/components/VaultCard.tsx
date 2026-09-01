@@ -31,7 +31,7 @@ function formatApy(apy: number): string {
   return `${apy.toFixed(2)}%`
 }
 
-/** Tiny inline SVG sparkline — no chart library needed */
+/** Tiny inline SVG sparkline. No chart library needed */
 function Sparkline({ data }: { data: number[] }) {
   if (data.length < 2) {
     return null
@@ -127,7 +127,7 @@ export function VaultCard({
           <p className="text-xs font-medium text-red-400">
             Flagged by LI.FI
             {reasons.length > 0 && (
-              <span className="font-normal"> — {reasons.join(', ')}</span>
+              <span className="font-normal">: {reasons.join(', ')}</span>
             )}
           </p>
         </div>

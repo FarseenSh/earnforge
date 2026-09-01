@@ -1,8 +1,8 @@
 # Migrating to 1.0.0
 
-`0.1.x` no longer works. LI.FI rewrote the Earn API in April 2026 — moving every
+`0.1.x` no longer works. LI.FI rewrote the Earn API in April 2026: moving every
 path, making authentication mandatory, removing two fields and changing the type
-of a third — so every `0.1.x` call now returns `404`, and once the paths are
+of a third, so every `0.1.x` call now returns `404`, and once the paths are
 corrected the schema throws on every vault.
 
 This release fixes that and takes the opportunity to correct several behaviours
@@ -30,7 +30,7 @@ that issue separate credentials, but `apiKey` alone now covers Composer too.
 
 ### Browser code must proxy
 
-The key cannot go to the client — it would be readable in the network tab. Route
+The key cannot go to the client. It would be readable in the network tab. Route
 Earn requests through your own server and point the SDK at it:
 
 ```ts
@@ -66,7 +66,7 @@ both types. `String(tvl.usd)` is safe if you only need to display it.
 
 ## Breaking: `apy.reward` can be `null`
 
-It was previously coerced to `0`. That coercion destroyed a real distinction — a
+It was previously coerced to `0`. That coercion destroyed a real distinction: a
 protocol reporting *no incentives* and a protocol reporting *nothing* are
 different facts, and both occur, sometimes within the same protocol.
 
@@ -76,7 +76,7 @@ different facts, and both occur, sometimes within the same protocol.
 ```
 
 Use `isRewardApyUnknown(vault.analytics)` when the difference matters.
-`apy.base` is also nullable now — one live vault reports `null`.
+`apy.base` is also nullable now. One live vault reports `null`.
 
 ---
 
@@ -85,7 +85,7 @@ Use `isRewardApyUnknown(vault.analytics)` when the difference matters.
 Labels were `low ≥ 7`, `medium ≥ 4`. They are now `low ≥ 8`, `medium ≥ 6`.
 
 The old thresholds put 80% of the fleet in `low` and made `high` mathematically
-unreachable — live scores span 4.1–9.7. The new cuts produce a usable spread
+unreachable: live scores span 4.1–9.7. The new cuts produce a usable spread
 (roughly 45% / 49% / 6%), and the `8` boundary is deliberate: a
 verification-flagged vault caps at 7.96, so **no flagged vault can be labelled
 low risk.**
@@ -109,7 +109,7 @@ the Earn index entirely.
 + forge.vaults.list({ protocol: 'morpho' })
 ```
 
-This one fails silently — a stale slug returns `200` with `total: 0`, not an
+This one fails silently: a stale slug returns `200` with `total: 0`, not an
 error. Resolve against `forge.protocols.list()` rather than hardcoding.
 
 ---
@@ -124,7 +124,7 @@ every parse throws until you upgrade.
 + console.log(vault.protocol.id ?? vault.protocol.name)
 ```
 
-`lpTokens` has no replacement — use `vault.address` as the share token, which is
+`lpTokens` has no replacement: use `vault.address` as the share token, which is
 what Composer expects as `toToken` anyway.
 
 ---
@@ -147,7 +147,7 @@ working. But if you split on `-` yourself, that now mis-parses.
 
 **`suggest()` excludes flagged vaults.** Roughly 9% of the fleet is flagged by
 LI.FI's verification pass. Allocations skip them unless you pass
-`includeFlagged: true`. Expect slightly different — and safer — allocations.
+`includeFlagged: true`. Expect slightly different (and safer) allocations.
 
 **Every strategy preset excludes flagged vaults**, and `conservative` also
 excludes the `il-risk` tag and requires `isRedeemable`.
@@ -166,22 +166,22 @@ ignores, so it silently returned everything.
 
 ## New in 1.0.0
 
-**`verificationStatus`** — LI.FI's undocumented vault-quality signal, now on
+**`verificationStatus`**: LI.FI's undocumented vault-quality signal, now on
 every `Vault`. Helpers: `isFlagged(vault)`, `flagReasons(vault)`.
 
-**Drift detection** — `detectDrift()` and `formatDriftReport()` compare the live
+**Drift detection**: `detectDrift()` and `formatDriftReport()` compare the live
 API, LI.FI's OpenAPI spec, and our schema, reporting which pair disagrees. Also
 available as `pnpm --filter @earnforge/sdk drift`.
 
-**Structured errors** — `EarnApiError.fieldErrors` carries the per-field
+**Structured errors**: `EarnApiError.fieldErrors` carries the per-field
 `errors[]` array from a `400`. Note that `404` does not include one, despite the
 changelog saying otherwise.
 
-**New helpers** — `getRewardApy`, `isRewardApyUnknown`, `rewardShareOfTotal`,
+**New helpers**: `getRewardApy`, `isRewardApyUnknown`, `rewardShareOfTotal`,
 `hasImpermanentLossRisk`, `analyticsAgeMs`, `parseVaultSlug`, `riskLabel`,
 `positionBalanceUsd`, `totalPortfolioUsd`, `protocolFilterKey`.
 
-**Server-side filters** — `isTransactional`, `isRedeemable`,
+**Server-side filters**: `isTransactional`, `isRedeemable`,
 `isComposerSupported` on `listVaults()`.
 
 ---
@@ -189,7 +189,7 @@ changelog saying otherwise.
 ## Portfolio positions
 
 `protocolName`, `balanceUsd` and `balanceNative` are all nullable now. If you
-format them, handle null — `Number(null).toFixed(2)` renders `NaN`.
+format them, handle null: `Number(null).toFixed(2)` renders `NaN`.
 
 ```diff
 - `$${Number(p.balanceUsd).toFixed(2)}`

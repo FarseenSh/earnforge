@@ -28,7 +28,7 @@ npm i @earnforge/sdk
 
 ## Quick start
 
-The Earn Data API requires a key as of April 2026 — create one at
+The Earn Data API requires a key as of April 2026: create one at
 [portal.li.fi](https://portal.li.fi).
 
 ```ts
@@ -55,16 +55,16 @@ LI.FI's own documentation. Verified against 799 live vaults (Sep 2026):
 
 | What LI.FI documents | What the API does |
 |---|---|
-| APY is a decimal (`0.0534` = 5.34%) | already a percentage — the quickstart's `* 100` overstates every yield **100×** |
+| APY is a decimal (`0.0534` = 5.34%) | already a percentage. The quickstart's `* 100` overstates every yield **100×** |
 | `tvl.usd` is a string | a number |
 | `caps`, `timeLock`, `kyc`, `lpTokens` exist | sent by **zero** vaults |
 | Structured errors on `400` and `404` | only `400` carries `errors[]` |
-| Analytics refresh every 15 minutes | one **hourly** batch — the freshest reading in the fleet is over an hour old, the tail ~92 h |
+| Analytics refresh every 15 minutes | one **hourly** batch. Nothing in the fleet is under an hour old, and the tail runs days |
 | "No API key required" | `earn.li.fi` hard-`401`s |
 | *(undocumented)* | `verificationStatus` flags **~10% of the fleet** |
 
 Plus the silent ones: a stale protocol slug (`morpho-v1`) returns `200` with zero
-results rather than an error, and an unknown query param is dropped — so
+results rather than an error, and an unknown query param is dropped, so
 `minTvl` instead of `minTvlUsd` returns the entire unfiltered fleet.
 
 Full detail, with a test for each: **[PITFALLS.md](./PITFALLS.md)**
@@ -92,11 +92,11 @@ rate limiting, caching and retry logic are inherited rather than reimplemented.
 | Package | Description |
 |---------|-------------|
 | [`@earnforge/sdk`](./packages/sdk) | Typed client, Zod schemas, risk scorer, strategies, quoting, drift detection |
-| [`@earnforge/cli`](./packages/cli) | 19 commands — `list`, `risk`, `suggest`, `doctor`, `compare`, all with `--json` |
-| [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query — `useVaults`, `useRiskScore`, `useEarnDeposit` |
+| [`@earnforge/cli`](./packages/cli) | 19 commands: `list`, `risk`, `suggest`, `doctor`, `compare`, all with `--json` |
+| [`@earnforge/react`](./packages/react) | 10 hooks on TanStack Query: `useVaults`, `useRiskScore`, `useEarnDeposit` |
 | [`@earnforge/mcp`](./packages/mcp) | 12 MCP tools on the `2026-07-28` revision; [hosted, no install](https://earnforge-mcp.papermind-ai.workers.dev/health); serves the skill over MCP |
-| [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec — `npx skills add FarseenSh/earnforge` |
-| [`earnforge-studio`](./apps/studio) | Next.js dashboard — explorer, sparklines, risk badges, code generator |
+| [`@earnforge/skill`](./packages/skill) | Agent Skill per the [agentskills.io](https://agentskills.io) spec: `npx skills add FarseenSh/earnforge` |
+| [`earnforge-studio`](./apps/studio) | Next.js dashboard: explorer, sparklines, risk badges, code generator |
 
 ---
 
@@ -104,9 +104,9 @@ rate limiting, caching and retry logic are inherited rather than reimplemented.
 
 ### Risk scoring
 
-A composite 0–10 score across seven dimensions — TVL, APY stability, protocol
+A composite 0–10 score across seven dimensions: TVL, APY stability, protocol
 maturity, redeemability, asset type, LI.FI's `verificationStatus`, and reward
-dependency — plus a `flags[]` array of plain-language concerns.
+dependency, plus a `flags[]` array of plain-language concerns.
 
 ```ts
 const { score, label, flags } = riskScore(vault)
@@ -116,7 +116,7 @@ const { score, label, flags } = riskScore(vault)
 
 Calibrated against the live fleet, whose scores span 4.1–9.7. The `8` boundary is
 deliberate: verification carries 0.22 of the weight, so a flagged vault caps at
-7.96 — **no flagged vault can ever be labelled low risk.**
+7.96: **no flagged vault can ever be labelled low risk.**
 
 ### Reward sustainability
 
@@ -129,8 +129,8 @@ const { label, organicApy, reasons } = rewardSustainability(vault)
 ```
 
 It works only because `apy.reward` is three-valued and the schema refuses to
-coerce it. `null` means the protocol reported nothing — 143 of Aave's 160
-vaults. `0` means it reported no incentives — 160 of Morpho's 210. A `?? 0`
+coerce it. `null` means the protocol reported nothing: 143 of Aave's 160
+vaults. `0` means it reported no incentives: 160 of Morpho's 210. A `?? 0`
 transform collapses the two and scores most of Aave as confidently organic
 while knowing nothing about it, so `null` is labelled `unknown` and stays that
 way. `analyzeRewardSustainability()` additionally reads the DeFiLlama curve,
@@ -141,19 +141,19 @@ ending*.
 
 `/v1/quote` builds one step at a time, so swap-then-deposit is two transactions
 and the second has to guess what the first returned. A Flow binds the swap's
-`amountOut` handle straight into the deposit's `amountIn` — the exact received
+`amountOut` handle straight into the deposit's `amountIn`: the exact received
 amount, one transaction, atomic.
 
 `vaultRoutability()` answers what no Earn field does: the vault list is a
 **superset** of what Composer can execute. Protocols ingested from DeFiLlama
-appear with no routing edges at all, and seven protocols are deposit-only —
+appear with no routing edges at all, and seven protocols are deposit-only,
 so a vault can be listed, carry `isTransactional: true`, and still be
 impossible to enter or impossible to exit.
 
 ### Drift detection
 
 Born from this project shipping broken for three months. `detectDrift()` compares
-the live API, LI.FI's OpenAPI spec, and our schema — reporting *which pair*
+the live API, LI.FI's OpenAPI spec, and our schema, reporting *which pair*
 disagrees, so a vendor documentation bug is distinguishable from ours.
 
 ```bash
@@ -163,7 +163,7 @@ WARNING (2)
   [live-vs-spec] analytics.apy
     The spec states APY is "expressed as a decimal", but live values exceed 1...
 
-No breaking drift — our schema still matches the live API.
+No breaking drift. Our schema still matches the live API.
 ```
 
 CI runs it daily.
@@ -179,13 +179,13 @@ coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor
 ## Testing
 
 **600+ mocked tests across five suites, plus 34 live integration tests.** Exact
-counts are deliberately not quoted here — they moved on almost every commit and
+counts are deliberately not quoted here. They moved on almost every commit and
 went stale three times before this note replaced them. `pnpm turbo test` prints
 the current numbers.
 
 | Suite | Covers |
 |---|---|
-| SDK | Schemas, risk scoring, strategies, quoting, drift — plus one named regression per pitfall, all 24 |
+| SDK | Schemas, risk scoring, strategies, quoting, drift, plus one named regression per pitfall, all 24 |
 | CLI | Every command, snapshot-tested in both human and `--json` modes |
 | MCP | The `2026-07-28` wire protocol and the Worker surface |
 | Studio | Vault explorer, filters, risk badges |
@@ -198,7 +198,7 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live
 LIFI_API_KEY=... pnpm --filter @earnforge/sdk drift
 ```
 
-CI gates on build, typecheck, lint, the mocked suite, the live suite, and drift —
+CI gates on build, typecheck, lint, the mocked suite, the live suite, and drift,
 plus a daily scheduled drift run. The previous release gated only on build and
 test, which is how it shipped broken.
 
@@ -210,7 +210,7 @@ TypeScript 7.0 · pnpm 10 · Turborepo 2.5 · tsdown · Biome 2.5 · Vitest 4 ·
 Zod 4 · viem 2.55 · TanStack Query 5 · MCP SDK 2.0 (`2026-07-28`) ·
 `@lifi/composer-sdk` 0.2 · Next.js 16 · Astro 7
 
-Zod is a deliberate divergence from LI.FI's own stack — runtime validation is
+Zod is a deliberate divergence from LI.FI's own stack: runtime validation is
 what surfaces the discrepancies in the table above.
 
 ---

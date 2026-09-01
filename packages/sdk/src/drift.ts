@@ -6,21 +6,21 @@ import { VaultSchema } from './schemas/vault.js'
  * Schema drift detection.
  *
  * This module exists because of a specific, expensive failure: LI.FI rewrote
- * the Earn API in Apr 2026 — moved every path, made auth mandatory, removed two
+ * the Earn API in Apr 2026: moved every path, made auth mandatory, removed two
  * fields, flipped the type of a third, and quietly added a vault-quality
  * signal. A 474-test suite stayed green throughout, because every test compared
  * our code against a fixture snapshot rather than against the API.
  *
- * The obvious fix — validate our schemas against LI.FI's published OpenAPI spec
- * — does not work either. Measured against the live API, that spec is wrong in
+ * The obvious fix: validate our schemas against LI.FI's published OpenAPI spec
+ *: does not work either. Measured against the live API, that spec is wrong in
  * six places and silent about three real fields. Failing CI on deviation from
  * it would produce false alarms and miss the true ones.
  *
  * So this compares three sources and reports where they disagree:
  *
- *   1. the live API — what is actually served
- *   2. the OpenAPI spec — what LI.FI documents
- *   3. our Zod schema — what we parse
+ *   1. the live API: what is actually served
+ *   2. the OpenAPI spec: what LI.FI documents
+ *   3. our Zod schema: what we parse
  *
  * A disagreement between (1) and (3) is our bug. Between (1) and (2) it is
  * LI.FI's, and worth reporting to users because it will mislead anyone reading
@@ -48,7 +48,7 @@ export interface DriftReport {
 
 /**
  * Fields our schema treats as required. If the live API stops sending one, every
- * parse throws — which is precisely what `provider` and `lpTokens` did.
+ * parse throws, which is precisely what `provider` and `lpTokens` did.
  */
 const SCHEMA_REQUIRED_FIELDS = [
   'address',
@@ -69,7 +69,7 @@ const SCHEMA_REQUIRED_FIELDS = [
 
 /**
  * Fields the live API sends that our schema knows about. Anything outside this
- * set is a new field LI.FI added without announcing it — how
+ * set is a new field LI.FI added without announcing it: how
  * `verificationStatus` arrived.
  */
 const SCHEMA_KNOWN_FIELDS = new Set<string>([
@@ -106,7 +106,7 @@ async function fetchSpec(): Promise<string | null> {
 /**
  * Compare the live API against our schema and against LI.FI's OpenAPI spec.
  *
- * `sampleSize` bounds how many vaults are inspected — field presence and type
+ * `sampleSize` bounds how many vaults are inspected: field presence and type
  * questions are answered well before the full fleet, and this runs in CI.
  */
 export async function detectDrift(
@@ -153,7 +153,7 @@ export async function detectDrift(
         between: 'live-vs-schema',
         message:
           `The live API sends \`${field}\`, which our schema does not model. ` +
-          'Undocumented additions have carried real signal before — ' +
+          'Undocumented additions have carried real signal before: ' +
           '`verificationStatus` arrived this way.',
       })
     }
@@ -200,7 +200,7 @@ export async function detectDrift(
         message:
           `Every APY in the sample is below 1 (max ${max}, median ${median}). ` +
           'The API appears to have switched from percentages to decimal ' +
-          'fractions — every displayed APY is now understated 100x.',
+          'fractions. Every displayed APY is now understated 100x.',
       })
     }
   }
@@ -272,7 +272,7 @@ export async function detectDrift(
  *
  * Added after `/v1/portfolio` renamed its array `positions` → `data` in Aug
  * 2026 with no changelog. The drift check reported "no breaking drift" straight
- * through it, because it only ever read `/v1/vaults` — the endpoint that had
+ * through it, because it only ever read `/v1/vaults`. The endpoint that had
  * not changed. A detector that inspects one endpoint deeply and the rest not at
  * all gives precisely the false assurance it exists to prevent.
  *
@@ -289,7 +289,7 @@ export async function detectDrift(
  *
  * That is not hypothetical. `underlyingTokens[].symbol` and `.decimals` were
  * required, and exactly one vault in 712 shipped a token object carrying only
- * an address — far enough into the fleet that a 100-vault sample never reached
+ * an address: far enough into the fleet that a 100-vault sample never reached
  * it. `listAll()` threw a ZodError partway through, which took the Studio's
  * vault list to zero in production while every sampled check stayed green.
  *
@@ -358,7 +358,7 @@ async function checkEveryVaultParses(apiKey?: string): Promise<DriftFinding[]> {
       between: 'live-vs-schema',
       message:
         `${count} of ${checked} live vaults fail our schema at \`${path}\` ` +
-        `(e.g. ${example}). Every full-fleet iteration throws on these — ` +
+        `(e.g. ${example}). Every full-fleet iteration throws on these: ` +
         'sampled checks cannot see them.',
     })
   }
@@ -443,7 +443,7 @@ async function checkEnvelopes(apiKey?: string): Promise<DriftFinding[]> {
 export function formatDriftReport(report: DriftReport): string {
   const lines: string[] = []
   lines.push(
-    `Schema drift check — ${report.checkedVaults} live vaults` +
+    `Schema drift check: ${report.checkedVaults} live vaults` +
       (report.specFetched ? ' vs OpenAPI spec' : ' (spec unavailable)')
   )
   lines.push('')
@@ -469,8 +469,8 @@ export function formatDriftReport(report: DriftReport): string {
 
   lines.push(
     report.ok
-      ? 'No breaking drift — our schema still matches the live API.'
-      : 'BREAKING drift detected — the SDK will fail against the live API.'
+      ? 'No breaking drift. Our schema still matches the live API.'
+      : 'BREAKING drift detected. The SDK will fail against the live API.'
   )
   return lines.join('\n')
 }

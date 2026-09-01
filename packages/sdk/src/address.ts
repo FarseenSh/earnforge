@@ -19,7 +19,7 @@ export function assertAddress(value: string, label: string): void {
  *
  * Validates first because `padStart` left-pads rather than rejecting: an
  * address missing its `0x` encoded to `0x00aaaa…`, and `0xAAAA` to
- * `0x0000…aaaa` — a different, valid address, in calldata of the correct
+ * `0x0000…aaaa`: a different, valid address, in calldata of the correct
  * length. On `approve` that is an allowance to an address nobody named.
  */
 export function encodeAddressArg(value: string, label: string): string {

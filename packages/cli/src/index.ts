@@ -42,7 +42,7 @@ import {
 } from './helpers.js'
 
 // `DoctorCheck` is reachable structurally through `DoctorReport.checks`, but
-// anyone writing a function that takes one needs the name — so it is exported
+// anyone writing a function that takes one needs the name, so it is exported
 // alongside the report rather than left implicit.
 export type { DoctorCheck, DoctorReport }
 export { formatDoctorReport, formatEnvReport, runDoctorChecks, runEnvChecks }
@@ -74,7 +74,7 @@ function resolveApiKey(): string {
   if (!key) {
     throw new Error(
       'LIFI_API_KEY is not set. Both the Earn Data API and Composer require ' +
-        'one — create it at https://portal.li.fi'
+        'one: create it at https://portal.li.fi'
     )
   }
   return key
@@ -107,15 +107,55 @@ function validateStrategy(s: string): StrategyPreset {
 }
 
 /**
- * Report a failed command: stop the spinner, print the message, set exit 1.
+ * Report a failed command: stop the spinner, print what went wrong, set exit 1.
  *
  * Sixteen commands each carried this same three-line catch body. The message
  * differs; the handling never did, and one copy quietly omitting the exit code
  * would make a failing command look successful to any script calling it.
+ *
+ * The message alone is often not actionable. Composer answers a rejected
+ * program with `422 preparation_error` and a `failedOps` array naming the op
+ * and the reason: "no_route_error on `swap`: No route available for
+ * 0x0000…0000 → 0x8335…2913", but the SDK wraps that as a cause and this
+ * printed only `err.message`. The user saw "1 of 1 prepared op(s) failed" and
+ * had no way to reach the sentence that explains it; diagnosing it needed a
+ * throwaway script. Anything the cause carries is printed underneath.
  */
 function fail(spinner: Ora, label: string, err: unknown): void {
   spinner.fail(label)
   console.error(chalk.red(err instanceof Error ? err.message : String(err)))
+
+  const cause = (err as { cause?: unknown } | undefined)?.cause as
+    | Record<string, unknown>
+    | undefined
+
+  if (cause && typeof cause === 'object') {
+    const parts: string[] = []
+    for (const key of ['kind', 'code', 'status'] as const) {
+      if (cause[key] !== undefined) {
+        parts.push(`${key}=${String(cause[key])}`)
+      }
+    }
+    if (parts.length > 0) {
+      console.error(chalk.dim(`  ${parts.join(' ')}`))
+    }
+
+    // Composer names the op that failed and why; nothing else in the chain
+    // can tell the user which leg of a multi-step program to fix.
+    const failedOps = cause.failedOps
+    if (Array.isArray(failedOps)) {
+      for (const op of failedOps as Record<string, unknown>[]) {
+        console.error(
+          chalk.dim(
+            `  ${String(op.op ?? op.callId ?? 'op')}: ${String(
+              op.kind ?? 'error'
+            )}: ${String(op.message ?? '')}`
+          )
+        )
+      }
+    }
+  }
+
   process.exitCode = 1
 }
 
@@ -126,10 +166,10 @@ export const program = new Command()
 program
   .name('earnforge')
   // Read, not written. This was hardcoded '0.1.0', "fixed" to a hardcoded
-  // '1.0.0', and drifted again by 1.0.3 — swapping one literal for another
+  // '1.0.0', and drifted again by 1.0.3: swapping one literal for another
   // fixes the value, never the cause.
   .version(pkg.version)
-  .description('EarnForge CLI — Developer toolkit for the LI.FI Earn API')
+  .description('EarnForge CLI: Developer toolkit for the LI.FI Earn API')
 
 // ── list ──
 
@@ -446,7 +486,7 @@ program
           opts.json,
           () => {
             const lines = [
-              chalk.bold(`Deposit Quote — ${vault.name}`),
+              chalk.bold(`Deposit Quote: ${vault.name}`),
               '',
               `  ${chalk.dim('Amount:')}      ${result.humanAmount} (${result.rawAmount} raw, ${result.decimals} decimals)`,
               `  ${chalk.dim('From:')}        ${result.quote.action.fromToken.symbol} on chain ${result.quote.action.fromChainId}`,
@@ -539,7 +579,7 @@ program
         opts.json,
         () => {
           const lines = [
-            chalk.bold(`Withdraw Quote — ${vault.name}`),
+            chalk.bold(`Withdraw Quote: ${vault.name}`),
             '',
             `  ${chalk.dim('Amount:')}      ${result.humanAmount} vault shares (${result.rawAmount} raw)`,
             `  ${chalk.dim('From:')}        ${result.quote.action.fromToken.symbol} (vault token) on chain ${result.quote.action.fromChainId}`,
@@ -620,8 +660,8 @@ program
 
       outputResult(jsonData, opts.json, () => {
         const status = result.sufficient
-          ? chalk.green('SUFFICIENT — no approval needed')
-          : chalk.red('INSUFFICIENT — approval required')
+          ? chalk.green('SUFFICIENT. No approval needed')
+          : chalk.red('INSUFFICIENT: approval required')
         return [
           chalk.bold('Allowance Check'),
           '',
@@ -673,7 +713,7 @@ program
           chalk.dim('(from quote.estimate.approvalAddress flows)') +
           '\n  --unlimited     approve MaxUint256' +
           chalk.dim(
-            '\n\nAn unlimited allowance stays live after the deposit — the spender can move\nthat token from your wallet until you revoke it.'
+            '\n\nAn unlimited allowance stays live after the deposit. The spender can move\nthat token from your wallet until you revoke it.'
           )
       )
       process.exitCode = 1
@@ -728,7 +768,7 @@ program
               `No APY history found for ${vault.name}. DeFiLlama may not track this vault.`
             )
           }
-          return `${chalk.bold(`APY History — ${vault.name} (${history.length} days)`)}\n\n${apyHistoryTable(history)}`
+          return `${chalk.bold(`APY History: ${vault.name} (${history.length} days)`)}\n\n${apyHistoryTable(history)}`
         }
       )
     } catch (err) {
@@ -773,7 +813,7 @@ program
         } catch (err) {
           // A dead RPC must not masquerade as a passing check.
           spinner.warn(
-            `Balance reads failed (${err instanceof Error ? err.message : String(err)}) — gas and balance checks skipped`
+            `Balance reads failed (${err instanceof Error ? err.message : String(err)}): gas and balance checks skipped`
           )
         }
       }
@@ -861,8 +901,7 @@ program
       outputResult(
         { slug: vault.slug, name: vault.name, ...risk },
         opts.json,
-        () =>
-          `${chalk.bold(`Risk Score — ${vault.name}`)}\n\n${riskTable(risk)}`
+        () => `${chalk.bold(`Risk Score: ${vault.name}`)}\n\n${riskTable(risk)}`
       )
     } catch (err) {
       fail(spinner, 'Failed to calculate risk', err)
@@ -920,7 +959,7 @@ program
           }
           const lines = [
             chalk.bold(
-              `Allocation Suggestion — ${fmtUsd(result.totalAmount)} in ${opts.asset}`
+              `Allocation Suggestion: ${fmtUsd(result.totalAmount)} in ${opts.asset}`
             ),
             `  ${chalk.dim('Expected APY:')} ${chalk.green(fmtPct(result.expectedApy))}`,
             '',
@@ -1070,7 +1109,7 @@ program
     }
 
     fs.mkdirSync(dir, { recursive: true })
-    // `src/app`, not `src` — the App Router resolves routes from an `app`
+    // `src/app`, not `src`. The App Router resolves routes from an `app`
     // directory, and `next build` fails outright with "Couldn't find any
     // `pages` or `app` directory" without one.
     fs.mkdirSync(path.join(dir, 'src', 'app'), { recursive: true })
@@ -1090,7 +1129,7 @@ program
           },
           dependencies: {
             // 0.1.x predates the Apr 2026 Earn API rewrite and 404s on every
-            // call — scaffolding a caret range on it would hand a new project
+            // call: scaffolding a caret range on it would hand a new project
             // the broken version.
             '@earnforge/sdk': '^1.0.0',
             '@earnforge/react': '^1.0.0',
@@ -1098,7 +1137,7 @@ program
             next: '^16.0.0',
             react: '^19.0.0',
             'react-dom': '^19.0.0',
-            // wagmi 3 to match the LI.FI ecosystem — Widget v4 and SDK v4 are
+            // wagmi 3 to match the LI.FI ecosystem: Widget v4 and SDK v4 are
             // wagmi 3 / React 19 only.
             wagmi: '^3.0.0',
             viem: '^2.55.0',
@@ -1118,7 +1157,7 @@ program
       path.join(dir, 'src', 'app', 'page.tsx'),
       `// SPDX-License-Identifier: Apache-2.0
 //
-// Server Component — this runs on the server, which is the only safe place for
+// Server Component. This runs on the server, which is the only safe place for
 // the API key. The Earn Data API requires one, so calling it from the browser
 // would mean shipping the key where anyone can read it out of the network tab.
 // For client-side vault data, proxy through a route handler instead.
@@ -1145,8 +1184,8 @@ export default async function Home() {
           const risk = forge.riskScore(v);
           return (
             <li key={v.slug}>
-              {/* APY is already a percentage — do not multiply by 100. */}
-              {v.name} — {v.analytics.apy.total.toFixed(2)}% APY
+              {/* APY is already a percentage, do not multiply by 100. */}
+              {v.name}: {v.analytics.apy.total.toFixed(2)}% APY
               {' · '}risk {risk.score}/10 ({risk.label})
             </li>
           );
@@ -1160,7 +1199,7 @@ export default async function Home() {
 
     // The App Router requires a root layout. Without it `next build` fails
     // before it reaches any page, so a scaffold that omits this produces a
-    // project that cannot start — which is what this one did.
+    // project that cannot start, which is what this one did.
     fs.writeFileSync(
       path.join(dir, 'src', 'app', 'layout.tsx'),
       `// SPDX-License-Identifier: Apache-2.0
@@ -1287,8 +1326,8 @@ program
         //
         // `fromToken` has to go in here too, not just into the flow below:
         // without it the amount is scaled by the *vault asset's* decimals, so
-        // `--amount 1 --from-token WETH` became 1e6 wei of WETH — a millionth
-        // of a cent — and the simulation failed on dust rather than on
+        // `--amount 1 --from-token WETH` became 1e6 wei of WETH: a millionth
+        // of a cent, and the simulation failed on dust rather than on
         // anything real.
         spinner.text = 'Resolving amount...'
         const quote = await forge.buildDepositQuote(vault, {
@@ -1300,7 +1339,7 @@ program
         // Composer simulates the compiled program against the current chain
         // head, so it sees allowances, balances and the actual protocol state.
         // The previous implementation was a bare `eth_call` against a public
-        // RPC — it could not observe any of that, and reported SUCCESS for
+        // RPC. It could not observe any of that, and reported SUCCESS for
         // transactions that would revert on submission.
         spinner.text = 'Simulating against the chain head...'
         const flows = createComposerFlows({ apiKey: resolveApiKey() })
@@ -1341,14 +1380,14 @@ program
 
         outputResult(simData, opts.json ?? false, () => {
           const status = sim.ok
-            ? chalk.green('SUCCESS — simulated cleanly against chain head')
-            : chalk.red('REVERTED — see revert diagnostics below')
+            ? chalk.green('SUCCESS: simulated cleanly against chain head')
+            : chalk.red('REVERTED: see revert diagnostics below')
           const lines = [
             chalk.bold('Simulation Result'),
             '',
             `  Vault:     ${vault.name} (${vault.slug})`,
             `  Amount:    ${opts.amount} (${quote.rawAmount} raw)`,
-            `  Gas Limit: ${tx?.gasLimit ?? chalk.dim('n/a — reverted')}`,
+            `  Gas Limit: ${tx?.gasLimit ?? chalk.dim('n/a: reverted')}`,
             `  Target:    ${tx?.to ?? chalk.dim('n/a')}`,
             `  Chain:     ${tx?.chainId ?? vault.chainId}`,
             '',

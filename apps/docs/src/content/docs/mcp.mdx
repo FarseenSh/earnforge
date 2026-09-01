@@ -26,7 +26,7 @@ call these tools to query vaults, compute risk, build deposit quotes, and more.
 
 ---
 
-## Hosted — no install
+## Hosted. No install
 
 A public instance runs on Cloudflare Workers and speaks the `2026-07-28`
 protocol revision. Point any MCP client at it:
@@ -43,7 +43,7 @@ protocol revision. Point any MCP client at it:
 ```
 
 All twelve tools, plus the Agent Skill served as resources under
-`skill://earnforge/*` — so one connection gives an agent the tools *and* the
+`skill://earnforge/*`, so one connection gives an agent the tools *and* the
 instructions for using them.
 
 :::caution[Bring your own key for real use]
@@ -55,7 +55,7 @@ your key instead:
 "headers": { "x-lifi-api-key": "your-key-from-portal.li.fi" }
 ```
 
-For production, deploy your own — same Worker, your account, your quota.
+For production, deploy your own: same Worker, your account, your quota.
 :::
 
 ---
@@ -206,7 +206,7 @@ Get DeFi portfolio positions for a wallet address.
 
 Compute a composite 0-10 risk score. Seven dimensions: TVL magnitude, APY
 stability, protocol maturity, redeemability, asset type, LI.FI's
-`verificationStatus`, and reward dependency — plus a `flags` array explaining
+`verificationStatus`, and reward dependency, plus a `flags` array explaining
 what is wrong in plain language.
 
 **Parameters:**
@@ -218,7 +218,7 @@ what is wrong in plain language.
 **Example prompt:** "What's the risk score for the Aave USDC vault on Base?"
 
 **Labels:** `>= 8` is low risk, `6–7.9` medium, `< 6` high. The boundary is
-deliberate — verification carries 0.22 of the weight, so a flagged vault caps at
+deliberate: verification carries 0.22 of the weight, so a flagged vault caps at
 7.96 and can never read as low risk.
 
 ---
@@ -241,7 +241,7 @@ Build a deposit quote for an Earn vault. Returns transaction data ready to sign.
 **Example prompt:** "Build a quote to deposit 100 USDC into the Aave vault on Base from my wallet 0x..."
 
 <Aside type="caution">
-Returns an **unsigned** transaction. Nothing here signs or broadcasts — every
+Returns an **unsigned** transaction. Nothing here signs or broadcasts. Every
 tool is annotated `readOnlyHint`, so a host can auto-approve them safely.
 </Aside>
 

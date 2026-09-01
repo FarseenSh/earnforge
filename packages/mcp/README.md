@@ -1,6 +1,6 @@
 # @earnforge/mcp
 
-MCP server for the [LI.FI Earn API](https://docs.li.fi/earn/overview) — vault
+MCP server for the [LI.FI Earn API](https://docs.li.fi/earn/overview): vault
 discovery, risk scoring, allocation, diagnostics, and API drift detection as
 agent-callable tools.
 
@@ -24,14 +24,14 @@ npm i -g @earnforge/mcp
 }
 ```
 
-The Earn Data API returns `401` without a key — create one at
+The Earn Data API returns `401` without a key: create one at
 [portal.li.fi](https://portal.li.fi).
 
 ## Hosted (Cloudflare Worker)
 
 Serves the **`2026-07-28`** revision, which is stateless by definition: no
 `initialize` handshake, no `Mcp-Session-Id`, every request carrying its own
-protocol version in `_meta`. That makes a Worker the natural host — no sticky
+protocol version in `_meta`. That makes a Worker the natural host. No sticky
 routing, no shared session store, nothing to rebuild on a cold start.
 
 2025-era clients are served from the same factory, so upgrading the protocol
@@ -51,7 +51,7 @@ wrangler deploy
 ```
 
 No build step: `wrangler.toml` points at `src/worker.ts` so wrangler does the
-bundling itself. That is load-bearing — see the `[alias]` note in the config.
+bundling itself. That is load-bearing: see the `[alias]` note in the config.
 
 A public instance runs at `earnforge-mcp.papermind-ai.workers.dev`, so an agent
 can reach every tool with no install and no key:
@@ -83,14 +83,14 @@ rate-limit under load. Pass `x-lifi-api-key` and the Worker uses yours instead:
 }
 ```
 
-For anything production, deploy your own with the three commands above —
-it is the same Worker, on your own account and quota.
+For anything production, deploy your own with the three commands above.
+It is the same Worker, on your own account and quota.
 
 `GET /health` is an unauthenticated liveness probe.
 
 ## Tools
 
-12 tools, all read-only — nothing signs or broadcasts. Quote tools return
+12 tools, all read-only. Nothing signs or broadcasts. Quote tools return
 unsigned `transactionRequest` objects for the caller's wallet.
 
 | Tool | LI.FI's hosted server | Here |
@@ -100,13 +100,13 @@ unsigned `transactionRequest` objects for the caller's wallet.
 | `get-earn-chains` | ✓ | ✓ |
 | `get-earn-protocols` | ✓ | ✓ |
 | `get-earn-portfolio` | ✓ | ✓ |
-| `get-vault-risk` | — | ✓ |
-| `suggest-allocation` | — | ✓ |
-| `run-doctor` | — | ✓ |
-| `check-allowance` | — | ✓ |
+| `get-vault-risk` | no | ✓ |
+| `suggest-allocation` | no | ✓ |
+| `run-doctor` | no | ✓ |
+| `check-allowance` | no | ✓ |
 | `quote-vault-deposit` | ✓ (via `get-quote`) | ✓ |
-| `quote-vault-redeem` | — | ✓ |
-| `check-api-drift` | — | ✓ |
+| `quote-vault-redeem` | no | ✓ |
+| `check-api-drift` | no | ✓ |
 
 ### Where this differs on quality
 
@@ -119,13 +119,13 @@ out of a text block and guess at.
 every call.
 
 **`verificationStatus` is surfaced.** LI.FI flags roughly 10% of vaults as suspect
-through a field that appears in no spec or changelog — and their own MCP server
+through a field that appears in no spec or changelog, and their own MCP server
 does not expose it. Every vault result here carries the status and its reasons,
 flagged vaults are excluded from allocations by default, and a flagged vault can
 never score as low risk.
 
 **Correct protocol ids.** LI.FI's tool descriptions still advertise `morpho-v1`,
-`aave-v3` and `euler-v2`. Those return HTTP 200 with zero results — an agent
+`aave-v3` and `euler-v2`. Those return HTTP 200 with zero results: an agent
 following them gets silence, not an error.
 
 **Correct APY scale.** Tool descriptions state that APY is already a percentage.
@@ -144,7 +144,7 @@ skill://earnforge/references/*.md     loaded only when a task needs them
 ```
 
 One connection gives a host the tools it can call *and* the instructions
-describing when to call them — previously two separate packages, one of which had
+describing when to call them: previously two separate packages, one of which had
 to be installed by hand.
 
 ## License

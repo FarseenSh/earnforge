@@ -21,7 +21,7 @@ import {
 } from '../src/schemas/index.js'
 import { flagReasons, isFlagged, parseVaultSlug } from '../src/schemas/vault.js'
 
-describe('Zod Schemas — validated against real API fixtures', () => {
+describe('Zod Schemas: validated against real API fixtures', () => {
   describe('VaultListResponseSchema', () => {
     it('parses the real Base vaults response', () => {
       const result = VaultListResponseSchema.parse(vaultsBase)
@@ -59,12 +59,12 @@ describe('Zod Schemas — validated against real API fixtures', () => {
     })
   })
 
-  describe('VaultSchema — single vault', () => {
+  describe('VaultSchema: single vault', () => {
     it('parses the real single-vault response', () => {
       const result = VaultSchema.parse(vaultSingle)
       expect(result.name).toBeTruthy()
       expect(result.chainId).toBe(8453)
-      // Protocol ids are unversioned — `morpho`, never `morpho-v1`.
+      // Protocol ids are unversioned: `morpho`, never `morpho-v1`.
       expect(result.protocol.id).toBe('morpho')
       expect(result.protocol.id).not.toMatch(/-v\d+$/)
     })
@@ -88,7 +88,7 @@ describe('Zod Schemas — validated against real API fixtures', () => {
     })
   })
 
-  describe('verificationStatus — undocumented LI.FI signal', () => {
+  describe('verificationStatus: undocumented LI.FI signal', () => {
     it('parses a flagged vault and reports its reasons', () => {
       const result = VaultSchema.parse(vaultFlagged)
       expect(isFlagged(result)).toBe(true)
@@ -172,7 +172,7 @@ describe('Zod Schemas — validated against real API fixtures', () => {
     })
   })
 
-  describe('ApySchema — three-valued reward', () => {
+  describe('ApySchema: three-valued reward', () => {
     it('preserves null rather than coercing to 0', () => {
       const result = ApySchema.parse({ base: 3.5, total: 3.5, reward: null })
       expect(result.reward).toBeNull()
@@ -194,7 +194,7 @@ describe('Zod Schemas — validated against real API fixtures', () => {
     })
   })
 
-  describe('TvlSchema — accepts either representation (Pitfall #8)', () => {
+  describe('TvlSchema: accepts either representation (Pitfall #8)', () => {
     it('parses a number, as the live API sends', () => {
       const parsed = parseTvl(TvlSchema.parse({ usd: 270595698 }))
       expect(parsed.parsed).toBe(270595698)
@@ -214,7 +214,7 @@ describe('Zod Schemas — validated against real API fixtures', () => {
     })
   })
 
-  describe('getBestApy — fallback chain (Pitfalls #7, #18)', () => {
+  describe('getBestApy: fallback chain (Pitfalls #7, #18)', () => {
     it('uses apy.total when available', () => {
       const analytics = AnalyticsSchema.parse({
         apy: { base: 3.5, total: 3.5, reward: 0 },
@@ -257,7 +257,7 @@ describe('Edge cases from real fixtures', () => {
   it('tolerates an empty underlyingTokens array even though none occur now', () => {
     // Pitfall #15 was built around a UNIBTC vault with no underlying tokens.
     // Zero of 799 live vaults now have an empty array, so the guard can only be
-    // asserted structurally — the schema must still accept it, because the
+    // asserted structurally. The schema must still accept it, because the
     // shape is legal and LI.FI has reintroduced dropped shapes before.
     const base = VaultSchema.parse(vaultSingle)
     const parsed = VaultSchema.safeParse({ ...base, underlyingTokens: [] })
@@ -277,7 +277,7 @@ describe('Edge cases from real fixtures', () => {
       (v) => (v.protocol.id ?? v.protocol.name) === 'aave'
     )
     if (aaveVault) {
-      // null is preserved, not flattened to 0 — see pitfall-17 for why.
+      // null is preserved, not flattened to 0: see pitfall-17 for why.
       const reward = aaveVault.analytics.apy.reward
       expect(reward === null || typeof reward === 'number').toBe(true)
     }
@@ -312,7 +312,7 @@ describe('toSmallestUnitNonZero', () => {
    * `toSmallestUnit` truncates, so any amount below one unit of the token
    * became "0" and the caller learned about it from Composer:
    * `/fromAmount must pass "isBigNumberish" keyword validation`. The amount is
-   * not malformed — it is unrepresentable at that token's precision, and the
+   * not malformed. It is unrepresentable at that token's precision, and the
    * message has to say which.
    */
   it.each([

@@ -6,7 +6,7 @@ import { assertAddress, encodeAddressArg } from './address.js'
  * ERC-20 allowance checking and approval transaction building.
  *
  * Uses the standard ERC-20 ABI for allowance() and approve().
- * Works with any EVM JSON-RPC provider via raw fetch — no viem dependency required.
+ * Works with any EVM JSON-RPC provider via raw fetch. No viem dependency required.
  * The approval address comes from the Composer quote's estimate.approvalAddress.
  */
 

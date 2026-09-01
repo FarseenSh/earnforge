@@ -5,21 +5,21 @@ import { ProtocolListResponseSchema } from '../../src/schemas/index.js'
 import { STRATEGIES } from '../../src/strategies.js'
 
 /**
- * Pitfall #19 — protocol slugs went unversioned, and the old ones fail silently.
+ * Pitfall #19: protocol slugs went unversioned, and the old ones fail silently.
  *
  * The Apr 2026 rewrite dropped version suffixes: `morpho-v1` became `morpho`,
  * `aave-v3` became `aave`, `euler-v2` became `euler`. `maple` left the index
  * entirely.
  *
  * What makes this dangerous is the failure mode. Filtering on a slug that no
- * longer exists does not 400 and does not signal an unknown value — it returns
+ * longer exists does not 400 and does not signal an unknown value. It returns
  * HTTP 200 with `total: 0`. So a stale hardcoded slug is indistinguishable from
  * "this protocol genuinely has no vaults", and a strategy preset silently
  * matches nothing while every test still passes.
  *
  * Our own code shipped this bug: the risk scorer's protocol tiers were keyed on
  * versioned slugs, so every Aave and Morpho vault fell through to the unknown-
- * protocol default of 3 — scoring the two largest, most audited protocols on
+ * protocol default of 3: scoring the two largest, most audited protocols on
  * the platform as if nobody had heard of them.
  *
  * LI.FI's hosted MCP server still advertises the versioned slugs to agents.

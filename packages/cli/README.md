@@ -1,6 +1,6 @@
 # @earnforge/cli
 
-Terminal interface for the [LI.FI Earn API](https://docs.li.fi/earn/overview) —
+Terminal interface for the [LI.FI Earn API](https://docs.li.fi/earn/overview):
 vault discovery, risk scoring, deposit quoting, and diagnostics.
 
 ```bash
@@ -41,7 +41,7 @@ Every command supports `--json` for machine-readable output.
 ## Flagged vaults are surfaced everywhere
 
 LI.FI flags roughly 10% of vaults through an undocumented `verificationStatus`
-field — usually for `zero_apy`, occasionally `apy_outlier`. `earnforge vault`
+field: usually for `zero_apy`, occasionally `apy_outlier`. `earnforge vault`
 and `earnforge compare` show a verification badge, and `earnforge risk` lists the
 reasons:
 

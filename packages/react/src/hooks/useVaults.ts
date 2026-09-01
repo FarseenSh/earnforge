@@ -78,7 +78,7 @@ export function useVaults(params: UseVaultsParams = {}): UseVaultsReturn {
         cursor: cursorRef.current ?? undefined,
       })
       // nextCursor is absent from the JSON on the last page, so it arrives as
-      // undefined rather than null — normalise so the ref stays string | null.
+      // undefined rather than null: normalise so the ref stays string | null.
       cursorRef.current = result.nextCursor ?? null
 
       if (accumulatedRef.current.length === 0) {

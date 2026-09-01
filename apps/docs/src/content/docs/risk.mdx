@@ -52,7 +52,7 @@ trust and lower risk of rug pulls or liquidity crises.
 
 <Aside type="caution">
 The spec declares `tvl.usd` a **string**; the live API sends a **number**. The SDK's
-`parseTvl()` accepts either, so the flip is a non-event for callers — but code that assumes
+`parseTvl()` accepts either, so the flip is a non-event for callers, but code that assumes
 one shape will break when it meets the other. See [Pitfall #8](/pitfalls/).
 </Aside>
 
@@ -92,22 +92,22 @@ protocol id.
 
 | Tier | Protocols | Score |
 |------|-----------|-------|
-| Blue chip — multi-year record, deep audits, systemic scale | `aave`, `morpho` | 9 |
+| Blue chip: multi-year record, deep audits, systemic scale | `aave`, `morpho` | 9 |
 | | `yearn` | 8 |
-| Established — long record or very large, well audited | `spark-v2` | 8 |
+| Established: long record or very large, well audited | `spark-v2` | 8 |
 | | `euler`, `fluid`, `pendle`, `etherfi-staking` | 7 |
 | | `ethena`, `maple` | 6 |
-| Mid — real adoption, but young, thin, or unaudited | `ipor`, `midas`, `kinetiq`, `hyperlend`, `upshift` | 5 |
-| Small or young — audited, but short record and limited scale | `avant`, `cap`, `neverland`, `yo`, `usdai`, `nest`, `concrete`, `infinifi`, `auto-finance`, `ember` | 4 |
+| Mid: real adoption, but young, thin, or unaudited | `ipor`, `midas`, `kinetiq`, `hyperlend`, `upshift` | 5 |
+| Small or young: audited, but short record and limited scale | `avant`, `cap`, `neverland`, `yo`, `usdai`, `nest`, `concrete`, `infinifi`, `auto-finance`, `ember` | 4 |
 | Examined and still unknown | `apyx`, `hypurrfi` | 3 |
 | Unknown protocol (fallback) | *anything unlisted* | 3 |
 | Examined, findings adverse | `ample` | 2 |
 
 Two entries are worth calling out, because they are where size and safety come apart:
 
-- **`kinetiq` scores 5 despite $785M TVL** — listed 2025-07 with zero audits. Scale is not
+- **`kinetiq` scores 5 despite $785M TVL**: listed 2025-07 with zero audits. Scale is not
   a substitute for review.
-- **`ample` scores 2, below the unknown-protocol fallback** — listed 2026-03, zero audits,
+- **`ample` scores 2, below the unknown-protocol fallback**: listed 2026-03, zero audits,
   and lottery-style payout mechanics. Being examined can be worse than being unexamined.
 
 <Aside type="caution">
@@ -139,7 +139,7 @@ Whether the vault holds stablecoins, less any impermanent-loss exposure LI.FI ta
 
 LI.FI publishes `verificationStatus` on every vault and flags **~10% of the fleet**
 (74 of 703). The field appears in no spec, changelog, or quickstart, and LI.FI's own
-hosted MCP server does not expose it — but it is LI.FI's own vault-quality signal, so it
+hosted MCP server does not expose it, but it is LI.FI's own vault-quality signal, so it
 carries the single largest weight here.
 
 | Verification | Score |
@@ -161,7 +161,7 @@ lending fees generally do not.
 
 | Reward share of total APY | Score |
 |---------------------------|-------|
-| 0% — no rewards reported | 10 |
+| 0%. No rewards reported | 10 |
 | < 20% | 9 |
 | < 40% | 7 |
 | < 60% | 5 |
@@ -192,7 +192,7 @@ score = (tvl * 0.18) + (apyStability * 0.14) + (protocol * 0.18)
 
 | Dimension | Weight | Rationale |
 |-----------|--------|-----------|
-| Verification | 22% | LI.FI's own quality signal — the only dimension sourced from the vendor's judgment rather than inferred |
+| Verification | 22% | LI.FI's own quality signal. The only dimension sourced from the vendor's judgment rather than inferred |
 | TVL Magnitude | 18% | Strong signal of trust and liquidity |
 | Protocol Maturity | 18% | Audit history and track record are the strongest safety indicators |
 | APY Stability | 14% | Volatile APY suggests high risk or unsustainable incentives |
@@ -206,7 +206,7 @@ score = (tvl * 0.18) + (apyStability * 0.14) + (protocol * 0.18)
 
 Both examples are real vaults, scored against the live API.
 
-### A clean vault — STEAKUSDC (Morpho, Base)
+### A clean vault: STEAKUSDC (Morpho, Base)
 
 | Dimension | Raw Score | Weight | Weighted |
 |-----------|-----------|--------|----------|
@@ -221,7 +221,7 @@ Both examples are real vaults, scored against the live API.
 
 Label: **low** risk. This is the highest score in the fleet.
 
-### The highest APY in the fleet — USP (Pendle, Ethereum)
+### The highest APY in the fleet: USP (Pendle, Ethereum)
 
 Advertised at 106.16% total APY. 92.40 points of that are rewards.
 
@@ -236,7 +236,7 @@ Advertised at 106.16% total APY. 92.40 points of that are rewards.
 | Reward Dependency (87% of APY) | 2 | 0.08 | 0.16 |
 | **Total** | | | **5.5** |
 
-Label: **high** risk — despite the best headline number on the platform.
+Label: **high** risk: despite the best headline number on the platform.
 
 ---
 
@@ -253,7 +253,7 @@ const risk = forge.riskScore(vault);
 
 console.log(risk.score);   // 9.7
 console.log(risk.label);   // "low"
-console.log(risk.flags);   // [] — populated with plain-language reasons when risk is present
+console.log(risk.flags);   // [], populated with plain-language reasons when risk is present
 console.log(risk.breakdown);
 // { tvl: 10, apyStability: 10, protocol: 9, redeemability: 10,
 //   assetType: 9, verification: 10, rewardDependency: 10 }
@@ -266,7 +266,7 @@ earnforge risk morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
 ```
 
 Prints all seven dimensions plus a `Flags` section naming why a vault carries risk.
-Requires `@earnforge/cli` 1.0.1 or later — 1.0.0 printed five dimensions and no flags.
+Requires `@earnforge/cli` 1.0.1 or later: 1.0.0 printed five dimensions and no flags.
 
 ### React
 

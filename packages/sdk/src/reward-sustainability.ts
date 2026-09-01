@@ -4,7 +4,7 @@ import { rewardShareOfTotal } from './risk-scorer.js'
 import type { Vault } from './schemas/vault.js'
 
 /**
- * Reward sustainability — "is this 12% real, or an incentive that ends?"
+ * Reward sustainability: "is this 12% real, or an incentive that ends?"
  *
  * A vault advertising 12% where 10 points are a token emission is a different
  * asset from one earning 12% organically, and no LI.FI surface distinguishes
@@ -14,14 +14,14 @@ import type { Vault } from './schemas/vault.js'
  * The distinction rests on `apy.reward` being *three*-valued, which is why the
  * schema deliberately does not coerce it:
  *
- * - `null` — the protocol reported nothing. Unknown, not zero. 143 of Aave's
+ * - `null`. The protocol reported nothing. Unknown, not zero. 143 of Aave's
  *   160 vaults are null.
- * - `0` — the protocol reported that there are no incentives. Genuinely
+ * - `0`. The protocol reported that there are no incentives. Genuinely
  *   organic. 160 of Morpho's 210 vaults are zero.
- * - `> 0` — incentives, and `rewardShareOfTotal` says how much of the headline
+ * - `> 0`: incentives, and `rewardShareOfTotal` says how much of the headline
  *   depends on them.
  *
- * Collapsing null into 0 — which is what a `?? 0` transform does — destroys
+ * Collapsing null into 0 (which is what a `?? 0` transform does) destroys
  * exactly the signal this module needs, and makes every Aave vault look
  * confidently organic when nothing is actually known about it.
  */
@@ -67,7 +67,7 @@ const HEAVY_SHARE = 0.6
  * Score a vault from its own reported data alone. Synchronous, no network.
  *
  * Use {@link analyzeRewardSustainability} when a DeFiLlama history lookup is
- * acceptable — a decaying APY curve is the strongest available evidence that
+ * acceptable: a decaying APY curve is the strongest available evidence that
  * an emission is winding down.
  */
 export function rewardSustainability(vault: Vault): RewardSustainability {
@@ -83,7 +83,7 @@ export function rewardSustainability(vault: Vault): RewardSustainability {
     // honestly, so a caller can choose to exclude rather than be misled.
     reasons.push(
       'Protocol does not report a reward APY, so the split between organic ' +
-        'yield and incentives is unknown — not zero.'
+        'yield and incentives is unknown, not zero.'
     )
     if (rewardTokenCount > 0) {
       reasons.push(
@@ -125,7 +125,7 @@ export function rewardSustainability(vault: Vault): RewardSustainability {
     label = 'organic'
     reasons.push(
       reward === 0
-        ? 'Protocol explicitly reports no incentives — the yield is organic.'
+        ? 'Protocol explicitly reports no incentives. The yield is organic.'
         : `Incentives are ${pct(resolvedShare)} of total APY, a negligible share.`
     )
   } else if (resolvedShare <= MOSTLY_ORGANIC_SHARE) {
@@ -153,7 +153,7 @@ export function rewardSustainability(vault: Vault): RewardSustainability {
 
   if (rewardTokenCount > 1) {
     reasons.push(
-      `${rewardTokenCount} distinct reward tokens — each is an independent ` +
+      `${rewardTokenCount} distinct reward tokens. Each is an independent ` +
         'emission that can end on its own schedule.'
     )
   }
@@ -206,7 +206,7 @@ export async function analyzeRewardSustainability(
     )
   } else if (trend.direction === 'rising' && base.label === 'organic') {
     reasons.push(
-      `APY is rising (${pct(trend.change)}) on organic yield — demand-driven ` +
+      `APY is rising (${pct(trend.change)}) on organic yield: demand-driven ` +
         'rather than incentive-driven.'
     )
   }

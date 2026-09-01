@@ -7,7 +7,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 The LI.FI Earn API has 24 known pitfalls that cause failures, data corruption, or silent
 bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pitfalls 15-24 were
-found by probing the live API — several of them only after they had already broken something
+found by probing the live API: several of them only after they had already broken something
 in production.
 
 **EarnForge eliminates every single one at the SDK layer.** Downstream surfaces (CLI, React,
@@ -33,7 +33,7 @@ with `pnpm turbo test --filter=@earnforge/sdk`.
 ### Pitfall 2 -- Auth is required on the Earn Data API
 
 **This pitfall inverted in April 2026.** It previously said the Earn Data API
-takes no auth header. It now hard-`401`s without one — and LI.FI's general API
+takes no auth header. It now hard-`401`s without one, and LI.FI's general API
 docs still say no key is required, which remains true only for `li.quest`.
 
 | | |
@@ -181,7 +181,7 @@ token -- **not** the underlying USDC/WETH address.
 
 | | |
 |---|---|
-| **Root Cause** | Protocol ids became unversioned. `protocol=morpho-v1` returns HTTP `200` with an empty list — no error — so a stale slug is indistinguishable from a protocol with no vaults. LI.FI's own MCP server still advertises the versioned ids. |
+| **Root Cause** | Protocol ids became unversioned. `protocol=morpho-v1` returns HTTP `200` with an empty list (no error) so a stale slug is indistinguishable from a protocol with no vaults. LI.FI's own MCP server still advertises the versioned ids. |
 | **SDK Mitigation** | Ids are resolved from `/v1/protocols`; a live test asserts every id EarnForge ships still exists upstream. |
 | **Test** | `pitfall-19-stale-protocol-slugs.test.ts` |
 
@@ -197,7 +197,7 @@ token -- **not** the underlying USDC/WETH address.
 
 | | |
 |---|---|
-| **Root Cause** | Present on every vault, in no spec or changelog, flagging ~9% as suspect — mostly `zero_apy`, occasionally `apy_outlier`. Nothing surfaces it, so flagged vaults look like any other. |
+| **Root Cause** | Present on every vault, in no spec or changelog, flagging ~9% as suspect: mostly `zero_apy`, occasionally `apy_outlier`. Nothing surfaces it, so flagged vaults look like any other. |
 | **SDK Mitigation** | A weighted risk dimension. A flagged vault caps at 7.96 and can never read as low risk; `suggest()` excludes them unless `includeFlagged: true`. |
 | **Test** | `pitfall-21-undocumented-verification-status.test.ts` |
 
@@ -205,7 +205,7 @@ token -- **not** the underlying USDC/WETH address.
 
 | | |
 |---|---|
-| **Root Cause** | The OpenAPI spec is wrong in six places and documents fields no vault sends. Following it produces wrong values rather than type errors — the APY case overstates every yield 100×. |
+| **Root Cause** | The OpenAPI spec is wrong in six places and documents fields no vault sends. Following it produces wrong values rather than type errors. The APY case overstates every yield 100×. |
 | **SDK Mitigation** | `detectDrift()` diffs live vs spec vs schema and reports which pair disagrees. CI runs it daily. |
 | **Test** | `pitfall-22-docs-contradict-the-api.test.ts` |
 
@@ -221,7 +221,7 @@ token -- **not** the underlying USDC/WETH address.
 
 | | |
 |---|---|
-| **Root Cause** | Pitfall 15 anticipated an *empty* `underlyingTokens` array. What the API actually sends is stranger: a populated array whose entries carry only an `address`, with no `symbol` and no `decimals`. One vault in the fleet did this, and because the schema required both fields, `listAll()` threw partway through — the Studio's vault list read zero in production and `earnforge list` could not complete without a chain filter. |
+| **Root Cause** | Pitfall 15 anticipated an *empty* `underlyingTokens` array. What the API actually sends is stranger: a populated array whose entries carry only an `address`, with no `symbol` and no `decimals`. One vault in the fleet did this, and because the schema required both fields, `listAll()` threw partway through. The Studio's vault list read zero in production and `earnforge list` could not complete without a chain filter. |
 | **SDK Mitigation** | `symbol` and `decimals` are optional on the token schema. Consumers that need them resolve on-chain or skip the vault, rather than the whole fleet iteration dying on one entry. |
 | **Test** | `pitfall-24-partial-underlying-tokens.test.ts` |
 

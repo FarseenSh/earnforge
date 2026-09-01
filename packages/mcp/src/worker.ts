@@ -7,9 +7,9 @@ import { SERVER_VERSION } from './version.js'
  * Cloudflare Worker entry point.
  *
  * Built on `createMcpHandler`, the v2 HTTP entry that serves the `2026-07-28`
- * revision. That revision is stateless by design — no `initialize` handshake,
+ * revision. That revision is stateless by design. No `initialize` handshake,
  * no `Mcp-Session-Id`, every request carrying its own protocol version in
- * `_meta` — which is the shape a Worker wants anyway: no sticky routing, no
+ * `_meta`, which is the shape a Worker wants anyway: no sticky routing, no
  * session store, no cold-start state to rebuild.
  *
  * The handler's default `legacy: 'stateless'` also serves 2025-era clients from
@@ -49,8 +49,8 @@ function withCors(response: Response): Response {
 /**
  * Built once per isolate rather than per request.
  *
- * The factory itself still runs per request — that is what keeps the endpoint
- * stateless — but the handler around it is reused, which is the arrangement the
+ * The factory itself still runs per request. That is what keeps the endpoint
+ * stateless, but the handler around it is reused, which is the arrangement the
  * SDK asks for. The Worker secret only exists inside `fetch`, so construction
  * is deferred to the first request rather than hoisted to module scope.
  */
@@ -70,7 +70,7 @@ function getHandler(fallbackKey: string | undefined) {
       //
       // The default upgrades to a stream as soon as a handler might emit a
       // notification, which returns from `fetch()` in ~2ms and then performs
-      // the Earn API call from the stream — after the Worker's request scope
+      // the Earn API call from the stream: after the Worker's request scope
       // has ended. Cloudflare tears that down: the client sees error 1042
       // while the Worker's own log records `outcome: ok` with no exception,
       // because from its side nothing failed.
@@ -119,14 +119,14 @@ export default {
           error:
             'No LI.FI API key. Set LIFI_API_KEY on the Worker, or pass one as ' +
             'the x-lifi-api-key header. The Earn Data API returns 401 without ' +
-            'a key — create one at https://portal.li.fi',
+            'a key: create one at https://portal.li.fi',
         },
         { status: 500, headers: CORS_HEADERS }
       )
     }
 
     // No Host/Origin guards here on purpose. Those defend a *localhost* bind
-    // against DNS rebinding — a browser resolving its own domain to 127.0.0.1
+    // against DNS rebinding: a browser resolving its own domain to 127.0.0.1
     // to reach a local server as same-origin. A Worker on a public hostname has
     // no such loopback to impersonate, and this endpoint is meant to be
     // reachable cross-origin by design.

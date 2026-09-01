@@ -11,7 +11,7 @@
  *   LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live
  *
  * Assertions are structural rather than exact wherever the fleet moves on its
- * own — counts drift as LI.FI indexes new protocols, and a test that fails
+ * own: counts drift as LI.FI indexes new protocols, and a test that fails
  * every time a vault is added trains people to ignore it.
  */
 import { describe, expect, it } from 'vitest'
@@ -27,7 +27,7 @@ const client = new EarnDataClient()
 /**
  * Protocols whose disappearance is a bug in us, not churn at LI.FI.
  *
- * Every other id may come and go — the index gained `spark-v2`, lost `nest`,
+ * Every other id may come and go. The index gained `spark-v2`, lost `nest`,
  * and lost then regained `maple` inside two months. These three have never
  * moved, so if one stops resolving the likely cause is an id-shape change we
  * failed to follow, which silently drops every vault it scores to tier 3.
@@ -42,7 +42,7 @@ const BLUE_CHIP_PROTOCOLS = ['aave', 'morpho', 'euler'] as const
  * tests can construct a client. That placeholder is indistinguishable from a
  * real key to this file: the live tests happily send it, LI.FI answers
  * `401 Invalid or disabled API key`, and a dozen data tests fail with an auth
- * error while the auth tests — which assert rejection — still pass. The run
+ * error while the auth tests (which assert rejection) still pass. The run
  * reads as "the Earn API is down" when it means "you forgot the key".
  *
  * Checking for absence is not enough; the sentinel has to be rejected too.
@@ -62,7 +62,7 @@ if (!ENV_KEY || ENV_KEY === PLACEHOLDER_KEY) {
 
 const KEY = ENV_KEY
 
-describe('Live API — Auth', () => {
+describe('Live API: Auth', () => {
   it('rejects a request with no API key', async () => {
     const res = await fetch('https://earn.li.fi/v1/chains')
     expect(res.status).toBe(401)
@@ -73,7 +73,7 @@ describe('Live API — Auth', () => {
    *
    * Measured 10 Aug 2026: an invalid key was accepted on 9 of 15 requests to
    * `/v1/chains`, returning real data, and `/v1/vaults` behaved the same way.
-   * A *missing* key is refused every time, so the header is required — it is
+   * A *missing* key is refused every time, so the header is required. It is
    * only checked for validity on some fraction of requests, which reads like
    * some instances behind the load balancer not validating.
    *
@@ -104,7 +104,7 @@ describe('Live API — Auth', () => {
   })
 })
 
-describe('Live API — Chains', () => {
+describe('Live API: Chains', () => {
   it('returns a non-empty chain list', async () => {
     const chains = await client.listChains()
     expect(chains.length).toBeGreaterThan(10)
@@ -127,7 +127,7 @@ describe('Live API — Chains', () => {
   })
 })
 
-describe('Live API — Protocols', () => {
+describe('Live API: Protocols', () => {
   it('returns a non-empty protocol list', async () => {
     const protocols = await client.listProtocols()
     expect(protocols.length).toBeGreaterThan(5)
@@ -143,7 +143,7 @@ describe('Live API — Protocols', () => {
 
   it('every protocol id we ship still resolves upstream', async () => {
     // This replaces an assertion that no protocol id carries a version suffix.
-    // That held in Jul 2026, when LI.FI had retired every versioned slug — and
+    // That held in Jul 2026, when LI.FI had retired every versioned slug, and
     // stopped holding in Aug, when `spark-v2` appeared. The rule was never
     // "versioned ids do not exist"; it is "do not hardcode an id without
     // checking it", because a stale one returns zero results rather than an
@@ -157,7 +157,7 @@ describe('Live API — Protocols', () => {
     ])
 
     // Delisting is not a failure, and this test used to treat it as one via a
-    // hardcoded `shipped.delete('maple')` — added when maple left the index in
+    // hardcoded `shipped.delete('maple')`: added when maple left the index in
     // Jul 2026. `nest` left in Aug and turned the job red until someone
     // hand-edited the same line again; then maple *came back*, which made the
     // exemption wrong in the other direction. Retaining the mapping across a
@@ -166,7 +166,7 @@ describe('Live API — Protocols', () => {
     // on re-listing.
     //
     // So a vanished id is reported, not asserted on. What must never happen is
-    // a blue-chip disappearing — that means the id shape changed underneath us
+    // a blue-chip disappearing. That means the id shape changed underneath us
     // rather than the protocol leaving, and every vault it scores is affected.
     const vanished = [...shipped].filter((id) => !live.has(id))
     if (vanished.length > 0) {
@@ -186,7 +186,7 @@ describe('Live API — Protocols', () => {
   })
 
   it('reports which live protocols have no risk tier', async () => {
-    // Not a failure — new protocols appear constantly and default to tier 3.
+    // Not a failure: new protocols appear constantly and default to tier 3.
     // But an unscored protocol is a silent quality gap, so it should be visible
     // rather than discovered by a user wondering why everything scores the same.
     const live = (await client.listProtocols()).map((p) => p.id ?? p.name)
@@ -204,7 +204,7 @@ describe('Live API — Protocols', () => {
   })
 
   it('a versioned slug silently returns zero results, not an error', async () => {
-    // The trap: no 400, no signal — just a 200 with nothing in it, so a stale
+    // The trap: no 400, no signal, just a 200 with nothing in it, so a stale
     // hardcoded slug is indistinguishable from "no vaults exist".
     const stale = await client.listVaults({ protocol: 'morpho-v1', limit: 1 })
     expect(stale.total).toBe(0)
@@ -214,7 +214,7 @@ describe('Live API — Protocols', () => {
   })
 })
 
-describe('Live API — Vault List', () => {
+describe('Live API: Vault List', () => {
   it('returns a page of vaults for Base', async () => {
     const page = await client.listVaults({ chainId: 8453 })
     expect(page.data.length).toBeGreaterThan(0)
@@ -275,7 +275,7 @@ describe('Live API — Vault List', () => {
 
   it('flags a meaningful minority of vaults', async () => {
     // Around 10% of the fleet is flagged. If this hits zero, either LI.FI stopped
-    // emitting the field or we stopped reading it — both worth knowing.
+    // emitting the field or we stopped reading it. Both worth knowing.
     const page = await client.listVaults({ limit: 100 })
     const flagged = page.data.filter(isFlagged)
     expect(flagged.length).toBeGreaterThan(0)
@@ -302,7 +302,7 @@ describe('Live API — Vault List', () => {
     expect(first.nextCursor).toBeTruthy()
 
     // Walk to the end rather than assuming where it is. This previously read
-    // "Base fits in two pages, so the second omits the cursor" — true at 97
+    // "Base fits in two pages, so the second omits the cursor": true at 97
     // vaults, false at 115, and the job went red for a fleet that simply grew.
     // The invariant is not the page count; it is that the cursor is present
     // exactly while more data remains, and that the walk visits every vault
@@ -341,7 +341,7 @@ describe('Live API — Vault List', () => {
   })
 })
 
-describe('Live API — Single Vault', () => {
+describe('Live API: Single Vault', () => {
   it('fetches a vault by chainId + address', async () => {
     const page = await client.listVaults({ chainId: 8453, limit: 1 })
     const target = page.data[0]
@@ -382,7 +382,7 @@ describe('Live API — Single Vault', () => {
   })
 })
 
-describe('Live API — Portfolio', () => {
+describe('Live API: Portfolio', () => {
   it('returns positions for a known address', async () => {
     const portfolio = await client.getPortfolio(
       '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
@@ -396,7 +396,7 @@ describe('Live API — Portfolio', () => {
   })
 })
 
-describe('Live API — Risk Score', () => {
+describe('Live API: Risk Score', () => {
   it('computes a risk score for real vaults', async () => {
     const page = await client.listVaults({ chainId: 8453, limit: 20 })
     for (const vault of page.data) {
@@ -427,7 +427,7 @@ describe('Live API — Risk Score', () => {
   })
 })
 
-describe('Live API — Async Iterator', () => {
+describe('Live API: Async Iterator', () => {
   it('listAllVaults walks every page for Base', async () => {
     const page = await client.listVaults({ chainId: 8453, limit: 50 })
     let count = 0
@@ -438,14 +438,14 @@ describe('Live API — Async Iterator', () => {
   })
 })
 
-describe('Live chain — Aave v3 Pool ABI', () => {
+describe('Live chain: Aave v3 Pool ABI', () => {
   // Aave v3 Pool, Ethereum mainnet.
   const POOL = '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2'
   const RPC = 'https://ethereum-rpc.publicnode.com'
 
   it('getUserAccountData still returns the six words we decode', async () => {
     // `getAaveAccountData` reads this by raw selector rather than through an
-    // ABI, so a signature change would not fail to compile — it would decode
+    // ABI, so a signature change would not fail to compile. It would decode
     // whatever came back and hand the caller a plausible, wrong health factor.
     // This is the only thing standing between that and a liquidation.
     const data = await getAaveAccountData(
@@ -457,7 +457,7 @@ describe('Live chain — Aave v3 Pool ABI', () => {
     expect(typeof data.currentLiquidationThreshold).toBe('bigint')
     // Basis points, so a sane threshold is 0 (no position) or under 100%.
     expect(Number(data.currentLiquidationThreshold)).toBeLessThanOrEqual(10_000)
-    // Either a real ratio or null for a debt-free account — never uint256 max
+    // Either a real ratio or null for a debt-free account: never uint256 max
     // leaking through as 1.16e59.
     expect(
       data.healthFactor === null || Number.isFinite(data.healthFactor)

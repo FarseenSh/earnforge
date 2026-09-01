@@ -12,7 +12,7 @@ export class EarnForgeError extends Error {
 
 /**
  * One field-level validation failure from a 400 response.
- * Only 400s carry these — 404s return a bare `{ statusCode, message }`
+ * Only 400s carry these: 404s return a bare `{ statusCode, message }`
  * despite the changelog announcing structured 404s.
  */
 export interface EarnApiFieldError {
@@ -36,7 +36,7 @@ export class EarnApiError extends EarnForgeError {
 /**
  * The Earn Data API requires an API key as of Apr 2026 and hard-401s without
  * one. Note this diverges from LI.FI's general API docs, which still state
- * that no key is required — that remains true for li.quest but not earn.li.fi.
+ * that no key is required. That remains true for li.quest but not earn.li.fi.
  */
 export class MissingApiKeyError extends EarnForgeError {
   constructor() {

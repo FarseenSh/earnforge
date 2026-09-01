@@ -5,13 +5,13 @@ import vaultsBaseLastPage from '../../../fixtures/src/vaults-base-lastpage.json'
 import { VaultListResponseSchema } from '../../src/schemas/index.js'
 
 /**
- * Pitfall #6 — reading only the first page.
+ * Pitfall #6: reading only the first page.
  *
  * The default page size is 50 and the maximum is 100. `total` reports the full
  * result-set size, so a caller who ignores `nextCursor` silently analyses a
  * fraction of the fleet.
  *
- * The subtle part: on the final page `nextCursor` is ABSENT from the JSON — not
+ * The subtle part: on the final page `nextCursor` is ABSENT from the JSON, not
  * null, not an empty string. A schema declaring it merely nullable rejects the
  * last page, and a loop testing `cursor !== null` never terminates.
  */
@@ -28,7 +28,7 @@ describe('Pitfall #6: Ignoring pagination', () => {
   })
 
   it('omits nextCursor entirely on the final page', () => {
-    // Absent, not null — this is what breaks a nullable-only schema.
+    // Absent, not null. This is what breaks a nullable-only schema.
     expect('nextCursor' in vaultsBaseLastPage).toBe(false)
 
     const result = VaultListResponseSchema.parse(vaultsBaseLastPage)
@@ -51,7 +51,7 @@ describe('Pitfall #6: Ignoring pagination', () => {
 
   it('cursor is a vault slug, not an opaque token or offset', () => {
     const result = VaultListResponseSchema.parse(vaultsBase)
-    // Format is protocol:chainId:_:address — useful when debugging, and a
+    // Format is protocol:chainId:_:address: useful when debugging, and a
     // reminder that cursors are not stable across data refreshes.
     expect(result.nextCursor).toMatch(/^[a-z0-9-]+:\d+:.*0x[0-9a-fA-F]{40}$/)
   })

@@ -12,7 +12,7 @@ export interface SuggestParams {
   strategy?: StrategyPreset
   maxVaults?: number
   /**
-   * Include vaults LI.FI's verification pass flagged. Off by default — flagged
+   * Include vaults LI.FI's verification pass flagged. Off by default: flagged
    * vaults are excluded from allocations unless explicitly requested.
    */
   includeFlagged?: boolean

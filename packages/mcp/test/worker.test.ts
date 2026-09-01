@@ -4,7 +4,7 @@ import worker, { type Env } from '../src/worker.js'
 
 /**
  * The Worker entry is what makes the server hostable, so it needs coverage
- * independent of the MCP protocol tests — a broken health check or a leaked key
+ * independent of the MCP protocol tests: a broken health check or a leaked key
  * would not show up there.
  */
 describe('Cloudflare Worker entry', () => {
@@ -76,7 +76,7 @@ describe('Cloudflare Worker entry', () => {
  * This is the part that could not be verified before the spec was final: the
  * previous server was *designed* for the stateless model but made no
  * compliance claim, because nothing could check one. These assertions are that
- * check — they read the actual bytes the Worker puts on the wire.
+ * check. They read the actual bytes the Worker puts on the wire.
  *
  * A modern request is distinguished purely by carrying the per-request `_meta`
  * envelope; without it the handler routes to the 2025-era path instead, which
@@ -118,7 +118,7 @@ describe('MCP 2026-07-28 over the Worker', () => {
   }
 
   it('implements server/discover and advertises the revision', async () => {
-    // The spec makes this a MUST — it is how a client selects an era without
+    // The spec makes this a MUST. It is how a client selects an era without
     // the `initialize` handshake that no longer exists.
     const { result } = await rpc('server/discover')
     expect(result?.supportedVersions).toContain('2026-07-28')
@@ -176,7 +176,7 @@ describe('MCP 2026-07-28 over the Worker', () => {
     )
   })
 
-  it('needs no session id — two requests share no server state', async () => {
+  it('needs no session id: two requests share no server state', async () => {
     // Statelessness is the property that makes a Worker viable at all. If any
     // per-connection state survived, the second call would need the first.
     const a = listOf(await rpc('tools/list'), 'tools')

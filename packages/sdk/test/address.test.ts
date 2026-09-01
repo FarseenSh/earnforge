@@ -16,7 +16,7 @@ describe('address encoding', () => {
    * The original encoder was `value.slice(2).toLowerCase().padStart(64, '0')`
    * with no validation. `padStart` left-pads, so malformed input produced a
    * full-width word that decoded as a *different, valid* address rather than
-   * failing — an address without `0x` lost two characters and became
+   * failing: an address without `0x` lost two characters and became
    * `0x00aaaa…`, and `0xAAAA` became `0x0000…aaaa`. Calldata was 138 characters
    * either way, so nothing downstream could tell.
    *
@@ -48,7 +48,7 @@ describe('address encoding', () => {
     expect(data).toHaveLength(138)
   })
 
-  it('keeps the amount word intact — a shifted address would corrupt it', () => {
+  it('keeps the amount word intact: a shifted address would corrupt it', () => {
     const { data } = buildApprovalTx(TOKEN, SPENDER, 123456n, 8453)
     expect(BigInt(`0x${data.slice(74)}`)).toBe(123456n)
   })

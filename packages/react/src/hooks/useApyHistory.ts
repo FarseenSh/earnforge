@@ -54,7 +54,7 @@ export function useApyHistory(
     queryKey,
     queryFn: () => {
       if (vault) {
-        // Full vault object — accurate DeFiLlama matching via protocol+chain+tokens
+        // Full vault object: accurate DeFiLlama matching via protocol+chain+tokens
         return sdk.getApyHistory(vault)
       }
       // Legacy: address + chainId

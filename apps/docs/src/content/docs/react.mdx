@@ -39,7 +39,7 @@ automatically.
 Wrap your application with `EarnForgeProvider` to make the SDK instance
 available to all hooks.
 
-The Earn API requires a key, and hooks run in the browser — so the browser must
+The Earn API requires a key, and hooks run in the browser, so the browser must
 never hold it. Proxy through a server route instead; see
 [Studio's implementation](https://github.com/FarseenSh/earnforge/blob/main/apps/studio/src/app/api/earn/%5B...path%5D/route.ts)
 for a route handler with a path allowlist.
@@ -49,7 +49,7 @@ import { createEarnForge } from '@earnforge/sdk';
 import { EarnForgeProvider } from '@earnforge/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// NEVER `NEXT_PUBLIC_` — that ships the key to every visitor's browser, where
+// NEVER `NEXT_PUBLIC_`. That ships the key to every visitor's browser, where
 // it is readable from the network tab. Point the SDK at your own route handler
 // and let the server attach the real key.
 const forge = createEarnForge({
@@ -434,7 +434,7 @@ idle --> preflight --> quoting --> ready --> sending --> success
 
 ### useEarnRedeem
 
-The exit path, and the mirror of `useEarnDeposit` — same phase machine, same
+The exit path, and the mirror of `useEarnDeposit`: same phase machine, same
 `prepare` / `execute` / `reset` shape. Redeems vault shares back to an underlying
 token, optionally on a different chain.
 

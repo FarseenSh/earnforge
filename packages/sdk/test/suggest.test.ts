@@ -6,7 +6,7 @@ import { suggest } from '../src/suggest.js'
 
 const baseVaults = VaultListResponseSchema.parse(vaultsBase).data
 
-describe('suggest — portfolio allocation engine', () => {
+describe('suggest: portfolio allocation engine', () => {
   it('returns allocations for USDC vaults', () => {
     const result = suggest(baseVaults, { amount: 10000, asset: 'USDC' })
     expect(result.allocations.length).toBeGreaterThan(0)

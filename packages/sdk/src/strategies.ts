@@ -24,7 +24,7 @@ export interface StrategyConfig {
 }
 
 /**
- * Protocol ids must be UNVERSIONED — the Apr 2026 rewrite dropped version
+ * Protocol ids must be UNVERSIONED. The Apr 2026 rewrite dropped version
  * suffixes, and `?protocol=morpho-v1` now returns an empty set with a 200
  * rather than an error. `maple` was also removed from Earn entirely.
  * Every id here is present in the live GET /v1/protocols response.
@@ -53,7 +53,7 @@ export const STRATEGIES: Record<StrategyPreset, StrategyConfig> = {
     name: 'max-apy',
     description:
       'Sort by APY descending, no TVL floor. Flagged vaults are still ' +
-      'excluded — a vault flagged for apy_outlier would otherwise top the list',
+      'excluded: a vault flagged for apy_outlier would otherwise top the list',
     filters: {
       excludeFlagged: true,
     },

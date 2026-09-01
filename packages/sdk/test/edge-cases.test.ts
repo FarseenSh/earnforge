@@ -11,7 +11,7 @@ import {
   VaultSchema,
 } from '../src/schemas/index.js'
 
-describe('Edge cases — comprehensive', () => {
+describe('Edge cases: comprehensive', () => {
   const baseParsed = VaultListResponseSchema.parse(vaultsBase)
   const ethParsed = VaultListResponseSchema.parse(vaultsEthereum)
 
@@ -22,7 +22,7 @@ describe('Edge cases — comprehensive', () => {
    * worth holding: the shape is legal, and LI.FI has reintroduced dropped
    * shapes before. So the case is constructed rather than found.
    */
-  describe('empty underlyingTokens — synthesised, no longer occurs live', () => {
+  describe('empty underlyingTokens: synthesised, no longer occurs live', () => {
     const template = baseParsed.data[0]!
     const noTokens = VaultSchema.parse({
       ...template,

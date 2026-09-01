@@ -73,7 +73,7 @@ describe('projectBorrow', () => {
   })
 })
 
-describe('projectBorrow — refusals', () => {
+describe('projectBorrow: refusals', () => {
   it('rejects a floor at or below the liquidation threshold', () => {
     // A floor of 1.0 means "warn me once I am already liquidatable".
     expect(() => projectBorrow(HEALTHY, USD(100), 1.0)).toThrow(

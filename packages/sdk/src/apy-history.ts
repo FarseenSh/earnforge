@@ -24,7 +24,7 @@ interface DeFiLlamaPool {
  * LI.FI protocol id -> DeFiLlama project name(s).
  *
  * Keys are LI.FI's UNVERSIONED ids (post Apr 2026). Values are verified
- * against the live DeFiLlama project list — they are NOT the same strings,
+ * against the live DeFiLlama project list. They are NOT the same strings,
  * and several are counter-intuitive:
  *
  *   morpho  -> morpho-blue   (there is no "morpho-v1" on DeFiLlama)
@@ -32,8 +32,8 @@ interface DeFiLlamaPool {
  *   ethena  -> ethena-usde   (the version suffix is on DeFiLlama's side)
  *   maple   -> maple         (NOT "maple-finance")
  *
- * A protocol may map to several DeFiLlama projects — Fluid splits by product
- * and Avant splits by collateral asset — so values are arrays and every
+ * A protocol may map to several DeFiLlama projects: Fluid splits by product
+ * and Avant splits by collateral asset, so values are arrays and every
  * candidate project is searched.
  */
 export const LIFI_TO_LLAMA_PROJECT: Record<string, string[]> = {
@@ -74,7 +74,7 @@ const CHAIN_ID_TO_LLAMA: Record<number, string> = {
   747474: 'Katana',
 }
 
-// Cache the full pools list — it's 10MB+ and changes infrequently
+// Cache the full pools list. It's 10MB+ and changes infrequently
 const poolsCache = new LRUCache<DeFiLlamaPool[]>({ ttl: 3_600_000, maxSize: 1 })
 
 /**
@@ -103,7 +103,7 @@ async function fetchPools(): Promise<DeFiLlamaPool[]> {
  * Match a LI.FI vault to a DeFiLlama pool.
  *
  * DeFiLlama pools have UUID IDs (not addresses). Matching strategy:
- * 1. Map the LI.FI protocol id to its DeFiLlama project name(s) — these
+ * 1. Map the LI.FI protocol id to its DeFiLlama project name(s): these
  *    differ, e.g. "morpho" maps to "morpho-blue"
  * 2. Filter by chain name
  * 3. Filter by underlying token address (the deposit token)
@@ -116,7 +116,7 @@ function matchPool(vault: Vault, pools: DeFiLlamaPool[]): DeFiLlamaPool | null {
     return null
   }
 
-  // Prefer protocol.id — it is the canonical filter key — and fall back to
+  // Prefer protocol.id (it is the canonical filter key) and fall back to
   // name for older cached vaults that predate the id field.
   const llamaProjects =
     LIFI_TO_LLAMA_PROJECT[vault.protocol.id ?? vault.protocol.name] ??
@@ -193,7 +193,7 @@ export async function getApyHistory(
     let pool: DeFiLlamaPool | null = null
 
     if (typeof vaultOrAddress === 'string') {
-      // Legacy signature: address + chainId — less accurate matching
+      // Legacy signature (address + chainId), which matches less accurately
       const chainName = CHAIN_ID_TO_LLAMA[chainId!]
       if (!chainName) {
         return []
@@ -206,7 +206,7 @@ export async function getApyHistory(
             p.underlyingTokens?.some((t) => t.toLowerCase() === addr)
         ) ?? null
     } else {
-      // Full vault object — accurate matching
+      // Full vault object: accurate matching
       pool = matchPool(vaultOrAddress, pools)
     }
 

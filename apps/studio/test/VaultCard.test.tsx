@@ -160,7 +160,7 @@ describe('VaultCard', () => {
 
   it('warns that a vault is flagged, with the reason', () => {
     // Studio computed verificationStatus and showed none of it. A flagged vault
-    // rendered identically to any other — same layout, same APY, no warning —
+    // rendered identically to any other. Same layout, same APY, no warning,
     // which is how an outlier ends up looking like a recommendation.
     render(
       <VaultCard

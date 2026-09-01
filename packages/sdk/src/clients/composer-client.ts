@@ -4,7 +4,7 @@ import { type RetryOptions, withRetry } from '../retry.js'
 import { type QuoteResponse, QuoteResponseSchema } from '../schemas/index.js'
 
 /**
- * Composer base URL — li.quest (Pitfall #1).
+ * Composer base URL: li.quest (Pitfall #1).
  * Requires x-lifi-api-key header (Pitfall #3).
  * Endpoint is GET, not POST (Pitfall #4).
  */

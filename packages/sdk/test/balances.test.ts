@@ -6,7 +6,7 @@ import { defaultRpcUrl } from '../src/balances.js'
  * The CLI shipped `https://rpc.li.fi/v1/chain/{id}` as its default RPC. That
  * host has no DNS record, so `earnforge allowance` failed with a bare "fetch
  * failed" for anyone who did not pass `--rpc`. Nothing tested it because
- * nothing asserted the URL was reachable — only that one was produced.
+ * nothing asserted the URL was reachable: only that one was produced.
  *
  * These assert the shape of the map rather than reachability: a unit test that
  * makes sixteen network calls is a flake generator. Reachability was verified

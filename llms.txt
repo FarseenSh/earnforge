@@ -8,7 +8,7 @@ All figures below were verified against the live API on Sep 1, 2026:
 
 LI.FI rewrote the Earn API in April 2026. Every path moved, auth became
 mandatory, and two documented field types are wrong in the current spec. If you
-have older notes about this API, prefer this file — several of the things that
+have older notes about this API, prefer this file: several of the things that
 changed inverted rather than merely moved.
 
 ## Earn Data API (earn.li.fi)
@@ -32,7 +32,7 @@ Query params:
 - cursor (string) -- pagination cursor from the previous response's nextCursor
 
 Unknown query params are dropped rather than rejected. Sending `minTvl` instead
-of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet — 799 results
+of `minTvlUsd` returns HTTP 200 and the entire unfiltered fleet: 799 results
 where the filter would have returned 39. A filter that fails open is worse than
 one that throws, so spell the param exactly.
 
@@ -110,8 +110,8 @@ execution duration), and action details.
 - underlyingTokens: array of { symbol, address, decimals, priceUsd }.
 - tags: array of strings (e.g. "stablecoin", "lst")
 - depositPacks / redeemPacks: available deposit/redeem methods
-- description: OPTIONAL, and usually absent — roughly three quarters of vaults omit it.
-- verificationStatus: "none" | "flagged". UNDOCUMENTED — it appears in no spec,
+- description: OPTIONAL, and usually absent: roughly three quarters of vaults omit it.
+- verificationStatus: "none" | "flagged". UNDOCUMENTED. It appears in no spec,
   changelog or quickstart, and LI.FI's own hosted MCP server does not expose it.
   Roughly 10% of vaults are flagged (75 of 799 when this was written). Sort
   by APY without checking it and a flagged vault lands at the top of your list.
@@ -128,7 +128,7 @@ execution duration), and action details.
 - analytics.apy.reward is THREE-VALUED and the distinction is load-bearing:
   `null` means the protocol did not report, `0` means it reported none, and
   `> 0` means real incentives. The split is close to even between the first two
-  — 324 null against 300 zero at the time of writing — so normalising null to 0
+ (324 null against 300 zero at the time of writing) so normalising null to 0
   conflates several hundred unknowns with several hundred confirmed zeroes and
   destroys any reward-sustainability signal.
 - analytics.apy1d / apy7d / apy30d: number OR null. Fresh vaults lack history.
@@ -136,7 +136,7 @@ execution duration), and action details.
 - analytics.updatedAt: ISO timestamp. The docs describe a 15-minute refresh; in
   practice the fleet updates in one hourly batch, so most vaults share a single
   updatedAt minute and the freshest reading is typically over an hour old. The
-  exact share swings through the batch cycle — do not treat it as a constant —
+  exact share swings through the batch cycle (do not treat it as a constant) 
   and a tail runs past 90 hours. Treat it as a coarse staleness signal.
 
 Fields the OpenAPI spec documents that NO live vault sends: `caps`, `timeLock`,
@@ -176,7 +176,7 @@ for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
 const risk = forge.riskScore(vault);
 // { score: 9.7, label: "low", breakdown: {...}, flags: [] }
 
-// Reward sustainability — preserves the null vs 0 distinction
+// Reward sustainability: preserves the null vs 0 distinction
 import { rewardSustainability } from "@earnforge/sdk";
 rewardSustainability(vault);  // "organic" | "incentive-heavy" | "unknown" | ...
 
@@ -189,7 +189,7 @@ const quote = await forge.buildDepositQuote(vault, {
 // Preflight checks before signing
 const report = forge.preflight(vault, "0x...", { walletChainId: 8453 });
 
-// Portfolio suggestions — excludes flagged vaults unless includeFlagged: true
+// Portfolio suggestions: excludes flagged vaults unless includeFlagged: true
 const suggestion = await forge.suggest({
   amount: 10000,
   asset: "USDC",
@@ -239,7 +239,7 @@ get-earn-vaults, get-earn-vault, get-earn-chains, get-earn-protocols,
 get-earn-portfolio, get-vault-risk, quote-vault-deposit, quote-vault-redeem,
 check-allowance, suggest-allocation, run-doctor, check-api-drift.
 
-Every tool is annotated readOnlyHint / destructiveHint:false — quote tools
+Every tool is annotated readOnlyHint / destructiveHint:false: quote tools
 return unsigned transactions and nothing here signs or broadcasts. Pass your own
 `x-lifi-api-key` header to use your own rate-limit budget.
 

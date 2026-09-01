@@ -320,8 +320,8 @@ describe('CLI commands', () => {
     it('passes --from-token through to the amount resolution', async () => {
       // `simulate` sent --from-token to the flow but not to the quote that
       // scales the human amount, so the amount was scaled by the VAULT asset's
-      // decimals. `--amount 1 --from-token WETH` became 1e6 wei of WETH — a
-      // millionth of a cent — and the simulation failed on dust rather than on
+      // decimals. `--amount 1 --from-token WETH` became 1e6 wei of WETH: a
+      // millionth of a cent, and the simulation failed on dust rather than on
       // anything the caller wrote.
       await runCommand([
         'simulate',
@@ -665,6 +665,68 @@ describe('CLI commands', () => {
     it('errors when neither --vault nor --env is given', async () => {
       const output = await runCommand(['doctor'])
       expect(output).toContain('--vault')
+    })
+  })
+
+  describe('failure diagnostics', () => {
+    /**
+     * A failure must print what the cause knows, not just the top message.
+     *
+     * Composer answers a rejected program with `422 preparation_error` and a
+     * `failedOps` array naming the op and the reason. The CLI printed only
+     * `err.message` ("1 of 1 prepared op(s) failed") so the sentence that
+     * actually explains the failure ("No route available for swap 0x0000…0000
+     * → 0x8335…2913") was unreachable without writing a throwaway script.
+     * That is how a real bug stayed undiagnosed in a published release.
+     */
+    it('surfaces kind, status and failedOps from the cause chain', async () => {
+      const cause = Object.assign(new Error('1 of 1 prepared op(s) failed'), {
+        kind: 'preparation_error',
+        status: 422,
+        failedOps: [
+          {
+            callId: 'swap',
+            op: 'lifi.swap',
+            kind: 'no_route_error',
+            message: 'No route available for swap 0xdead → 0xbeef',
+          },
+        ],
+      })
+      const err = Object.assign(new Error('Failed to compose a deposit'), {
+        cause,
+      })
+
+      setForge(
+        createMockForge({
+          vaults: {
+            get: vi.fn().mockRejectedValue(err),
+          },
+        } as unknown as Partial<EarnForge>)
+      )
+
+      const output = await runCommand(['vault', 'morpho:8453:_:0xbeef0001'])
+
+      expect(output).toContain('Failed to compose a deposit')
+      expect(output).toContain('kind=preparation_error')
+      expect(output).toContain('status=422')
+      expect(output).toContain('lifi.swap')
+      expect(output).toContain('no_route_error')
+      expect(output).toContain('No route available')
+    })
+
+    it('prints nothing extra when the error carries no cause', async () => {
+      setForge(
+        createMockForge({
+          vaults: {
+            get: vi.fn().mockRejectedValue(new Error('plain failure')),
+          },
+        } as unknown as Partial<EarnForge>)
+      )
+
+      const output = await runCommand(['vault', 'morpho:8453:_:0xbeef0001'])
+      expect(output).toContain('plain failure')
+      expect(output).not.toContain('kind=')
+      expect(output).not.toContain('status=')
     })
   })
 })

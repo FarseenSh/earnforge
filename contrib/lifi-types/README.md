@@ -8,13 +8,13 @@ A PR-ready contribution adding LI.FI Earn types to
 ## Why
 
 `@lifi/types@17.88.0` ships types for chains, tokens, bridges, exchanges,
-steps and balances. It has **zero Earn types** — the word "earn" appears only
+steps and balances. It has **zero Earn types**. The word "earn" appears only
 in the README. Anyone integrating the Earn Data API in TypeScript today writes
 these by hand, from an OpenAPI spec that disagrees with the service.
 
 ## What to do with it
 
-`earn.ts` is written in the package's own house style — plain interfaces, no
+`earn.ts` is written in the package's own house style: plain interfaces, no
 semicolons, single quotes, no runtime dependency. Dropping it in is:
 
 1. Copy `earn.ts` to `src/earn.ts` in `lifinance/types`.
@@ -25,14 +25,14 @@ No other changes. It imports nothing.
 ## Provenance
 
 These are not transcribed from `earn-openapi.yaml`. They are derived from the
-live API and cross-checked against it — 799 vaults, 17 chains, 27 protocols, as
-of 9 August 2026 — because the spec and the service disagree in several places.
+live API and cross-checked against it: 799 vaults, 17 chains, 27 protocols, as
+of 9 August 2026, because the spec and the service disagree in several places.
 Each disagreement is documented inline at the field it affects, so the
 correction travels with the type rather than living in a changelog:
 
 | Field | Spec says | API does |
 |---|---|---|
-| `analytics.apy.*` | decimal (`0.0534` = 5.34%) | already a percentage — the quickstart's `* 100` overstates every yield 100× |
+| `analytics.apy.*` | decimal (`0.0534` = 5.34%) | already a percentage. The quickstart's `* 100` overstates every yield 100× |
 | `analytics.tvl.usd` | string | number |
 | `caps`, `timeLock`, `kyc` | documented | sent by zero vaults |
 | `rewardTokens[].symbol`/`.decimals` | required | absent on some entries |
@@ -40,12 +40,12 @@ correction travels with the type rather than living in a changelog:
 
 Plus three behaviours that are in no spec at all:
 
-- **`verificationStatus`** — undocumented, present on every vault, set to
+- **`verificationStatus`**: undocumented, present on every vault, set to
   `flagged` on ~10% of them. It is LI.FI's own vault-quality signal.
 - **`nextCursor`** is *absent* from the JSON on the final page rather than
   null, so it must be optional as well as nullable.
-- **`apy.reward` is three-valued** — `null` (unreported), `0` (reported as
-  none), or positive — and the split varies within a single protocol. This is
+- **`apy.reward` is three-valued**: `null` (unreported), `0` (reported as
+  none), or positive, and the split varies within a single protocol. This is
   the distinction that separates organic yield from a token emission, and a
   `?? 0` normalisation destroys it.
 

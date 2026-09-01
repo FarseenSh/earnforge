@@ -10,7 +10,7 @@ npm i @earnforge/react @earnforge/sdk @tanstack/react-query wagmi viem
 ## Setup
 
 The Earn Data API requires an API key and **must not be called from the
-browser** — doing so exposes the credential in the network tab. Proxy Earn
+browser**: doing so exposes the credential in the network tab. Proxy Earn
 requests through your own server route and point the SDK at it:
 
 ```tsx
@@ -44,7 +44,7 @@ import { EarnForgeProvider } from '@earnforge/react'
 
 ## Peer dependencies
 
-Requires `wagmi` 3+ and `react` 19+, matching the LI.FI ecosystem — Widget v4
+Requires `wagmi` 3+ and `react` 19+, matching the LI.FI ecosystem: Widget v4
 and SDK v4 are wagmi 3 / React 19 only.
 
 ## License

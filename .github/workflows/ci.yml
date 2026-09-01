@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           # Astro 7 requires >=22.12. Pinned to 20 until Aug 2026, which built
-          # fine locally on 22 and failed only here — the repo declared no Node
+          # fine locally on 22 and failed only here. The repo declared no Node
           # version, so there was nothing to notice the drift. `engines` and
           # .nvmrc now say the same thing this does.
           node-version-file: .nvmrc
@@ -42,7 +42,7 @@ jobs:
       # developer runs locally. Typecheck was previously absent here, which is
       # how two type errors and sixteen missing-@types/react errors reached a
       # published release; later, work was reported green locally because
-      # `pnpm lint` had been run instead of `pnpm check` — lint alone skips the
+      # `pnpm lint` had been run instead of `pnpm check`, and lint alone skips the
       # formatter, so CI failed on formatting that "passed" on the machine it
       # was written on. Any gate that lives only in this file can drift from
       # what anyone actually runs, so the list lives in package.json.
@@ -50,7 +50,7 @@ jobs:
         run: pnpm verify
 
   # The mocked suite only proves we still agree with a fixture snapshot, so it
-  # cannot detect the API moving underneath us — which is exactly what happened
+  # cannot detect the API moving underneath us, which is exactly what happened
   # in Apr 2026 and went unnoticed for three months. This job talks to the real
   # API and is the only thing that can catch it.
   live-api:

@@ -22,7 +22,7 @@ export interface UseSuggestReturn {
  *
  * ```tsx
  * const { data } = useSuggest({ amount: 10_000, asset: 'USDC' });
- * // data.allocations — the recommended split
+ * // data.allocations. The recommended split
  * ```
  */
 export function useSuggest(

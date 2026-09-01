@@ -229,7 +229,7 @@ earnforge risk morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9 --json
 **Example output:**
 
 ```
-Risk Score — STEAKUSDC
+Risk Score: STEAKUSDC
 
 ┌───────────────────┬──────────────┐
 │ Dimension         │ Score        │
@@ -256,7 +256,7 @@ A vault carrying risk also prints a `Flags` section naming *why*. The composite
 alone says something is wrong; the flags say what:
 
 ```
-Risk Score — USP
+Risk Score: USP
 
 ┌───────────────────┬───────────────┐
 │ Dimension         │ Score         │
@@ -285,7 +285,7 @@ Flags
 ```
 
 That vault is the highest advertised APY in the fleet. Requires
-`@earnforge/cli` 1.0.1 or later — 1.0.0 printed five dimensions and no flags.
+`@earnforge/cli` 1.0.1 or later: 1.0.0 printed five dimensions and no flags.
 
 See the full [Risk Scoring Guide](/risk/) for how each dimension is computed.
 
@@ -435,7 +435,7 @@ earnforge simulate --vault morpho:8453:_:0xbeef... --amount 1000 --wallet 0xYour
 | `--amount <human>` | string | **required** | Deposit amount, human-readable |
 | `--wallet <addr>` | string | **required** | Wallet address |
 | `--from-token <addr>` | string | the vault asset | Token to spend |
-| `--slippage-bps <n>` | number | — | Slippage tolerance in basis points |
+| `--slippage-bps <n>` | number | none | Slippage tolerance in basis points |
 | `--allow-revert` | boolean | `false` | Return calldata even if the simulation reverts, with diagnostics |
 | `--json` | boolean | `false` | Output as JSON |
 
@@ -459,8 +459,8 @@ earnforge preflight --vault morpho:8453:_:0xbeef... --wallet 0xYourAddress --amo
 |------|------|---------|-------------|
 | `--vault <slug>` | string | **required** | Vault slug |
 | `--wallet <addr>` | string | **required** | Wallet address |
-| `--amount <human>` | string | — | Deposit amount, human-readable |
-| `--wallet-chain <id>` | number | — | Wallet's current chain ID |
+| `--amount <human>` | string | none | Deposit amount, human-readable |
+| `--wallet-chain <id>` | number | none | Wallet's current chain ID |
 | `--cross-chain` | boolean | `false` | Flag cross-chain deposit intent |
 | `--json` | boolean | `false` | Output as JSON |
 
@@ -479,9 +479,9 @@ earnforge withdraw --vault morpho:8453:_:0xbeef... --amount 100 --wallet 0xYourA
 | `--vault <slug>` | string | **required** | Vault slug |
 | `--amount <human>` | string | **required** | Vault shares to redeem |
 | `--wallet <addr>` | string | **required** | Wallet address |
-| `--to-token <addr>` | string | — | Override destination token |
-| `--to-chain <id>` | number | — | Override destination chain |
-| `--slippage <n>` | number | — | Slippage tolerance (`0.03` = 3%) |
+| `--to-token <addr>` | string | none | Override destination token |
+| `--to-chain <id>` | number | none | Override destination chain |
+| `--slippage <n>` | number | none | Slippage tolerance (`0.03` = 3%) |
 | `--json` | boolean | `false` | Output as JSON |
 
 ---
@@ -499,7 +499,7 @@ earnforge allowance --token 0x8335... --owner 0xYourAddress \
 |------|------|---------|-------------|
 | `--token <addr>` | string | **required** | ERC-20 token address |
 | `--owner <addr>` | string | **required** | Token owner (wallet) address |
-| `--spender <addr>` | string | **required** | Spender — from `quote.estimate.approvalAddress` |
+| `--spender <addr>` | string | **required** | Spender: from `quote.estimate.approvalAddress` |
 | `--amount <raw>` | string | **required** | Required amount, smallest unit |
 | `--chain <id>` | number | **required** | Chain ID |
 | `--rpc <url>` | string | public RPC | Custom RPC URL |
@@ -519,7 +519,7 @@ earnforge approve --token 0x8335... --spender 0xbeef... --chain 8453
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--token <addr>` | string | **required** | ERC-20 token address |
-| `--spender <addr>` | string | **required** | Spender — from `quote.estimate.approvalAddress` |
+| `--spender <addr>` | string | **required** | Spender: from `quote.estimate.approvalAddress` |
 | `--chain <id>` | number | **required** | Chain ID |
 | `--amount <raw>` | string | unlimited | Amount to approve |
 | `--json` | boolean | `false` | Output as JSON |
@@ -571,7 +571,7 @@ earnforge init my-yield-app
 | `<name>` | Project name |
 
 The scaffold filters verification-flagged vaults with the reason inline, shows risk
-alongside APY, and keeps the API key in a Server Component — a scaffolder's output
+alongside APY, and keeps the API key in a Server Component: a scaffolder's output
 becomes the pattern every new project copies.
 
 ---

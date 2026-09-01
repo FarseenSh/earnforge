@@ -6,7 +6,7 @@ import { VaultListResponseSchema } from '../../src/schemas/index.js'
 import { parseTvl } from '../../src/schemas/vault.js'
 
 /**
- * Pitfall #22 — LI.FI's documentation contradicts LI.FI's API.
+ * Pitfall #22: LI.FI's documentation contradicts LI.FI's API.
  *
  * This is the pitfall that subsumes the rest, and the reason our schemas are
  * generated from live responses rather than from the spec. Measured against the
@@ -14,7 +14,7 @@ import { parseTvl } from '../../src/schemas/vault.js'
  * about three fields that exist:
  *
  *   WRONG
- *   - APY is "expressed as a decimal (e.g. 0.0534 = 5.34%)" — it is already a
+ *   - APY is "expressed as a decimal (e.g. 0.0534 = 5.34%)". It is already a
  *     percentage. The quickstart compounds this by multiplying by 100, so
  *     following the official example overstates every yield 100x.
  *   - `tvl.usd` is declared a string; it is a number.
@@ -23,7 +23,7 @@ import { parseTvl } from '../../src/schemas/vault.js'
  *
  *   MISSING
  *   - `verificationStatus`, `verificationStatusBreakdown`,
- *     `underlyingTokens[].priceUsd` — all present on every vault.
+ *     `underlyingTokens[].priceUsd`. All present on every vault.
  *
  * Two further contradictions sit outside the spec: the changelog announces
  * structured error bodies for 400 *and* 404, but only 400 carries an `errors[]`
@@ -32,7 +32,7 @@ import { parseTvl } from '../../src/schemas/vault.js'
  * hour old.
  *
  * These assertions pin the *actual* behaviour. If one starts failing, either
- * LI.FI fixed a documentation bug or changed the API — and `pnpm drift` says
+ * LI.FI fixed a documentation bug or changed the API, and `pnpm drift` says
  * which.
  */
 describe('Pitfall #22: the docs contradict the API', () => {

@@ -5,10 +5,10 @@ import { VaultListResponseSchema } from '../../src/schemas/index.js'
 import { parseVaultSlug } from '../../src/schemas/vault.js'
 
 /**
- * Pitfall #23 — the vault slug format changed, and it doubles as the cursor.
+ * Pitfall #23. The vault slug format changed, and it doubles as the cursor.
  *
  * Slugs used to look like `8453-0xee8f...`. They now look like
- * `morpho:8453:_:0xee8f...` — protocol, chain id, a reserved segment, address.
+ * `morpho:8453:_:0xee8f...`: protocol, chain id, a reserved segment, address.
  *
  * Two things broke. Any code splitting on `-` to recover a chain id and address
  * mis-parses every slug; ours threw `Invalid slug format` on input the API had
@@ -50,7 +50,7 @@ describe('Pitfall #23: vault slug format changed', () => {
 
   it('naive splitting on "-" would mis-parse a live slug', () => {
     // The exact bug: the protocol segment contains no dash, so the first dash
-    // in a hyphenated protocol name lands in the wrong place — and for
+    // in a hyphenated protocol name lands in the wrong place, and for
     // dash-free names there is no dash at all and the parse simply fails.
     const slug =
       'etherfi-staking:1:_:0x35fa164735182de50811e8e2e824cfb9b6118ac2'

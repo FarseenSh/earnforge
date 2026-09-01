@@ -75,8 +75,8 @@ export function PortfolioSuggestion() {
         Portfolio Suggestion
       </h2>
       <p className="mb-4 text-sm text-[var(--color-text-muted)]">
-        Enter your budget and asset — the engine recommends an optimal
-        allocation with risk scores and chain diversification.
+        Enter your budget and asset. The engine recommends an optimal allocation
+        with risk scores and chain diversification.
       </p>
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

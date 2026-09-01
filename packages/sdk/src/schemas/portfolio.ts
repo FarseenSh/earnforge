@@ -13,7 +13,7 @@ export const PositionAssetSchema = z.object({
  * Single portfolio position.
  *
  * `address` (the vault contract) was added in Apr 2026. In the same release
- * `protocolName` and `balanceUsd` became nullable — they are populated in
+ * `protocolName` and `balanceUsd` became nullable. They are populated in
  * practice, but the API contract now permits null, so anything formatting them
  * must handle it rather than producing `NaN`.
  */
@@ -47,7 +47,7 @@ export function totalPortfolioUsd(positions: Position[]): number {
  *
  * The array was renamed `positions` → `data` (Aug 2026), bringing this endpoint
  * in line with `/v1/vaults` and adding a `limit`. No changelog entry, no
- * deprecation window — the same pattern as the April rewrite.
+ * deprecation window. The same pattern as the April rewrite.
  *
  * Both keys are accepted and normalised to `positions`. Reading `data` alone
  * would break anyone still pointed at a cached or proxied older response for

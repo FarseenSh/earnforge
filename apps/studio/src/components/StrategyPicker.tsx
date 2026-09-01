@@ -54,7 +54,7 @@ export function StrategyPicker({ value, onChange }: StrategyPickerProps) {
       >
         {STRATEGY_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {opt.label} — {opt.description}
+            {opt.label}: {opt.description}
           </option>
         ))}
       </select>

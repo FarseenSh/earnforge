@@ -8,14 +8,14 @@ import { type Vault, VaultSchema } from '../../src/schemas/index.js'
 import { suggest } from '../../src/suggest.js'
 
 /**
- * Pitfall #24 — `underlyingTokens` entries can be partial, not just absent.
+ * Pitfall #24: `underlyingTokens` entries can be partial, not just absent.
  *
  * Pitfall #15 anticipated an *empty* `underlyingTokens` array. What the API
  * actually sends is stranger: a populated array whose entries carry only an
  * `address`, with no `symbol` and no `decimals`.
  *
  * `morpho:1:_:0xb5ce3ca2c774b72955c25875022fdd91f7a7b938` (KPK-WARS-YIELD) is
- * the live example. One vault out of 712 — and because the schema required
+ * the live example. One vault out of 712, and because the schema required
  * both fields, `listAll()` threw a ZodError partway through the fleet. Anything
  * iterating every vault died: the Studio's vault list read zero in production,
  * and `earnforge list` without a chain filter could not complete.
@@ -26,7 +26,7 @@ import { suggest } from '../../src/suggest.js'
  * ~300.
  *
  * The lesson is narrower than "validate less". It is that a field being
- * present on every vault you sampled is not the same as it being required —
+ * present on every vault you sampled is not the same as it being required,
  * and the distance between those two claims is one vault in seven hundred.
  */
 describe('Pitfall #24: partial underlyingTokens entries', () => {
@@ -52,7 +52,7 @@ describe('Pitfall #24: partial underlyingTokens entries', () => {
   }
 
   it('quotes against it, falling back to 18 decimals', async () => {
-    // The address is present, so a quote can still be built — only the scaling
+    // The address is present, so a quote can still be built: only the scaling
     // hint is missing, and that already had a documented fallback.
     const composer = {
       getQuote: async () => ({ ok: true }),

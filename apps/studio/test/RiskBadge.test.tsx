@@ -37,7 +37,7 @@ describe('RiskBadge', () => {
 
   it('colours by label, not by re-deriving from the score', () => {
     // The bug this replaces: the badge had its own `>= 7` cutoff while risk
-    // scorer v2 labels at 8. A 7.5 scored `medium` rendered green — the colour
+    // scorer v2 labels at 8. A 7.5 scored `medium` rendered green. The colour
     // contradicting the word next to it. Every previous test passed a score and
     // label that already agreed, so none of them could catch it.
     render(<RiskBadge score={7.5} label="medium" />)

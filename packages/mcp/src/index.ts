@@ -9,7 +9,7 @@ export { registerSkillResources } from './resources.js'
 export { type CreateServerOptions, createServer } from './server.js'
 
 /**
- * Run the server over stdio — the transport local MCP clients use.
+ * Run the server over stdio. The transport local MCP clients use.
  *
  * `serveStdio` owns the era decision for the connection: the opening exchange
  * picks `2026-07-28` or the 2025 revision, one instance is pinned for the
@@ -33,7 +33,7 @@ if (isMain) {
    * `serveStdio` calls the factory lazily, per connection, so a
    * `MissingApiKeyError` from `createServer()` was thrown inside the framework's
    * `initialize` handler rather than here. The catch below never saw it and the
-   * client received `{"code":-32603,"message":"Internal server error"}` — no
+   * client received `{"code":-32603,"message":"Internal server error"}`. No
    * mention of a key, on the single most likely first-run mistake. The SDK's own
    * message is good; it just never reached anyone.
    */

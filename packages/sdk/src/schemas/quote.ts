@@ -78,7 +78,7 @@ export const QuoteEstimateSchema = z.object({
   toAmountUSD: z.string().optional(),
 })
 
-/** Transaction request — ready to sign */
+/** Transaction request: ready to sign */
 export const TransactionRequestSchema = z.object({
   to: z.string(),
   data: z.string(),

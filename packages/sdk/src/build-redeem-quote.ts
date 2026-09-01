@@ -30,7 +30,7 @@ export interface RedeemQuoteResult {
  * - fromToken = vault.address (the vault share token)
  * - toToken = underlying token address (what you get back)
  *
- * Uses the same Composer /v1/quote endpoint — just swapped tokens.
+ * Uses the same Composer /v1/quote endpoint: just swapped tokens.
  */
 export async function buildRedeemQuote(
   vault: Vault,
@@ -47,7 +47,7 @@ export async function buildRedeemQuote(
 
   if (!vault.isRedeemable) {
     throw new EarnForgeError(
-      `Vault ${vault.slug} is not redeemable — withdrawals are not supported.`,
+      `Vault ${vault.slug} is not redeemable: withdrawals are not supported.`,
       'NOT_REDEEMABLE'
     )
   }
@@ -61,7 +61,7 @@ export async function buildRedeemQuote(
 
   if (!toToken) {
     throw new EarnForgeError(
-      'Cannot determine toToken for redeem — vault has no underlyingTokens and none was provided.',
+      'Cannot determine toToken for redeem: vault has no underlyingTokens and none was provided.',
       'NO_TO_TOKEN'
     )
   }

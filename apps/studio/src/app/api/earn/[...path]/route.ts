@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'
  * with no credentials, and this route attaches the key server-side. The key is
  * read from `LIFI_API_KEY` and must never carry a `NEXT_PUBLIC_` prefix.
  *
- * Read-only by design — only GET is exported.
+ * Read-only by design: only GET is exported.
  */
 const EARN_BASE_URL = 'https://earn.li.fi'
 
@@ -47,7 +47,7 @@ export async function GET(
     return NextResponse.json(
       {
         error:
-          'LIFI_API_KEY is not configured. The Earn Data API requires a key — ' +
+          'LIFI_API_KEY is not configured. The Earn Data API requires a key: ' +
           'create one at https://portal.li.fi and set it in the environment.',
       },
       { status: 500 }
@@ -60,9 +60,9 @@ export async function GET(
   try {
     const res = await fetch(upstream, {
       headers: { 'x-lifi-api-key': apiKey },
-      // Vault analytics refresh roughly every 90 minutes in practice despite
-      // the documented 15, so a short cache costs nothing and spares the
-      // 100 req/min budget.
+      // The fleet refreshes in one hourly batch, not the documented 15 minutes
+      // (a minute-count here would only measure where in the cycle we sampled),
+      // so a short cache costs nothing and spares the 100 req/min budget.
       next: { revalidate: 60 },
     })
 

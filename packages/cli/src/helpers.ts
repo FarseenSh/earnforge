@@ -17,13 +17,13 @@ import Table from 'cli-table3'
 /**
  * Format an APY percentage.
  *
- * The API returns APY already scaled as a percentage — `3.84` means 3.84%.
+ * The API returns APY already scaled as a percentage: `3.84` means 3.84%.
  * LI.FI's OpenAPI spec and quickstart both claim these are decimals and show a
  * `* 100`; doing that produces a 100x overstatement. Verified against the live
  * fleet, which spans 0–106%.
  *
  * `null` means the protocol did not report a figure, which is distinct from
- * reporting zero — rendered as `N/A` rather than `0.00%`.
+ * reporting zero: rendered as `N/A` rather than `0.00%`.
  */
 export function fmtPct(n: number | null | undefined): string {
   if (n === null || n === undefined) {
@@ -67,7 +67,7 @@ export function riskLabelPlain(score: number): string {
   return `${score}/10 (high)`
 }
 
-/** Verification badge — flagged vaults must be visible at a glance. */
+/** Verification badge: flagged vaults must be visible at a glance. */
 function verificationBadge(v: Vault): string {
   if (v.verificationStatus !== 'flagged') {
     return chalk.green('verified')
@@ -144,7 +144,7 @@ export function vaultDetail(v: Vault): string {
     chalk.bold('Underlying Tokens'),
     ...v.underlyingTokens.map(
       (t) =>
-        `  ${t.symbol ?? '(no symbol)'} (${t.address}) — ${t.decimals ?? '?'} decimals` +
+        `  ${t.symbol ?? '(no symbol)'} (${t.address}): ${t.decimals ?? '?'} decimals` +
         (t.priceUsd ? ` @ $${t.priceUsd}` : '')
     ),
     ...(v.underlyingTokens.length === 0 ? ['  (none)'] : []),
@@ -191,7 +191,7 @@ export function protocolTable(protocols: ProtocolDetail[]): string {
  *
  * `protocolName`, `balanceUsd` and `balanceNative` all became nullable in
  * Apr 2026. Formatting a null through `Number()` yields `NaN`, so each is
- * rendered explicitly as `—` when absent.
+ * rendered explicitly as `: ` when absent.
  */
 export function portfolioTable(
   positions: Array<{
@@ -214,13 +214,13 @@ export function portfolioTable(
   for (const p of positions) {
     const usd =
       p.balanceUsd === null || Number.isNaN(Number(p.balanceUsd))
-        ? '—'
+        ? ': '
         : `$${Number(p.balanceUsd).toFixed(2)}`
     table.push([
       String(p.chainId),
-      p.protocolName ?? '—',
+      p.protocolName ?? ': ',
       `${p.asset.symbol} (${p.asset.name})`,
-      p.balanceNative ?? '—',
+      p.balanceNative ?? ': ',
       usd,
     ])
   }
@@ -249,13 +249,13 @@ export function riskTable(risk: RiskScore): string {
   table.push(['Redeemability', dimension(risk.breakdown.redeemability)])
   table.push(['Asset Type', dimension(risk.breakdown.assetType)])
   // Both of these arrived with risk scorer v2 and were never added here, so
-  // the CLI reported five dimensions of a seven-dimension score — omitting
+  // the CLI reported five dimensions of a seven-dimension score: omitting
   // LI.FI's own verification signal, which is the whole reason v2 exists.
   table.push(['Verification', dimension(risk.breakdown.verification)])
   table.push(['Reward Dependency', dimension(risk.breakdown.rewardDependency)])
   table.push([chalk.bold('Composite'), chalk.bold(riskLabel(risk.score))])
 
-  // The flags are the actionable part — a number tells you something is wrong,
+  // The flags are the actionable part: a number tells you something is wrong,
   // these tell you what. Printing the score without them was the bug.
   if (risk.flags.length === 0) {
     return table.toString()
@@ -312,7 +312,7 @@ export function apyHistoryTable(history: ApyDataPoint[]): string {
 export function preflightTable(report: PreflightReport): string {
   const lines: string[] = []
   const status = report.ok ? chalk.green('PASS') : chalk.red('FAIL')
-  lines.push(chalk.bold(`Preflight — ${report.vault.name}  ${status}`))
+  lines.push(chalk.bold(`Preflight: ${report.vault.name}  ${status}`))
   lines.push('')
 
   if (report.issues.length === 0) {

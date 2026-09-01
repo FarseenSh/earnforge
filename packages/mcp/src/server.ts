@@ -29,7 +29,7 @@ import {
 import { registerSkillResources } from './resources.js'
 import { SERVER_VERSION } from './version.js'
 
-/** Slug description reused across tools — the format changed in Apr 2026. */
+/** Slug description reused across tools. The format changed in Apr 2026. */
 const SLUG_DESC =
   'Vault slug, format "protocol:chainId:_:address" (e.g. ' +
   '"morpho:8453:_:0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61"). The legacy ' +
@@ -104,13 +104,13 @@ export interface CreateServerOptions {
 /**
  * Build the EarnForge MCP server.
  *
- * Twelve tools, all read-only — nothing here signs or broadcasts. Quote tools
+ * Twelve tools, all read-only. Nothing here signs or broadcasts. Quote tools
  * return unsigned `transactionRequest` objects for the caller's wallet.
  *
  * Overlaps LI.FI's own hosted server on the five `get-earn-*` tools and adds
  * seven it does not offer: risk scoring, allocation, diagnostics, allowance
  * checking, redeem quoting, and API drift detection. It also differs on quality
- * — LI.FI's tool descriptions still advertise versioned protocol slugs that
+ *: LI.FI's tool descriptions still advertise versioned protocol slugs that
  * match nothing, and their server does not expose `verificationStatus`.
  */
 export function createServer(options: CreateServerOptions = {}): McpServer {
@@ -141,7 +141,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       description:
         'Search yield vaults across every chain LI.FI Earn indexes. THE primary ' +
         'tool for finding yield. APY values are percentages already (4.63 = ' +
-        '4.63%) — do not multiply by 100. Each result carries a verification ' +
+        '4.63%), do not multiply by 100. Each result carries a verification ' +
         'block: LI.FI flags roughly 10% of vaults as suspect, and those should ' +
         'not be recommended without saying so.',
       inputSchema: z.object({
@@ -159,7 +159,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .string()
           .optional()
           .describe(
-            'Protocol id — UNVERSIONED. "morpho", never "morpho-v1". A stale ' +
+            'Protocol id: UNVERSIONED. "morpho", never "morpho-v1". A stale ' +
               'slug returns zero results with no error, so resolve it via ' +
               'get-earn-protocols rather than guessing.'
           ),
@@ -238,7 +238,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'List Earn chains',
       description:
         'Chains with at least one indexed Earn vault. This is a SUBSET of all ' +
-        'LI.FI-supported chains — Composer covers more. Use these chain ids to ' +
+        'LI.FI-supported chains. Composer covers more. Use these chain ids to ' +
         'filter get-earn-vaults rather than hardcoding them.',
       inputSchema: z.object({}),
       outputSchema: ChainListOut,
@@ -261,7 +261,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'List Earn protocols',
       description:
-        'Protocols with at least one indexed vault. Ids are UNVERSIONED — ' +
+        'Protocols with at least one indexed vault. Ids are UNVERSIONED: ' +
         '"morpho", "aave", "euler", not "morpho-v1"/"aave-v3"/"euler-v2". ' +
         'Filtering on a versioned slug returns HTTP 200 with zero results ' +
         'rather than an error, so always resolve the id here first.',
@@ -294,7 +294,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'Get wallet portfolio',
       description:
         "A wallet's Earn positions across all protocols. Note that " +
-        '`protocolName` and `balanceUsd` are nullable — handle null rather than ' +
+        '`protocolName` and `balanceUsd` are nullable: handle null rather than ' +
         'formatting it into NaN.',
       inputSchema: z.object({
         wallet: z
@@ -336,7 +336,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'status, and reward dependency. Labels: "low" (>=8), "medium" (>=6), ' +
         '"high" (<6). Higher is safer. Verification is weighted heavily enough ' +
         'that a flagged vault can never be low risk. ALWAYS relay the `flags` ' +
-        'array — the score alone hides why.',
+        'array. The score alone hides why.',
       inputSchema: z.object({ slug: z.string().describe(SLUG_DESC) }),
       outputSchema: RiskOut,
       annotations: readOnly,
@@ -369,7 +369,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'Quote a vault deposit',
       description:
         'Build an UNSIGNED deposit transaction. This does not execute anything ' +
-        "— the caller's wallet signs and broadcasts. Check the returned " +
+        "the caller's wallet signs and broadcasts. Check the returned " +
         'approvalAddress with check-allowance first; ERC-20 deposits fail ' +
         'without sufficient approval. Cross-chain flows are NOT atomic: a bridge ' +
         'can succeed while the destination deposit fails.',
@@ -384,7 +384,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           .optional()
           .describe(
             "Source token address. Defaults to the vault's first underlying " +
-              'token. REQUIRED for cross-chain — the underlying address is on ' +
+              'token. REQUIRED for cross-chain. The underlying address is on ' +
               "the vault's chain, not the source chain."
           ),
         fromChain: z
@@ -408,7 +408,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         }
         if (params.fromChain && params.fromChain !== vault.chainId) {
           warnings.push(
-            'Cross-chain deposit — not atomic. Poll status and handle the ' +
+            'Cross-chain deposit, not atomic. Poll status and handle the ' +
               'failed case, where the bridge succeeds but the deposit does not.'
           )
         }
@@ -457,7 +457,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'Quote a vault withdrawal',
       description:
         'Build an UNSIGNED withdrawal transaction, swapping vault share tokens ' +
-        'back to an underlying asset. Verifies isRedeemable first — some ' +
+        'back to an underlying asset. Verifies isRedeemable first: some ' +
         'protocols support deposits only, and withdrawals there must go through ' +
         "the protocol's own interface.",
       inputSchema: z.object({
@@ -479,7 +479,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         const warnings: string[] = []
         if (!vault.isRedeemable) {
           warnings.push(
-            'isRedeemable is false — Composer cannot withdraw from this vault.'
+            'isRedeemable is false. Composer cannot withdraw from this vault.'
           )
         }
         const r = await forge.buildRedeemQuote(vault, {
@@ -531,7 +531,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         spender: z.string().describe("From the quote's approvalAddress."),
         requiredAmount: z
           .string()
-          .describe("Smallest unit — the quote's rawAmount."),
+          .describe("Smallest unit. The quote's rawAmount."),
         chainId: z.number(),
       }),
       outputSchema: AllowanceOut,
@@ -577,8 +577,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'Suggest a portfolio allocation',
       description:
         'Split an amount across vaults using a risk-adjusted scoring engine. ' +
-        'Verification-flagged vaults are excluded by default — roughly 10% of the ' +
-        'fleet — because a caller asking for an allocation has not asked to be ' +
+        'Verification-flagged vaults are excluded by default: roughly 10% of the ' +
+        'fleet, because a caller asking for an allocation has not asked to be ' +
         'handed a suspect vault.',
       inputSchema: z.object({
         amount: z.number().describe('Total USD to allocate.'),

@@ -2,8 +2,8 @@
 #
 # Cloudflare Worker deployment for the EarnForge MCP server.
 #
-# The server is stateless by design — a fresh transport per request, no session
-# id — which is what makes a Worker the right host. No sticky routing, no shared
+# The server is stateless by design: a fresh transport per request, no session
+# id, which is what makes a Worker the right host. No sticky routing, no shared
 # session store, nothing to rebuild on a cold start. That also aligns with where
 # the protocol is going: the 2026-07-28 revision removes the initialize
 # handshake and Mcp-Session-Id entirely.
@@ -19,7 +19,7 @@ name = "earnforge-mcp"
 # Source, not the tsdown bundle in dist/.
 #
 # The dist bundle has already resolved and inlined its dependencies, so the
-# `[alias]` below cannot reach into it — and without that alias the Worker does
+# `[alias]` below cannot reach into it, and without that alias the Worker does
 # not boot at all (see the note there). Pointing wrangler at source lets it own
 # the bundling, which is the only place the alias can be applied.
 main = "src/worker.ts"
@@ -39,7 +39,7 @@ enabled = true
 # they are different entry files, so the bundler emits two copies of zod's
 # classic build. Their initialisers then interleave: the `lazy()` in one copy
 # runs before the other copy assigns `ZodLazy`, and the Worker dies at module
-# evaluation with `ZodLazy is not a constructor` — before it can serve anything.
+# evaluation with `ZodLazy is not a constructor`before it can serve anything.
 #
 # Node never hits this, because it resolves both specifiers to one live module
 # registry entry. Only a bundled runtime splits them, which is why no test that
@@ -48,7 +48,7 @@ enabled = true
 zod = "zod/v4"
 
 [vars]
-# Non-secret defaults only. The API key is a secret — set it with
+# Non-secret defaults only. The API key is a secret: set it with
 # `wrangler secret put LIFI_API_KEY`, never here, or it lands in version control.
 
 # Deploys to <name>.<subdomain>.workers.dev by default, which needs no DNS setup.
@@ -56,7 +56,7 @@ zod = "zod/v4"
 # To serve it from your own hostname, uncomment this and set the pattern to a
 # domain in your Cloudflare account. It is left commented rather than filled
 # with a placeholder because `custom_domain = true` on a domain you do not own
-# fails the deploy outright — a placeholder here is not a harmless default.
+# fails the deploy outright: a placeholder here is not a harmless default.
 #
 # [[routes]]
 # pattern = "mcp.your-domain.com"

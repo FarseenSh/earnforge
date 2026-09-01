@@ -7,14 +7,14 @@ import { z } from 'zod'
  * Declaring `outputSchema` means the SDK validates `structuredContent` before it
  * leaves the server and advertises the derived JSON Schema in `tools/list`, so a
  * client can validate it too. Without one, an agent has to parse prose out of a
- * text block and guess at the shape — which is how tool calls silently produce
+ * text block and guess at the shape, which is how tool calls silently produce
  * wrong numbers.
  *
  * Every tool also returns the human-readable JSON in `content`, so hosts that
  * predate structured output keep working.
  */
 
-/** APY breakdown. All values are percentages — 4.63 means 4.63%. */
+/** APY breakdown. All values are percentages: 4.63 means 4.63%. */
 export const ApyOut = z.object({
   total: z.number().describe('Total APY as a percentage (4.63 = 4.63%)'),
   base: z.number().nullable().describe('Base APY, null if unreported'),
@@ -27,7 +27,7 @@ export const ApyOut = z.object({
     ),
 })
 
-/** LI.FI's vault verification signal — undocumented but present on every vault. */
+/** LI.FI's vault verification signal: undocumented but present on every vault. */
 export const VerificationOut = z.object({
   status: z.string().describe('"none" or "flagged"'),
   flagged: z.boolean(),
@@ -103,7 +103,7 @@ export const ProtocolListOut = z.object({
   count: z.number(),
   protocols: z.array(
     z.object({
-      id: z.string().describe('Filter key. Unversioned — never "morpho-v1".'),
+      id: z.string().describe('Filter key. Unversioned: never "morpho-v1".'),
       name: z.string(),
       url: z.string(),
     })

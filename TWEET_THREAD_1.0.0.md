@@ -1,6 +1,6 @@
-# EarnForge 1.0.0 — launch thread
+# EarnForge 1.0.0: launch thread
 
-Supersedes `TWEET_THREAD.md` (Apr 2026 hackathon draft — every number in it is
+Supersedes `TWEET_THREAD.md` (Apr 2026 hackathon draft. Every number in it is
 now wrong: 623 vaults, 16 chains, 18 pitfalls, Telegram bot).
 
 First person. LI.FI framed as collaborator, since PR #561 is open with them.
@@ -14,7 +14,7 @@ differ per package and will keep moving, so the tweets deliberately say "1.0".
 
 EarnForge 1.0 is out.
 
-A TypeScript toolkit for the LI.FI Earn API — the layer that tells you *which*
+A TypeScript toolkit for the LI.FI Earn API. The layer that tells you *which*
 vault to pick, not just which ones exist.
 
 SDK · CLI · React hooks · MCP server · Agent Skill
@@ -42,7 +42,7 @@ This release is the repair.
 The part that stung: I had 474 passing tests and didn't notice for three months.
 
 All mocked against April fixtures. Live tests excluded from CI. And the
-`test:live` script used a flag that doesn't exist in Vitest 4 — so it had never
+`test:live` script used a flag that doesn't exist in Vitest 4, so it had never
 once run.
 
 Green tests. Dead API.
@@ -53,8 +53,8 @@ Green tests. Dead API.
 
 So 1.0.0 ships the thing that would have caught it.
 
-`detectDrift()` diffs three sources — the live API, LI.FI's OpenAPI spec, and my
-own schemas — and reports *which pair* disagrees.
+`detectDrift()` diffs three sources. The live API, LI.FI's OpenAPI spec, and my
+own schemas, and reports *which pair* disagrees.
 
 A vendor doc bug looks different from my bug. CI runs it daily.
 
@@ -76,7 +76,7 @@ Real scores span 4.1 to 9.7.
 
 The question no yield UI answers: *is this real, or an incentive that ends?*
 
-Highest APY in the entire fleet right now — USP on Pendle, 106.68%:
+Highest APY in the entire fleet right now: USP on Pendle, 106.68%:
 
   base    14.33%
   reward  92.35%
@@ -87,7 +87,7 @@ Highest APY in the entire fleet right now — USP on Pendle, 106.68%:
 
 **7/**
 
-New in 1.0.0 — Composer Flows.
+New in 1.0.0: Composer Flows.
 
 Swap → deposit as one atomic transaction, at the exact amount the swap
 returned. Not two transactions where the second has to guess.
@@ -104,7 +104,7 @@ Two ways to give an agent this.
 As an Agent Skill:
 npx skills add FarseenSh/earnforge
 
-Or the hosted MCP server — zero install, current 2026-07-28 revision:
+Or the hosted MCP server: zero install, current 2026-07-28 revision:
 earnforge-mcp.papermind-ai.workers.dev/mcp
 
 12 tools, plus the skill served as MCP resources.
@@ -128,9 +128,9 @@ Checked across 799 vaults.
 
 Four more, verified live:
 
-▸ `tvl.usd` documented as string — it's a number
-▸ `caps`/`timeLock`/`kyc`/`lpTokens` documented — zero vaults send them
-▸ 15-min analytics refresh — really one hourly batch
+▸ `tvl.usd` documented as string. It's a number
+▸ `caps`/`timeLock`/`kyc`/`lpTokens` documented: zero vaults send them
+▸ 15-min analytics refresh: really one hourly batch
 ▸ a stale protocol slug returns 200 and zero results, never an error
 
 ---
@@ -139,10 +139,10 @@ Four more, verified live:
 
 And one that isn't written down anywhere:
 
-`verificationStatus` — undocumented, on every vault, flagging 75 of 799 as
+`verificationStatus`: undocumented, on every vault, flagging 75 of 799 as
 suspect. USP is one: `apy_outlier`.
 
-So the top APY in the fleet is 87% emissions *and* flagged — and nothing shows
+So the top APY in the fleet is 87% emissions *and* flagged, and nothing shows
 you either. EarnForge scores it 5.5/10, high.
 
 ---
@@ -151,7 +151,7 @@ you either. EarnForge scores it 5.5/10, high.
 
 All 23 documented in PITFALLS.md, each with a regression test.
 
-I've also opened a PR adding Earn types to @lifi/types — every discrepancy
+I've also opened a PR adding Earn types to @lifi/types. Every discrepancy
 noted inline at the field it affects, so the correction travels with the type:
 
 github.com/lifinance/types/pull/561
@@ -175,17 +175,17 @@ npm i @earnforge/sdk
 **Decisions you may want to flip**
 
 - Written first person. Swap to "we" if posting from a project account.
-- LI.FI is framed as collaborator, not target — tweet 12 leads with the PR
+- LI.FI is framed as collaborator, not target: tweet 12 leads with the PR
   deliberately, so 9–11 read as contributed-back rather than gotcha.
 - No @-mentions included. The April draft tagged @lifiprotocol and @kenny_io.
-  Tagging them on tweet 12 (the PR) is the natural place if you want to —
+  Tagging them on tweet 12 (the PR) is the natural place if you want to:
   attaching it to tweet 9 would make the doc criticism feel pointed.
 - Hackathon framing dropped. Add it back on tweet 1 if the DeFi Mullet
   audience still matters.
 
 **Which tweets carry weight**
 
-- **9** is the most shareable — useful to any LI.FI integrator whether or not
+- **9** is the most shareable: useful to any LI.FI integrator whether or not
   they touch EarnForge. If one tweet travels, it's this.
 - **8** is the lowest-friction ask: an endpoint someone can paste into a config
   right now. Good candidate to re-post standalone later.
@@ -194,7 +194,7 @@ npm i @earnforge/sdk
 **Media**
 
 - Strongest visual is `earnforge risk` on a flagged vault, or `earnforge doctor`
-  output — both show the judgment layer better than a code block.
+  output. Both show the judgment layer better than a code block.
 - Don't screenshot download counts. The spread across packages is flat enough
   to read as registry mirrors, and it's a claim anyone can check in one click.
 
@@ -202,27 +202,27 @@ npm i @earnforge/sdk
 
 The fleet moves, and not only in the direction you'd expect. Across five days the
 vault total *fell* 712 → 703 and the chain count dropped 19 → 17. Flagged rose
-68 → 74. An earlier draft of this note claimed 19 / 27 / 68 "have held" — two of
+68 → 74. An earlier draft of this note claimed 19 / 27 / 68 "have held". Two of
 those three were wrong within the week, which is the whole argument for measuring
 instead of quoting. Only the protocol count (27) and the score range (4.10–9.70)
 survived the window unchanged.
 
 Re-measure every figure above before posting. What did hold is the judgment layer:
 USP is still rank 1, still flagged `apy_outlier`, still scores 5.5, still 87%
-emissions — stable even as the fleet underneath it moved.
+emissions: stable even as the fleet underneath it moved.
 
 Not every figure is worth re-measuring, though, because not every figure is
 stable enough to quote. The bands below were first drawn from repeated walks in a
-single day, and re-checked three weeks later — which moved one of them:
+single day, and re-checked three weeks later, which moved one of them:
 
-- **Rock steady** — 17 chains, 27 protocols. Held exactly across a month. Quote
+- **Rock steady**: 17 chains, 27 protocols. Held exactly across a month. Quote
   freely, but note that *composition* churns even when the count does not:
   `nest` was delisted and `maple` returned between Aug and Sep.
-- **Drifts** — 799 vaults, 75 flagged, 199 under 1% APY, 49 over $100M TVL. Fine
+- **Drifts**: 799 vaults, 75 flagged, 199 under 1% APY, 49 over $100M TVL. Fine
   as a dated snapshot only. "39 vaults over $100M" sat in the rock-steady band
   above until it became 49 in three weeks: stable across a *day* is not stable
   across a *month*, and anything derived from TVL or APY belongs here.
-- **Not quotable at all** — the size of the refresh-minute cluster and the share
+- **Not quotable at all**. The size of the refresh-minute cluster and the share
   of the fleet past any fixed staleness boundary. Both are functions of where in
   the hourly cycle you sampled, not properties of the API. Tweet 10 makes the
   structural claim ("15-min refresh, really one hourly batch") and that is the
@@ -232,7 +232,7 @@ One number was *removed* rather than refreshed: the thread used to say analytics
 had an "observed floor of 87 minutes". That was never a property of the API, only
 how far into the refresh cycle the sample landed. The fleet updates in one hourly
 batch firing at :01–:03, so most of the fleet shares one `analytics.updatedAt`
-minute — but how many depends entirely on how far into the hour you sampled.
+minute, but how many depends entirely on how far into the hour you sampled.
 Four walks in one day gave 328, 338, 522 and 526. The structural claim replaces
 the number and stays true.
 
@@ -246,10 +246,10 @@ LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live   # asserts the shape
 799 vaults · 17 chains · 27 protocols · 75 flagged · 610 mocked tests · 34 live
 scores 4.10–9.70 · sdk 1.1.0 · cli 1.1.0 · react 1.0.1 · mcp 1.0.6 · skill 1.0.4
 
-USP (pendle:1:_:0xc83f...86cb) — 415.13% total / 17.69% base / 397.44% reward,
+USP (pendle:1:_:0xc83f...86cb): 415.13% total / 17.69% base / 397.44% reward,
 rank 1 of 799 by APY, $50k TVL, flagged apy_outlier, EarnForge score 4.0 high.
 
-The example holds and the judgment holds — still rank 1, still flagged, still
-scored high, still ~96% emissions — but every one of its *numbers* moved between
+The example holds and the judgment holds: still rank 1, still flagged, still
+scored high, still ~96% emissions, but every one of its *numbers* moved between
 Aug 10 and Sep 1: APY 107% → 415%, TVL $216k → $50k, score 5.5 → 4.0. Re-measure
 this block before posting; the argument survives, the figures do not.

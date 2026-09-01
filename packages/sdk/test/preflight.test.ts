@@ -7,12 +7,12 @@ import { type Vault, VaultSchema } from '../src/schemas/index.js'
 const vault = VaultSchema.parse(vaultSingle)
 const wallet = '0x1234567890abcdef1234567890abcdef12345678'
 
-describe('preflight — what did not get checked', () => {
+describe('preflight: what did not get checked', () => {
   /**
    * `ok: true` with no balances supplied means "nothing I could check failed",
    * which is not the same as "safe to deposit". The CLI called this with no
    * balances at all and printed a clean report for a wallet holding no gas and
-   * no tokens — a false green in the one command whose entire job is to catch
+   * no tokens: a false green in the one command whose entire job is to catch
    * that. The report names its own gaps now, so a caller can tell the two
    * states apart.
    */
@@ -22,7 +22,7 @@ describe('preflight — what did not get checked', () => {
     expect(codes).toContain('GAS_BALANCE')
     expect(codes).toContain('TOKEN_BALANCE')
     expect(codes).toContain('CHAIN_MATCH')
-    // Still `ok` — it found no failures. That is precisely why `skipped` has
+    // Still `ok`. It found no failures. That is precisely why `skipped` has
     // to be there for the caller to read.
     expect(report.ok).toBe(true)
   })
@@ -65,9 +65,9 @@ describe('preflight', () => {
     expect(report.issues.some((i) => i.code === 'NOT_TRANSACTIONAL')).toBe(true)
   })
 
-  it('warns on chain mismatch — Composer handles cross-chain (Pitfall #12)', () => {
+  it('warns on chain mismatch. Composer handles cross-chain (Pitfall #12)', () => {
     const report = preflight(vault, wallet, { walletChainId: 1 })
-    expect(report.ok).toBe(true) // warning, not error — cross-chain is valid
+    expect(report.ok).toBe(true) // warning, not error: cross-chain is valid
     expect(
       report.issues.some(
         (i) => i.code === 'CHAIN_MISMATCH' && i.severity === 'warning'

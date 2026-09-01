@@ -2,7 +2,7 @@
 import { z } from 'zod'
 
 /**
- * Protocol info. `id` is the filter key used by `?protocol=` — it is
+ * Protocol info. `id` is the filter key used by `?protocol=`. It is
  * UNVERSIONED as of the Apr 2026 API rewrite (`morpho`, not `morpho-v1`).
  * Filtering on a versioned slug returns zero results with no error.
  */
@@ -15,14 +15,14 @@ export const ProtocolSchema = z.object({
 /**
  * Underlying token. `priceUsd` is a decimal string, present on every token
  * observed live. `weight` is documented for multi-asset vaults but never
- * actually emitted — accepted optimistically in case it ships.
+ * actually emitted: accepted optimistically in case it ships.
  */
 /**
  * An underlying token, as the API actually sends it.
  *
  * `symbol` and `decimals` are optional because they are genuinely absent on
  * live vaults: `morpho:1:_:0xb5ce...b938` (KPK-WARS-YIELD) ships a token object
- * carrying nothing but an address. One vault in 712 is enough — requiring these
+ * carrying nothing but an address. One vault in 712 is enough: requiring these
  * made `listAll()` throw a ZodError partway through the fleet, which took the
  * Studio's vault list to zero and would break any full-fleet iteration.
  *
@@ -42,7 +42,7 @@ export const UnderlyingTokenSchema = z.object({
  * Reward token distributed by the vault (e.g. governance token).
  *
  * Only `address` is guaranteed. Most entries carry symbol/decimals/priceUsd,
- * but a minority are address-only stubs — the spec declares symbol and
+ * but a minority are address-only stubs. The spec declares symbol and
  * decimals required, which would reject those.
  */
 export const RewardTokenSchema = z.object({
@@ -53,7 +53,7 @@ export const RewardTokenSchema = z.object({
 })
 
 /**
- * Pack (deposit or redeem method). Legacy "zap-pack" metadata — the endpoints
+ * Pack (deposit or redeem method). Legacy "zap-pack" metadata. The endpoints
  * that served these were decommissioned in Jun 2026, but the vault field still
  * populates. `stepsType` is `instant` on every pack observed; `complex` is
  * documented but unseen.
@@ -67,12 +67,12 @@ export const PackSchema = z.object({
  * APY breakdown. All values are PERCENTAGES: `4.63439` means 4.63%.
  *
  * LI.FI's OpenAPI spec, quickstart, and NormalizedVault docs all claim these
- * are decimals (`0.0534` = 5.34%) and all three are wrong — following their
+ * are decimals (`0.0534` = 5.34%) and all three are wrong: following their
  * quickstart's `* 100` yields a 100x overstatement. Verified against 799 live
  * vaults (9 Aug 2026): min 0, max 106.68, median 3.50.
  *
  * `base` is null on a small number of vaults. `reward` is genuinely
- * three-valued — null (unknown), 0 (no rewards), or a number — and the split
+ * three-valued (null (unknown), 0 (no rewards), or a number) and the split
  * varies WITHIN a protocol, not just between protocols. We preserve null
  * rather than collapsing it to 0, because "unknown" and "none" are different
  * facts for reward-sustainability analysis. Use `getRewardApy()` when you just
@@ -85,7 +85,7 @@ export const ApySchema = z.object({
 })
 
 /**
- * TVL. `usd` is a NUMBER as of the Apr 2026 rewrite — it was a string before,
+ * TVL. `usd` is a NUMBER as of the Apr 2026 rewrite. It was a string before,
  * and the OpenAPI spec still says string. We accept both and normalise, so a
  * flip in either direction is a non-event for callers.
  */
@@ -169,7 +169,7 @@ export const VerificationBreakdownSchema = z.object({
 
 /**
  * Deposit capacity limits. Documented in the OpenAPI spec but absent from
- * every live vault — accepted so we pick it up automatically if it ships.
+ * every live vault: accepted so we pick it up automatically if it ships.
  */
 export const CapsSchema = z.object({
   totalCap: z.union([z.number(), z.string()]).optional(),
@@ -177,7 +177,7 @@ export const CapsSchema = z.object({
 })
 
 /**
- * Vault schema — derived from live vaults, not from docs. Last re-verified
+ * Vault schema: derived from live vaults, not from docs. Last re-verified
  * against 799 vaults on 1 Sep 2026.
  *
  * Removed by LI.FI in the Apr 2026 rewrite: `provider`, `lpTokens`. Both were
@@ -240,7 +240,7 @@ export function analyticsAgeMs(vault: Vault, now = Date.now()): number {
 
 /**
  * Parse a live vault slug. Format is `protocol:chainId:_:address` as of the
- * Apr 2026 rewrite — the previous `chainId-address` form no longer occurs.
+ * Apr 2026 rewrite. The previous `chainId-address` form no longer occurs.
  * Both are accepted so cached or user-supplied legacy slugs still resolve.
  */
 export function parseVaultSlug(
@@ -269,7 +269,7 @@ export function parseVaultSlug(
 
 /**
  * Paginated vault list. `nextCursor` is ABSENT from the JSON on the last page
- * — not null, not empty — so it must be both nullable and optional.
+ * (not null, not empty) so it must be both nullable and optional.
  */
 export const VaultListResponseSchema = z.object({
   data: z.array(VaultSchema),

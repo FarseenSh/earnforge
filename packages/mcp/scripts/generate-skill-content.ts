@@ -3,7 +3,7 @@
  * Inline the Agent Skill files into a TypeScript module.
  *
  * The MCP server serves the skill as Resources (SEP-2640) and must work in a
- * Cloudflare Worker, which has no filesystem — so the content is bundled at
+ * Cloudflare Worker, which has no filesystem, so the content is bundled at
  * build time rather than read at runtime. `skills/earnforge/` remains the single
  * source of truth; this file is generated and should never be hand-edited.
  */
@@ -38,7 +38,7 @@ const index = {
 }
 
 const body = `// SPDX-License-Identifier: Apache-2.0
-// GENERATED FILE — do not edit.
+// GENERATED FILE: do not edit.
 // Source: skills/earnforge/  ·  Regenerate: pnpm --filter @earnforge/mcp generate
 
 export const SKILL_NAME = 'earnforge'
@@ -59,6 +59,6 @@ ${Object.entries(files)
 
 writeFileSync(OUT, body)
 console.log(
-  `generated src/skill-content.ts — ${Object.keys(files).length} files, ` +
+  `generated src/skill-content.ts: ${Object.keys(files).length} files, ` +
     `${(body.length / 1024).toFixed(1)} kB`
 )

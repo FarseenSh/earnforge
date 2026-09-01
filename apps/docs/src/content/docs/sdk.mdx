@@ -54,7 +54,7 @@ const forge = createEarnForge({
 <Aside type="caution" title="Auth is mandatory as of April 2026">
 `earn.li.fi` hard-`401`s without an `x-lifi-api-key` header. This **inverts**
 what earlier versions of this page said, and what LI.FI's general API docs
-still say — that no key is required. That remains true for `li.quest`; it has
+still say. That no key is required. That remains true for `li.quest`; it has
 not been true for the Earn API since the April rewrite.
 
 One key covers both services. Create one at [portal.li.fi](https://portal.li.fi).
@@ -138,7 +138,7 @@ const top = await forge.vaults.top({
 
 ### chains.list()
 
-Returns every chain with at least one indexed vault — 19 as of Aug 2026, and
+Returns every chain with at least one indexed vault: 19 as of Aug 2026, and
 rising. Read it rather than hardcoding a list.
 
 ```ts
@@ -148,7 +148,7 @@ const chains = await forge.chains.list();
 
 ### protocols.list()
 
-Returns every indexed protocol — 27 as of Aug 2026. Ids are read from here and
+Returns every indexed protocol: 27 as of Aug 2026. Ids are read from here and
 **never hardcoded**: a stale id returns `200` with zero results, not an error.
 
 ```ts
@@ -244,13 +244,13 @@ console.log(risk.flags);
 //   'analytics 2514 minutes stale' ]
 ```
 
-Seven dimensions, not five — `verification` carries LI.FI's own undocumented
+Seven dimensions, not five: `verification` carries LI.FI's own undocumented
 quality signal, and `rewardDependency` how much of the APY is emissions. The
 `flags` array is the actionable part: the score says something is wrong, the
 flags say what.
 
 The `8` threshold is deliberate. Verification carries 0.22 of the weight, so a
-flagged vault caps at 7.96 — **no flagged vault can ever be labelled low risk.**
+flagged vault caps at 7.96: **no flagged vault can ever be labelled low risk.**
 
 See the full [Risk Scoring Guide](/risk/) for dimension details, weights, and thresholds.
 
@@ -268,7 +268,7 @@ import { rewardSustainability } from '@earnforge/sdk';
 
 const s = rewardSustainability(vault);
 console.log(s.label);      // "incentive-dependent"
-console.log(s.organicApy); // 13.76  — what remains if emissions stop
+console.log(s.organicApy); // 13.76, what remains if emissions stop
 console.log(s.rewardShare) // 0.87
 console.log(s.reasons);
 // [ 'Incentives are 87% of total APY. Organic yield is only 13.76%.' ]
@@ -279,8 +279,8 @@ Labels are `organic`, `mostly-organic`, `incentive-heavy`,
 
 <Aside type="caution" title="null is not zero">
 This works only because `apy.reward` is three-valued and the schema refuses to
-coerce it. `null` means the protocol reported nothing — 143 of Aave's 160
-vaults. `0` means it reported no incentives — 160 of Morpho's 210. A `?? 0`
+coerce it. `null` means the protocol reported nothing: 143 of Aave's 160
+vaults. `0` means it reported no incentives: 160 of Morpho's 210. A `?? 0`
 transform collapses the two and scores most of Aave as confidently organic
 while knowing nothing about it, so `null` is labelled `unknown` and stays that
 way.
@@ -296,7 +296,7 @@ const s = await analyzeRewardSustainability(vault);
 console.log(s.trend); // { direction: 'decaying', change: -0.41, samples: 30 }
 ```
 
-History is advisory — if DeFiLlama has no match, the base score stands rather
+History is advisory: if DeFiLlama has no match, the base score stands rather
 than the call failing.
 
 ---
@@ -305,7 +305,7 @@ than the call failing.
 
 `/v1/quote` builds one step at a time, so swap-then-deposit is two transactions
 and the second has to guess what the first returned. A Flow binds the swap's
-`amountOut` handle straight into the deposit's `amountIn` — the exact received
+`amountOut` handle straight into the deposit's `amountIn`. The exact received
 amount, one transaction, atomic.
 
 ### createComposerFlows()
@@ -319,7 +319,7 @@ const sim = await flows.buildDepositFlow({
   vault,
   wallet: '0xYourWallet',
   fromToken: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', // USDC
-  amount: '1000000',   // base units — 1 USDC, never a decimal
+  amount: '1000000',   // base units: 1 USDC, never a decimal
   slippageBps: 100,
 });
 
@@ -337,7 +337,7 @@ a second guard there is a compile-time `guard_error` rather than extra safety.
 
 ### vaultRoutability()
 
-Answers what no Earn field does — the vault list is a **superset** of what
+Answers what no Earn field does. The vault list is a **superset** of what
 Composer can execute.
 
 ```ts
@@ -347,7 +347,7 @@ const r = await flows.vaultRoutability(vault);
 
 Protocols ingested from DeFiLlama appear in the vault list with no routing edges
 at all, and several protocols are deposit-only. So a vault can be listed, carry
-`isTransactional: true`, and still be impossible to enter — or possible to enter
+`isTransactional: true`, and still be impossible to enter: or possible to enter
 and impossible to exit.
 
 ---
@@ -372,18 +372,18 @@ console.log(projection.maxSafeBorrowBase); // headroom, in oracle base units
 ```
 
 `projectBorrow()` is the non-throwing form. A floor at or below `1.0` is
-rejected outright — a position that reaches Aave's liquidation threshold is
+rejected outright: a position that reaches Aave's liquidation threshold is
 already liquidatable, so a floor there means "warn me once it is too late".
 
 <Aside type="caution" title="Enforced before signing, not on-chain">
 `@lifi/composer-sdk` ships an `AaveGetHealthFactorConfig` type, implying an op
 that could bake a liquidation floor into the calldata. That op is **not in the
-live Compose manifest** — the backend serves borrow, repay, repayWithATokens,
+live Compose manifest**. The backend serves borrow, repay, repayWithATokens,
 claimRewards and setEMode, and nothing that reads a health factor.
 
 So this floor is checked against current oracle prices before signing. A price
 move between the check and inclusion can still breach it. It prevents borrowing
-more than a position can carry — not an adverse market.
+more than a position can carry, not an adverse market.
 </Aside>
 
 ---
@@ -391,7 +391,7 @@ more than a position can carry — not an adverse market.
 ## Drift Detection
 
 Born from this project shipping broken for three months. Compares three sources
-— the live API, LI.FI's OpenAPI spec, and our schemas — and reports *which pair*
+ (the live API, LI.FI's OpenAPI spec, and our schemas) and reports *which pair*
 disagrees, so a vendor documentation bug is distinguishable from ours.
 
 ```ts

@@ -39,7 +39,7 @@ export class TokenBucketRateLimiter {
   }
 
   /**
-   * Queued async acquire — serializes concurrent callers to prevent
+   * Queued async acquire: serializes concurrent callers to prevent
    * race conditions where multiple callers pass the token check simultaneously.
    */
   async acquireAsync(): Promise<void> {

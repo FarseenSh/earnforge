@@ -15,8 +15,8 @@ import {
  * each file in a skill directory is exposed under a `skill://` URI, and a
  * well-known `skill://index.json` enumerates what is available.
  *
- * The point is that a host connecting to this server gets both halves at once —
- * the tools it can call, and the workflow instructions describing when and how
+ * The point is that a host connecting to this server gets both halves at once.
+ * The tools it can call, and the workflow instructions describing when and how
  * to call them. Previously those shipped as two separate packages, one of which
  * had to be installed by hand.
  *
@@ -57,7 +57,7 @@ export function registerSkillResources(server: McpServer): void {
       isEntry ? 'skill' : `skill-${name.replace(/^references\/|\.md$/g, '')}`,
       `skill://${SKILL_NAME}/${name}`,
       {
-        title: isEntry ? 'EarnForge SKILL.md' : `EarnForge — ${name}`,
+        title: isEntry ? 'EarnForge SKILL.md' : `EarnForge: ${name}`,
         description: isEntry
           ? 'Entry point for the EarnForge skill: commands, rules, and the ' +
             'API behaviours that will otherwise bite you.'
@@ -74,7 +74,7 @@ export function registerSkillResources(server: McpServer): void {
 const REFERENCE_DESCRIPTIONS: Partial<Record<SkillFileName, string>> = {
   'references/pitfalls.md':
     "23 Earn API pitfalls, including six where LI.FI's documentation " +
-    'contradicts the API — read before writing integration code.',
+    'contradicts the API: read before writing integration code.',
   'references/protocols.md':
     'Indexed protocols with risk tiers. Ids are unversioned; a stale slug ' +
     'returns zero results with no error.',

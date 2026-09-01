@@ -34,30 +34,30 @@ export interface RiskScore {
  * Every key appears in the live `GET /v1/protocols` response. The versioned
  * keys this table once used (`aave-v3`, `morpho-v1`, `euler-v2`) matched
  * nothing after the Apr 2026 rewrite, so every vault silently fell through to
- * the default of 3 — Aave and Morpho scored as unknown protocols.
+ * the default of 3: Aave and Morpho scored as unknown protocols.
  *
  * Note that "always unversioned" is *not* the rule, though it held for a year:
  * `spark-v2` arrived versioned in Aug 2026. The only durable rule is that ids
- * are read from the endpoint, never assumed — which the live suite enforces.
+ * are read from the endpoint, never assumed, which the live suite enforces.
  *
  * Exported so that test can assert every id here still resolves upstream. An
  * id that stops resolving does not error; the vault just quietly scores worse.
  *
  * ## How these were assigned
  *
- * LI.FI's `/v1/protocols` carries only `id`, `name` and `url` — no maturity
- * signal at all — so the tiers are derived from four observable inputs, scored
+ * LI.FI's `/v1/protocols` carries only `id`, `name` and `url`. No maturity
+ * signal at all, so the tiers are derived from four observable inputs, scored
  * against the live fleet (799 vaults, Sep 2026) and DeFiLlama:
  *
- * 1. **Track record** — how long the protocol has been listed. The single
+ * 1. **Track record**: how long the protocol has been listed. The single
  *    strongest signal, and the one TVL cannot substitute for.
- * 2. **Audits** — zero published audits is a material caution regardless of
+ * 2. **Audits**: zero published audits is a material caution regardless of
  *    size. It is why `kinetiq` sits at 5 despite $785M, and why `ample` is
  *    below the unknown-protocol default rather than at it.
- * 3. **Scale** — aggregate TVL, cross-checked between the Earn fleet and
+ * 3. **Scale**: aggregate TVL, cross-checked between the Earn fleet and
  *    DeFiLlama. A large gap between the two means most of the protocol's
  *    capital is not in the vaults being scored, so Earn-side TVL is weighted.
- * 4. **Category risk** — RWA and lottery mechanics carry failure modes that
+ * 4. **Category risk**: RWA and lottery mechanics carry failure modes that
  *    on-chain lending does not (off-chain counterparty, negative expected
  *    value per position), and are capped accordingly.
  *
@@ -69,15 +69,15 @@ export interface RiskScore {
  * Entries are retained after a protocol leaves the Earn index, so vaults cached
  * before the delisting still score. `maple` left in Jul 2026 and was kept on
  * that reasoning; it returned in Sep 2026, which is the argument for the policy
- * — had the entry been deleted, every maple vault would have silently re-listed
+ *: had the entry been deleted, every maple vault would have silently re-listed
  * at the tier-3 default. `nest` left in Aug 2026 and is kept on the same terms.
  */
 export const PROTOCOL_TIERS: Record<string, number> = {
-  // Blue chip — multi-year record, deep audits, systemic scale.
+  // Blue chip: multi-year record, deep audits, systemic scale.
   aave: 9,
   morpho: 9,
   yearn: 8,
-  // Established — long record or very large, well audited.
+  // Established: long record or very large, well audited.
   'spark-v2': 8, // SparkLend, listed 2023-05, 2 audits, $3.6B
   euler: 7,
   fluid: 7,
@@ -85,27 +85,27 @@ export const PROTOCOL_TIERS: Record<string, number> = {
   'etherfi-staking': 7,
   ethena: 6,
   maple: 6,
-  // Mid — real adoption, but young, thin, or unaudited.
+  // Mid: real adoption, but young, thin, or unaudited.
   ipor: 5, // listed 2022-10, the longest record in this band
   midas: 5, // 2024-07, 2 audits, RWA across 3 chains
-  kinetiq: 5, // $785M but 2025-07 and ZERO audits — size is not safety
+  kinetiq: 5, // $785M but 2025-07 and ZERO audits: size is not safety
   hyperlend: 5, // $437M, 2025-03, 2 audits, single chain
   upshift: 5,
-  // Small or young — audited, but short record and limited scale.
+  // Small or young: audited, but short record and limited scale.
   avant: 4,
   cap: 4,
   neverland: 4,
   yo: 4,
-  usdai: 4, // 2025-05, RWA lending — off-chain counterparty risk
+  usdai: 4, // 2025-05, RWA lending: off-chain counterparty risk
   nest: 4, // 2024-10, RWA credit
   concrete: 4, // 2025-02; most of its TVL sits outside these vaults
   infinifi: 4, // 2025-05, $52M
   'auto-finance': 4, // 2 audits, $36M, 10 vaults across 4 chains
-  ember: 4, // 2025-09 — under a year old
+  ember: 4, // 2025-09: under a year old
   // Explicitly evaluated and still unknown. Same value as the fallback, but
   // recorded so the coverage check can tell "unexamined" from "examined".
   apyx: 3, // no audits, no DeFiLlama TVL, no listing date
-  hypurrfi: 3, // audited but $1.5M across 3 vaults — too thin to judge
+  hypurrfi: 3, // audited but $1.5M across 3 vaults: too thin to judge
   // Below the unknown default: examined, and the findings are adverse.
   ample: 2, // listed 2026-03, ZERO audits, and lottery-style payout mechanics
 }
@@ -130,14 +130,14 @@ const STALE_ANALYTICS_MS = 6 * 60 * 60 * 1000
  * Compute a composite 0–10 risk score for a vault. Higher is safer.
  *
  * Dimensions:
- * - TVL magnitude — higher TVL means deeper liquidity and more scrutiny
- * - APY stability — divergence between current and trailing APY
- * - Protocol maturity — track record and audit surface
- * - Redeemability — can the position be exited via Composer
- * - Asset type — stablecoin exposure vs volatile, plus impermanent-loss tag
- * - Verification — LI.FI flags ~10% of the fleet; a flagged vault is a
+ * - TVL magnitude: higher TVL means deeper liquidity and more scrutiny
+ * - APY stability: divergence between current and trailing APY
+ * - Protocol maturity: track record and audit surface
+ * - Redeemability: can the position be exited via Composer
+ * - Asset type: stablecoin exposure vs volatile, plus impermanent-loss tag
+ * - Verification: LI.FI flags ~10% of the fleet; a flagged vault is a
  *   near-disqualifying signal and is weighted accordingly
- * - Reward dependency — yield paid in token incentives can stop; yield from
+ * - Reward dependency: yield paid in token incentives can stop; yield from
  *   lending fees generally does not
  */
 export function riskScore(vault: Vault): RiskScore {
@@ -180,7 +180,7 @@ export function riskScore(vault: Vault): RiskScore {
  * Map a composite score to a label.
  *
  * Calibrated against the live fleet, whose scores span 4.1–9.7 with a median of
- * 7.9 — the previous thresholds (low >= 7, high < 4) put 80% of vaults in "low"
+ * 7.9. The previous thresholds (low >= 7, high < 4) put 80% of vaults in "low"
  * and made "high" unreachable, so the label carried no information.
  *
  * The 8.0 cut is deliberate: a verification-flagged vault scores at most 7.96

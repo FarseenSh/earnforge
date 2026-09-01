@@ -5,11 +5,11 @@ import { EarnDataClient } from '../../src/clients/index.js'
 import { MissingApiKeyError } from '../../src/errors.js'
 
 /**
- * Pitfall #2 — INVERTED as of Apr 2026.
+ * Pitfall #2: INVERTED as of Apr 2026.
  *
  * This pitfall used to be "don't send auth to the Earn Data API," because the
  * endpoint was public. It is now the opposite: earn.li.fi hard-401s without an
- * `x-lifi-api-key` header. Verified live — both an empty key and a garbage key
+ * `x-lifi-api-key` header. Verified live. Both an empty key and a garbage key
  * return 401, so the header is genuinely validated, not merely required.
  *
  * The trap is now that LI.FI's own API reference still states "All LI.FI APIs
@@ -45,7 +45,7 @@ describe('Pitfall #2: Earn Data API requires auth (inverted Apr 2026)', () => {
   it('rejects a whitespace-only key the same as an absent one', () => {
     // What a mis-parsed `.env` line or a paste with a trailing newline yields.
     // Untrimmed this passed the guard and constructed, then failed later as a
-    // 401 — and since the Earn API validates keys inconsistently, that surfaced
+    // 401, and since the Earn API validates keys inconsistently, that surfaced
     // as an intermittent fault rather than "your key is wrong".
     withoutEnvKey(() => {
       for (const blank of ['   ', '\n', '\t ', ' \r\n']) {

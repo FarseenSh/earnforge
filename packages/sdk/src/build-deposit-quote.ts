@@ -46,7 +46,7 @@ export async function buildDepositQuote(
   // Pitfall #13: non-transactional vault
   if (!vault.isTransactional) {
     throw new EarnForgeError(
-      `Vault ${vault.slug} is not transactional — deposits are not supported.`,
+      `Vault ${vault.slug} is not transactional: deposits are not supported.`,
       'NOT_TRANSACTIONAL'
     )
   }
@@ -64,7 +64,7 @@ export async function buildDepositQuote(
 
   if (!fromTokenAddr) {
     throw new EarnForgeError(
-      'Cannot determine fromToken — vault has no underlyingTokens and none was provided.',
+      'Cannot determine fromToken: vault has no underlyingTokens and none was provided.',
       'NO_FROM_TOKEN'
     )
   }
@@ -113,7 +113,7 @@ export async function buildDepositQuote(
 /**
  * Convert to the smallest unit, rejecting amounts that round away to nothing.
  *
- * `toSmallestUnit` truncates, which is right for a converter — but a quote for
+ * `toSmallestUnit` truncates, which is right for a converter, but a quote for
  * zero is not a quote. `0.0000001` of a 6-decimal token became `"0"`, and the
  * caller found out when Composer answered
  * `/fromAmount must pass "isBigNumberish" keyword validation`. Naming the

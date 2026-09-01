@@ -4,7 +4,7 @@ import { assertAddress, encodeAddressArg } from './address.js'
 import { EarnForgeError } from './errors.js'
 
 /**
- * Aave v3 lifecycle operations — borrow, repay, eMode, rewards.
+ * Aave v3 lifecycle operations: borrow, repay, eMode, rewards.
  *
  * Everything else in EarnForge deals in deposits and withdrawals, where the
  * worst outcome is a failed transaction. Borrowing is different: a position can
@@ -19,14 +19,14 @@ import { EarnForgeError } from './errors.js'
  *
  * That op is **not in the live Compose manifest** (verified Aug 2026: the
  * backend exposes `aave.borrow`, `aave.repay`, `aave.repayWithATokens`,
- * `aave.claimRewards`, `aave.setEMode` — and nothing that reads a health
+ * `aave.claimRewards`, `aave.setEMode`, and nothing that reads a health
  * factor). The published types describe an operation the service will reject.
  *
  * So the floor here is enforced **before signing, not on-chain**. That is a
  * weaker guarantee and it is stated rather than glossed: the projection is made
  * against current oracle prices, and a price move between the check and
  * inclusion can still land the position below the floor. It prevents the
- * common mistake — borrowing more than the position can carry — not an adverse
+ * common mistake (borrowing more than the position can carry) not an adverse
  * market. When `aave.getHealthFactor` reaches the manifest, this becomes an
  * on-chain invariant and the distinction goes away.
  */
@@ -37,7 +37,7 @@ const USER_ACCOUNT_DATA_SELECTOR = '0xbf92857c'
 /** Aave reports health factor scaled by 1e18. */
 const HF_SCALE = 10n ** 18n
 
-/** Aave returns this for a position with no debt — division by zero, in effect. */
+/** Aave returns this for a position with no debt: division by zero, in effect. */
 const HF_NO_DEBT = 2n ** 256n - 1n
 
 /**
@@ -59,7 +59,7 @@ export interface AaveAccountData {
   ltv: bigint
   /**
    * Health factor as a number. `null` when the account has no debt, which Aave
-   * encodes as uint256 max — reporting that as 1.157e59 would be technically
+   * encodes as uint256 max: reporting that as 1.157e59 would be technically
    * true and useless.
    */
   healthFactor: number | null
@@ -75,8 +75,8 @@ export class AaveLifecycleError extends EarnForgeError {
 /**
  * Read a wallet's Aave position directly from the Pool contract.
  *
- * Raw `eth_call` rather than viem, so the SDK keeps no on-chain dependency —
- * the same approach `checkAllowance` takes.
+ * Raw `eth_call` rather than viem, so the SDK keeps no on-chain dependency.
+ * The same approach `checkAllowance` takes.
  */
 export async function getAaveAccountData(
   rpcUrl: string,
@@ -111,7 +111,7 @@ export async function getAaveAccountData(
   const words = decodeWords(json.result, 6)
   if (!words) {
     throw new AaveLifecycleError(
-      'Aave Pool returned a short response — check that the pool address is ' +
+      'Aave Pool returned a short response: check that the pool address is ' +
         'the Pool contract for this chain, not the PoolAddressesProvider.'
     )
   }
@@ -147,7 +147,7 @@ export interface BorrowProjection {
  *
  * Health factor is `collateral * liquidationThreshold / debt`, so borrowing
  * moves only the denominator. Both amounts are in Aave's oracle base units,
- * which is what `getUserAccountData` reports — no token decimals involved.
+ * which is what `getUserAccountData` reports. No token decimals involved.
  */
 export function projectBorrow(
   account: AaveAccountData,
@@ -160,7 +160,7 @@ export function projectBorrow(
   if (floor <= LIQUIDATION_THRESHOLD) {
     throw new AaveLifecycleError(
       `A health-factor floor of ${floor} is at or below Aave's liquidation ` +
-        `threshold of ${LIQUIDATION_THRESHOLD}. Choose a floor above it — ` +
+        `threshold of ${LIQUIDATION_THRESHOLD}. Choose a floor above it: ` +
         'a position that reaches 1.0 is already liquidatable.'
     )
   }

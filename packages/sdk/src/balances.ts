@@ -5,7 +5,7 @@ import { encodeAddressArg } from './address.js'
 /**
  * Native and ERC-20 balance reads.
  *
- * `preflight()` is deliberately pure — it checks whatever balances you hand it
+ * `preflight()` is deliberately pure. It checks whatever balances you hand it
  * and skips the rest. That is the right shape for a browser caller, which
  * already has balances from wagmi and should not pay for a second round trip.
  * It is the wrong shape for a CLI, which has no wallet connection and was
@@ -23,7 +23,7 @@ const BALANCE_OF_SELECTOR = '0x70a08231'
  * Fallback RPC per Earn chain.
  *
  * The CLI previously defaulted to `https://rpc.li.fi/v1/chain/{id}`, which does
- * not resolve — the host has no DNS record at all. `earnforge allowance` was
+ * not resolve. The host has no DNS record at all. `earnforge allowance` was
  * therefore broken out of the box and only worked if you passed `--rpc`, and
  * the failure surfaced as a bare "fetch failed".
  *
@@ -31,7 +31,7 @@ const BALANCE_OF_SELECTOR = '0x70a08231'
  * reply matched the key, which is the check that would have caught the original
  * mistake. Robinhood Chain (4663) is deliberately absent: no public endpoint
  * answered, and a guess here is exactly what caused this bug. Callers should
- * always be able to override with their own RPC — these are a floor, not a
+ * always be able to override with their own RPC: these are a floor, not a
  * recommendation, and public endpoints rate-limit.
  */
 const DEFAULT_RPC_URLS: Record<number, string> = {
@@ -112,7 +112,7 @@ export async function fetchWalletBalances(
   }
 
   // The zero address is how the API denotes the native token, and it is not an
-  // ERC-20 — calling balanceOf on it returns empty rather than a balance.
+  // ERC-20: calling balanceOf on it returns empty rather than a balance.
   if (/^0x0{40}$/i.test(tokenAddress)) {
     return { native, token: native }
   }

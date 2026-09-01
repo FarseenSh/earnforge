@@ -154,7 +154,7 @@ import type {
 
 export interface EarnForgeOptions {
   /**
-   * LI.FI API key for the Earn Data API. Required — earn.li.fi returns 401
+   * LI.FI API key for the Earn Data API. Required: earn.li.fi returns 401
    * without one as of Apr 2026. Falls back to `process.env.LIFI_API_KEY`.
    * The same key works for Composer, so passing `apiKey` alone is enough.
    */
@@ -235,7 +235,7 @@ interface TopVaultsParams {
 }
 
 /**
- * Create an EarnForge instance — the main entry point.
+ * Create an EarnForge instance. The main entry point.
  *
  * ```ts
  * const forge = createEarnForge({ composerApiKey: process.env.LIFI_API_KEY });
@@ -300,7 +300,7 @@ export function createEarnForge(options: EarnForgeOptions = {}): EarnForge {
         if (strategy.filters.excludeTags?.some((t) => vault.tags.includes(t))) {
           continue
         }
-        // Match on protocol.id — the unversioned filter key — falling back to
+        // Match on protocol.id (the unversioned filter key) falling back to
         // name for vaults cached before the id field existed.
         if (
           strategy.filters.protocols &&

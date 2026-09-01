@@ -10,7 +10,7 @@ import { SKILL_FILES, SKILL_INDEX } from '../src/skill-content.js'
  *
  * These matter because the previous server declared no output schemas and no
  * annotations, so a host had no way to validate a result or to know which tools
- * were safe to auto-approve — it had to parse prose and guess.
+ * were safe to auto-approve. It had to parse prose and guess.
  */
 /**
  * Text of the first content entry of a resource read.
@@ -86,7 +86,7 @@ describe('MCP protocol surface', () => {
     })
 
     it('marks every tool read-only and non-destructive', async () => {
-      // Nothing here signs or broadcasts — quote tools return unsigned
+      // Nothing here signs or broadcasts: quote tools return unsigned
       // transactions. A host can auto-approve all of them safely, and that is
       // only knowable from the annotations.
       const { tools } = await client.listTools()
@@ -99,7 +99,7 @@ describe('MCP protocol surface', () => {
 
     it('warns about the API-key requirement in no tool description', async () => {
       // The key is a server-level concern, surfaced as a construction error and
-      // in the Worker's 500 body — not something each tool should repeat.
+      // in the Worker's 500 body, not something each tool should repeat.
       const { tools } = await client.listTools()
       const noisy = tools.filter((t) =>
         /set LIFI_API_KEY env var/i.test(t.description ?? '')

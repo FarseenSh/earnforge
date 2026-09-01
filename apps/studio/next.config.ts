@@ -4,7 +4,7 @@ import type { NextConfig } from 'next'
 /**
  * Optional wallet-connector peers that `@wagmi/connectors` and RainbowKit
  * import unconditionally. The Studio only offers injected wallets, so none of
- * these are reachable at runtime — but they still have to resolve at build
+ * these are reachable at runtime, but they still have to resolve at build
  * time, and several drag Node built-ins into the client bundle.
  */
 const OPTIONAL_CONNECTOR_PEERS = [

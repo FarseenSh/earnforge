@@ -11,7 +11,7 @@ export interface PreflightReport {
    * Checks that could not run because their input was not supplied.
    *
    * Balance and chain checks need on-chain reads this function deliberately
-   * does not perform — it stays pure so callers can supply values from wagmi,
+   * does not perform. It stays pure so callers can supply values from wagmi,
    * viem, a cache, or a test. The cost is that `ok: true` on its own is
    * ambiguous: it means "nothing I could check failed", not "safe to deposit".
    * A caller that omits every balance got a clean report for a wallet with no
@@ -36,14 +36,14 @@ export interface PreflightOptions {
   tokenBalance?: bigint
   tokenDecimals?: number
   depositAmount?: string
-  /** If true, cross-chain deposit is intended — skip chain mismatch error */
+  /** If true, cross-chain deposit is intended: skip chain mismatch error */
   crossChain?: boolean
 }
 
 /**
  * Run preflight checks before a deposit:
  * - isTransactional check (Pitfall #13)
- * - Chain mismatch check (Pitfall #12) — warning for cross-chain, error for same-chain
+ * - Chain mismatch check (Pitfall #12): warning for cross-chain, error for same-chain
  * - Gas token balance check (Pitfall #11)
  * - Token balance check (uses string-based toSmallestUnit to avoid float precision loss)
  * - underlyingTokens existence (Pitfall #15)
@@ -60,12 +60,12 @@ export function preflight(
   if (!vault.isTransactional) {
     issues.push({
       code: 'NOT_TRANSACTIONAL',
-      message: `Vault ${vault.slug} is not transactional — cannot deposit.`,
+      message: `Vault ${vault.slug} is not transactional: cannot deposit.`,
       severity: 'error',
     })
   }
 
-  // Pitfall #12: chain mismatch — warning for cross-chain (Composer handles bridging)
+  // Pitfall #12: chain mismatch is a warning for cross-chain (Composer bridges)
   if (
     options.walletChainId !== undefined &&
     options.walletChainId !== vault.chainId
@@ -96,7 +96,7 @@ export function preflight(
     })
   }
 
-  // Token balance check — uses string-based conversion to avoid float precision loss
+  // Token balance check: uses string-based conversion to avoid float precision loss
   if (
     options.tokenBalance !== undefined &&
     options.depositAmount !== undefined
@@ -117,7 +117,7 @@ export function preflight(
   if (!vault.isRedeemable) {
     issues.push({
       code: 'NOT_REDEEMABLE',
-      message: 'Vault is not redeemable — you may not be able to withdraw.',
+      message: 'Vault is not redeemable. You may not be able to withdraw.',
       severity: 'warning',
     })
   }

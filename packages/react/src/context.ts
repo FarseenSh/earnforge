@@ -26,7 +26,7 @@ export function EarnForgeProvider({ sdk, children }: EarnForgeProviderProps) {
 }
 
 /**
- * Internal helper — returns the SDK instance from context
+ * Internal helper: returns the SDK instance from context
  * or throws if used outside an `EarnForgeProvider`.
  */
 export function useEarnForge(): EarnForge {
