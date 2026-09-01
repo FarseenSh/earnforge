@@ -25,6 +25,16 @@ import { isFlagged, parseTvl, parseVaultSlug } from '../../src/schemas/vault.js'
 const client = new EarnDataClient()
 
 /**
+ * Protocols whose disappearance is a bug in us, not churn at LI.FI.
+ *
+ * Every other id may come and go — the index gained `spark-v2`, lost `nest`,
+ * and lost then regained `maple` inside two months. These three have never
+ * moved, so if one stops resolving the likely cause is an id-shape change we
+ * failed to follow, which silently drops every vault it scores to tier 3.
+ */
+const BLUE_CHIP_PROTOCOLS = ['aave', 'morpho', 'euler'] as const
+
+/**
  * Fail immediately and legibly when there is no *real* key.
  *
  * `test/setup.ts` runs for every suite and does
@@ -145,14 +155,34 @@ describe('Live API — Protocols', () => {
       ...Object.keys(PROTOCOL_TIERS),
       ...Object.keys(LIFI_TO_LLAMA_PROJECT),
     ])
-    // `maple` left the Earn index in Jul 2026. The mapping is kept so stored
-    // vault references still resolve, but it is not expected to be live.
-    shipped.delete('maple')
 
+    // Delisting is not a failure, and this test used to treat it as one via a
+    // hardcoded `shipped.delete('maple')` — added when maple left the index in
+    // Jul 2026. `nest` left in Aug and turned the job red until someone
+    // hand-edited the same line again; then maple *came back*, which made the
+    // exemption wrong in the other direction. Retaining the mapping across a
+    // delisting is the correct behaviour, and maple's return is the proof: had
+    // the entry been deleted, its vaults would have silently dropped to tier 3
+    // on re-listing.
+    //
+    // So a vanished id is reported, not asserted on. What must never happen is
+    // a blue-chip disappearing — that means the id shape changed underneath us
+    // rather than the protocol leaving, and every vault it scores is affected.
     const vanished = [...shipped].filter((id) => !live.has(id))
-    expect(vanished, `protocol ids we score/map that no longer exist`).toEqual(
-      []
-    )
+    if (vanished.length > 0) {
+      console.warn(
+        `[drift] ${vanished.length} shipped protocol id(s) are not in the ` +
+          `live index: ${vanished.join(', ')}. Mappings are retained so ` +
+          `stored vault references still resolve if they return.`
+      )
+    }
+
+    for (const id of BLUE_CHIP_PROTOCOLS) {
+      expect(
+        [...live],
+        `${id} vanished from the live protocol index`
+      ).toContain(id)
+    }
   })
 
   it('reports which live protocols have no risk tier', async () => {
@@ -168,7 +198,7 @@ describe('Live API — Protocols', () => {
       )
     }
     // The blue-chips must always be tiered; everything else is best-effort.
-    for (const id of ['aave', 'morpho', 'euler']) {
+    for (const id of BLUE_CHIP_PROTOCOLS) {
       expect(untiered, `${id} lost its risk tier`).not.toContain(id)
     }
   })
@@ -271,15 +301,34 @@ describe('Live API — Vault List', () => {
     const first = await client.listVaults({ chainId: 8453, limit: 50 })
     expect(first.nextCursor).toBeTruthy()
 
-    const second = await client.listVaults({
-      chainId: 8453,
-      limit: 50,
-      cursor: first.nextCursor ?? undefined,
-    })
-    expect(second.data.length).toBeGreaterThan(0)
-    // Base fits in two pages, so the second omits the cursor entirely.
-    expect(second.nextCursor ?? undefined).toBeUndefined()
-    expect(first.data.length + second.data.length).toBe(first.total)
+    // Walk to the end rather than assuming where it is. This previously read
+    // "Base fits in two pages, so the second omits the cursor" — true at 97
+    // vaults, false at 115, and the job went red for a fleet that simply grew.
+    // The invariant is not the page count; it is that the cursor is present
+    // exactly while more data remains, and that the walk visits every vault
+    // once. Those hold at any size.
+    const seen: string[] = [...first.data.map((v) => v.slug)]
+    let cursor = first.nextCursor
+    let pages = 1
+
+    while (cursor) {
+      const page = await client.listVaults({ chainId: 8453, limit: 50, cursor })
+      expect(
+        page.data.length,
+        `page ${pages + 1} came back empty`
+      ).toBeGreaterThan(0)
+      seen.push(...page.data.map((v) => v.slug))
+      cursor = page.nextCursor
+      pages++
+      // Base is ~115 vaults at 50/page; anything past this is a cursor loop.
+      expect(pages, 'pagination did not terminate').toBeLessThan(20)
+    }
+
+    expect(pages).toBeGreaterThan(1)
+    expect(seen.length).toBe(first.total)
+    expect(new Set(seen).size, 'a vault was returned on two pages').toBe(
+      seen.length
+    )
   })
 
   it('the capability filters narrow the result set', async () => {

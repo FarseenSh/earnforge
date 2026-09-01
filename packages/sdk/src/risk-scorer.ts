@@ -47,7 +47,7 @@ export interface RiskScore {
  *
  * LI.FI's `/v1/protocols` carries only `id`, `name` and `url` — no maturity
  * signal at all — so the tiers are derived from four observable inputs, scored
- * against the live fleet (703 vaults, Aug 2026) and DeFiLlama:
+ * against the live fleet (799 vaults, Sep 2026) and DeFiLlama:
  *
  * 1. **Track record** — how long the protocol has been listed. The single
  *    strongest signal, and the one TVL cannot substitute for.
@@ -66,7 +66,11 @@ export interface RiskScore {
  * means we looked and found something concerning. Precision beyond a whole
  * number would imply confidence this data does not support.
  *
- * `maple` is retained for vaults cached before it left the Earn index.
+ * Entries are retained after a protocol leaves the Earn index, so vaults cached
+ * before the delisting still score. `maple` left in Jul 2026 and was kept on
+ * that reasoning; it returned in Sep 2026, which is the argument for the policy
+ * — had the entry been deleted, every maple vault would have silently re-listed
+ * at the tier-3 default. `nest` left in Aug 2026 and is kept on the same terms.
  */
 export const PROTOCOL_TIERS: Record<string, number> = {
   // Blue chip — multi-year record, deep audits, systemic scale.
