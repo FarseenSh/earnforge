@@ -388,6 +388,26 @@ export function compareTable(vaults: Vault[], risks: RiskScore[]): string {
 
 // ── Output helper ──
 
+/**
+ * JSON replacer that survives a BigInt.
+ *
+ * `JSON.stringify` throws outright on one ("Do not know how to serialize a
+ * BigInt"), and `earnforge simulate --json` did exactly that on every run: the
+ * Composer SDK returns `producedResources` and `approvals` carrying BigInt
+ * amounts. The human output path never touched those fields, so the command
+ * looked healthy while its documented `--json` mode was dead. Every surface
+ * here promises "all with --json", which is what made the gap worth closing at
+ * the choke point rather than in one command.
+ *
+ * Serialised as a decimal string, not a number: a JSON number silently loses
+ * precision above 2^53, which is well inside the range of a wei-denominated
+ * amount. Every other raw amount this CLI emits is already a string, so callers
+ * parsing the output see one consistent shape.
+ */
+function jsonSafe(_key: string, value: unknown): unknown {
+  return typeof value === 'bigint' ? value.toString() : value
+}
+
 export function outputResult(
   data: unknown,
   json: boolean,
@@ -395,7 +415,7 @@ export function outputResult(
 ): void {
   if (json) {
     // biome-ignore lint/suspicious/noConsole: CLI output
-    console.log(JSON.stringify(data, null, 2))
+    console.log(JSON.stringify(data, jsonSafe, 2))
   } else {
     // biome-ignore lint/suspicious/noConsole: CLI output
     console.log(humanFn())

@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { RiskScore } from '@earnforge/sdk'
-import { describe, expect, it } from 'vitest'
-import { fmtPct, fmtUsd, riskLabelPlain, riskTable } from '../src/helpers.js'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  fmtPct,
+  fmtUsd,
+  outputResult,
+  riskLabelPlain,
+  riskTable,
+} from '../src/helpers.js'
 
 describe('fmtPct', () => {
   it('formats a percentage value as a string (API returns percentages, not fractions)', () => {
@@ -112,5 +118,74 @@ describe('riskTable', () => {
   it('omits the Flags section entirely when there is nothing to report', () => {
     const clean = riskTable({ ...risk, score: 9.2, label: 'low', flags: [] })
     expect(clean).not.toContain('Flags')
+  })
+})
+
+/**
+ * Regression: `--json` must survive a BigInt.
+ *
+ * `earnforge simulate --json` threw "Do not know how to serialize a BigInt" on
+ * every single run, in every published version up to and including 1.2.2. The
+ * Composer SDK returns `producedResources` and `approvals` carrying BigInt
+ * amounts, and `JSON.stringify` refuses them outright.
+ *
+ * It survived this long because the human output path never reads those fields,
+ * so the command looked healthy in normal use and only the documented `--json`
+ * mode was dead. Nothing in the mocked suite passed a BigInt through
+ * `outputResult`, and the live suite does not shell out to the CLI. The fix
+ * lives in `outputResult` rather than in the simulate command, because every
+ * surface promises "all commands, all with --json", so any future command
+ * surfacing an on-chain amount would have reintroduced it.
+ */
+describe('outputResult: BigInt in --json', () => {
+  function captured(data: unknown): string {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      outputResult(data, true, () => 'human')
+      return String(spy.mock.calls.at(0)?.[0] ?? '')
+    } finally {
+      spy.mockRestore()
+    }
+  }
+
+  it('does not throw on a BigInt', () => {
+    expect(() =>
+      captured({
+        approvals: [
+          {
+            amount:
+              115792089237316195423570985008687907853269984665640564039457584007913129639935n,
+          },
+        ],
+      })
+    ).not.toThrow()
+  })
+
+  it('serialises it as a decimal string, losing no precision', () => {
+    // Above 2^53 a JSON number would silently round. This value is uint256 max,
+    // which is exactly what an unlimited ERC-20 approval carries.
+    const max =
+      115792089237316195423570985008687907853269984665640564039457584007913129639935n
+    const out = JSON.parse(captured({ amount: max }))
+    expect(out.amount).toBe(max.toString())
+    expect(BigInt(out.amount)).toBe(max)
+  })
+
+  it('handles a BigInt nested inside arrays and objects', () => {
+    const out = JSON.parse(
+      captured({
+        producedResources: [{ token: '0xabc', amount: 100n }],
+        gas: { limit: 21000n },
+      })
+    )
+    expect(out.producedResources[0].amount).toBe('100')
+    expect(out.gas.limit).toBe('21000')
+  })
+
+  it('leaves every other type alone', () => {
+    const out = JSON.parse(
+      captured({ s: 'x', n: 1.5, b: true, nul: null, arr: [1, 2] })
+    )
+    expect(out).toEqual({ s: 'x', n: 1.5, b: true, nul: null, arr: [1, 2] })
   })
 })
