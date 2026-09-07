@@ -124,10 +124,20 @@ const tmp = `${ROOT}node_modules/.cache/ship-check`
 try {
   await run('rm', ['-rf', tmp])
   await run('mkdir', ['-p', tmp])
-  await run('npm', ['pack', '@earnforge/skill@latest', '--silent'], {
-    cwd: tmp,
-  })
-  const [tgz] = (await run('sh', ['-c', `ls ${tmp}/*.tgz`])).stdout
+  // Pinned to the exact version and forced online. `@latest` with a warm npm
+  // cache resolves the tag from cached metadata and can hand back the previous
+  // tarball, which made this check report a correctly-published package as
+  // stale. A verification step that lies in the safe direction is still a
+  // check that cannot be trusted.
+  const skillVersion = json('packages/skill/package.json').version
+  await run(
+    'npm',
+    ['pack', `@earnforge/skill@${skillVersion}`, '--prefer-online', '--silent'],
+    { cwd: tmp }
+  )
+  const [tgz] = (
+    await run('sh', ['-c', `ls ${tmp}/earnforge-skill-*.tgz`])
+  ).stdout
     .trim()
     .split('\n')
   await run('tar', ['xzf', tgz, '-C', tmp])
@@ -158,7 +168,12 @@ try {
 
   // The mcp bundle embeds the same content, so it goes stale for the same
   // reason and independently of its own source changing.
-  await run('npm', ['pack', '@earnforge/mcp@latest', '--silent'], { cwd: tmp })
+  const mcpVersion = json('packages/mcp/package.json').version
+  await run(
+    'npm',
+    ['pack', `@earnforge/mcp@${mcpVersion}`, '--prefer-online', '--silent'],
+    { cwd: tmp }
+  )
   const [mtgz] = (
     await run('sh', ['-c', `ls ${tmp}/earnforge-mcp-*.tgz`])
   ).stdout
@@ -170,22 +185,52 @@ try {
       maxBuffer: 64 * 1024 * 1024,
     })
   ).stdout
-  // Sample distinctive lines rather than diffing: the content is minified and
-  // string-escaped inside the bundle, so an exact compare is not meaningful.
-  const probes = read('skills/earnforge/SKILL.md')
-    .split('\n')
-    .filter(
-      (l) => l.trim().length > 40 && !l.includes('`') && !l.includes('\\')
-    )
-    .slice(-6)
-  const missing = probes.filter((l) => !bundle.includes(l.trim()))
-  if (missing.length) {
+  // Probes are taken from the GENERATED `skill-content.ts`, not from SKILL.md.
+  // That file has already escaped the content exactly as the bundle will, so
+  // its literals match verbatim; sampling raw markdown instead meant filtering
+  // out every line containing a backtick or a backslash, which silently skipped
+  // most of the file. A first version did that and failed to notice an appended
+  // command, so the check passed while the package was stale.
+  let generated = null
+  try {
+    generated = read('packages/mcp/src/skill-content.ts')
+  } catch {
     bad(
       '@earnforge/mcp embedded skill',
-      `stale; run pnpm --filter @earnforge/mcp generate, rebuild, republish`
+      'skill-content.ts absent; run pnpm --filter @earnforge/mcp generate'
     )
-  } else {
-    ok('@earnforge/mcp embeds the current skill content')
+  }
+  if (generated) {
+    // The markdown is stored JSON-escaped, so `\n` appears throughout and
+    // filtering chunks containing a backslash discards essentially the whole
+    // file. Split ON the escaped newlines instead and keep the prose between
+    // them, which is what actually has to survive into the bundle verbatim.
+    const chunks = generated
+      .split('\\n')
+      .map((c) => c.trim())
+      .filter((c) => c.length >= 50 && !/[\\'"`]/.test(c))
+    // Every chunk, not a sample. Sampling every Nth chunk passed while the
+    // published bundle was genuinely stale, because the one line that had
+    // changed fell between two sampled points. A drift check that can miss a
+    // single-line drift is not a check.
+    const probes = [...new Set(chunks)]
+    const missing = probes.filter((c) => !bundle.includes(c))
+    if (probes.length < 20) {
+      bad(
+        '@earnforge/mcp embedded skill',
+        `only ${probes.length} probes extracted; the generated file shape changed`
+      )
+    } else if (missing.length) {
+      bad(
+        '@earnforge/mcp embedded skill',
+        `stale (${missing.length}/${probes.length} absent, e.g. "${missing[0].slice(0, 40)}..."); regenerate, rebuild, republish`
+      )
+    } else {
+      ok(
+        '@earnforge/mcp embeds the current skill content',
+        `${probes.length} probes`
+      )
+    }
   }
 } catch (e) {
   bad('published content check', String(e.message).slice(0, 80))

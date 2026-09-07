@@ -5,7 +5,7 @@ description: >
   quotes for DeFi yield vaults across every chain indexed by the LI.FI Earn API.
   Surfaces LI.FI's undocumented verificationStatus signal, which flags roughly
   10% of vaults as suspect. Includes ERC-20 allowance checking, a 0-10 composite
-  risk score, yield strategy presets, portfolio allocation, and 23 documented
+  risk score, yield strategy presets, portfolio allocation, and 25 documented
   API pitfalls handled by default. Use when working with DeFi yield, vault APY,
   lending deposits, or the LI.FI Earn API.
 license: Apache-2.0

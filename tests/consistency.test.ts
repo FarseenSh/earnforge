@@ -54,34 +54,39 @@ const SURFACES = [
  * wording the sweep did not anticipate. Four of the fourteen misses were exactly
  * that: "All 23 are documented", "24 Pitfalls Guide", "All 24 tests", and a
  * sidebar label, none of which matched the pattern being grepped at the time.
+ *
+ * Scans the text with all whitespace flattened, because a claim can wrap across
+ * a line break: SKILL.md's frontmatter read "...and 23 documented\n  API
+ * pitfalls..." and survived a line-by-line version of this very check.
+ * Exclusions therefore apply to a window around each match rather than to a
+ * line, which is the same idea at the right granularity.
  */
 function claims(text: string, noun: RegExp): number[] {
   const re = new RegExp(
     `(?:\\b|>)(\\d{1,3})\\s*(?:\\w+\\s+){0,2}?${noun.source}`,
     'gi'
   )
+  // Percent-encoding in badge URLs fakes a match: `API%20pitfalls-25-red`
+  // reads as "20 pitfalls" to any regex that does not decode it first. The
+  // badge's real value is asserted separately.
+  const flat = text.replace(/%[0-9A-Fa-f]{2}/g, ' ').replace(/\s+/g, ' ')
   const out: number[] = []
-  for (const raw of text.split('\n')) {
-    // Skip lines describing someone else's product. CLAUDE.md and llms.txt
+  for (const m of flat.matchAll(re)) {
+    const at = m.index ?? 0
+    const window = flat.slice(Math.max(0, at - 110), at + 110)
+    // Skip claims describing someone else's product. CLAUDE.md and llms.txt
     // both state LI.FI's own counts on purpose (their MCP server has 25 tools,
     // their CLI has 13 commands), and those must not be read as claims about
-    // this repo. Scoped per line so a stale number elsewhere in the same file
-    // is still caught.
-    if (/LI\.FI's|lifi-cli|mcp\.li\.quest|get-earn-\*/.test(raw)) {
+    // this repo.
+    if (/LI\.FI's|lifi-cli|mcp\.li\.quest|get-earn-\*/.test(window)) {
       continue
     }
     // `doctor` runs a subset of the pitfalls as runtime checks. That number is
     // legitimately different from the total and is asserted on its own below.
-    if (/\d+ checks\b/.test(raw)) {
+    if (/\d+ checks\b/.test(window)) {
       continue
     }
-    // Percent-encoding in badge URLs fakes a match: `API%20pitfalls-25-red`
-    // reads as "20 pitfalls" to any regex that does not decode it first. The
-    // badge's real value is asserted separately.
-    const line = raw.replace(/%[0-9A-Fa-f]{2}/g, ' ')
-    for (const m of line.matchAll(re)) {
-      out.push(Number(m[1]))
-    }
+    out.push(Number(m[1]))
   }
   return out
 }
