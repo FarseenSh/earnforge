@@ -31,6 +31,20 @@ const ROOT = new URL('..', import.meta.url).pathname
 const read = (p: string) => readFileSync(join(ROOT, p), 'utf8')
 const count = (s: string, re: RegExp) => (s.match(re) ?? []).length
 
+/**
+ * Some surfaces are local-only. `CLAUDE.md` is in `.git/info/exclude`, so it is
+ * present on a developer's machine and absent in CI, and reading it
+ * unconditionally took the whole suite down on the runner while every local run
+ * stayed green. Checked where it exists, skipped where it does not.
+ */
+function readIfPresent(p: string): string {
+  try {
+    return read(p)
+  } catch {
+    return ''
+  }
+}
+
 /** Every surface that quotes a number, and therefore has to be kept honest. */
 const SURFACES = [
   'README.md',
@@ -152,7 +166,7 @@ describe('pitfall count agrees everywhere', () => {
     expect(vault).toBeGreaterThan(0)
     expect(env).toBeGreaterThan(0)
     for (const f of SURFACES) {
-      for (const m of read(f).matchAll(
+      for (const m of readIfPresent(f).matchAll(
         /(\d+) checks(?:[^:]*): (\d+) pitfall guards (?:plus|\+) (\d+) environment/g
       )) {
         expect(`${f}: ${m[0]}`).toBe(
@@ -165,7 +179,7 @@ describe('pitfall count agrees everywhere', () => {
   it(`no surface quotes a pitfall count other than ${N}`, () => {
     const wrong: string[] = []
     for (const f of SURFACES) {
-      for (const n of claims(read(f), /pitfalls?\b/)) {
+      for (const n of claims(readIfPresent(f), /pitfalls?\b/)) {
         // Ignore ordinals inside prose like "Pitfalls 15-25 were found by...":
         // those name a range, not a total. Only totals are asserted.
         if (n !== N && n > 10) {
@@ -208,7 +222,7 @@ describe('CLI command count agrees everywhere', () => {
   it(`no surface quotes a command count other than ${N}`, () => {
     const wrong: string[] = []
     for (const f of SURFACES) {
-      for (const n of claims(read(f), /commands?\b/)) {
+      for (const n of claims(readIfPresent(f), /commands?\b/)) {
         if (n !== N && n > 5) {
           wrong.push(`${f}: claims ${n} commands, actual ${N}`)
         }
@@ -247,7 +261,7 @@ describe('MCP tool count agrees everywhere', () => {
   it(`no surface quotes a tool count other than ${N}`, () => {
     const wrong: string[] = []
     for (const f of SURFACES) {
-      for (const n of claims(read(f), /(?:MCP )?tools?\b/)) {
+      for (const n of claims(readIfPresent(f), /(?:MCP )?tools?\b/)) {
         if (n !== N && n > 5) {
           wrong.push(`${f}: claims ${n} tools, actual ${N}`)
         }
@@ -271,7 +285,7 @@ describe('fleet figures are quoted consistently', () => {
   it('all surfaces agree on the vault count', () => {
     const seen = new Map<number, string[]>()
     for (const f of FIGURE_SURFACES) {
-      for (const line of read(f).split('\n')) {
+      for (const line of readIfPresent(f).split('\n')) {
         // The drift detector's sample size is also "<n> vaults" and is a
         // configured constant, not a measurement of the fleet.
         if (/samples?\b|drift check/i.test(line)) {
@@ -294,7 +308,7 @@ describe('fleet figures are quoted consistently', () => {
   it('all surfaces agree on the protocol count', () => {
     const seen = new Set<number>()
     for (const f of FIGURE_SURFACES) {
-      for (const m of read(f).matchAll(/\b(\d{1,3}) protocols\b/g)) {
+      for (const m of readIfPresent(f).matchAll(/\b(\d{1,3}) protocols\b/g)) {
         seen.add(Number(m[1]))
       }
     }
@@ -304,7 +318,7 @@ describe('fleet figures are quoted consistently', () => {
   it('all surfaces agree on the chain count', () => {
     const seen = new Set<number>()
     for (const f of FIGURE_SURFACES) {
-      for (const m of read(f).matchAll(/\b(\d{1,3}) chains\b/g)) {
+      for (const m of readIfPresent(f).matchAll(/\b(\d{1,3}) chains\b/g)) {
         seen.add(Number(m[1]))
       }
     }

@@ -62,6 +62,88 @@ function section(name) {
   console.log(`\n\x1b[1m${name}\x1b[0m`)
 }
 
+// ── git and CI ───────────────────────────────────────────────────────
+section('git and CI')
+/**
+ * A local `pnpm verify` passing says nothing about CI. Three consecutive
+ * pushes went red on the runner while every local run was green, and none of
+ * them was noticed, because checking CI was a thing to remember rather than a
+ * thing that ran. The specific cause was a file in `.git/info/exclude` that
+ * exists locally and not on the runner, which is a whole class of difference a
+ * local run cannot see.
+ */
+try {
+  const dirty = (await run('git', ['status', '--porcelain'])).stdout.trim()
+  if (dirty) {
+    bad('working tree', `${dirty.split('\n').length} uncommitted file(s)`)
+  } else {
+    ok('working tree clean')
+  }
+
+  const ahead = (
+    await run('git', ['log', '--oneline', 'origin/main..HEAD'])
+  ).stdout.trim()
+  if (ahead) {
+    bad('unpushed commits', `${ahead.split('\n').length}; CI has not seen them`)
+  } else {
+    ok('everything pushed')
+  }
+
+  const head = (await run('git', ['rev-parse', 'HEAD'])).stdout.trim()
+  const runs = JSON.parse(
+    (
+      await run('gh', [
+        'run',
+        'list',
+        '--limit',
+        '20',
+        '--json',
+        'headSha,status,conclusion,event,displayTitle,createdAt',
+      ])
+    ).stdout
+  )
+  const forHead = runs.filter((r) => r.headSha === head && r.event === 'push')
+  if (!forHead.length) {
+    bad('CI for HEAD', 'no run found yet; it may still be queued')
+  } else if (forHead.some((r) => r.status !== 'completed')) {
+    bad('CI for HEAD', 'still running')
+  } else if (forHead.every((r) => r.conclusion === 'success')) {
+    ok('CI green on HEAD', head.slice(0, 7))
+  } else {
+    bad('CI for HEAD', `${forHead[0].conclusion}; gh run view --log-failed`)
+  }
+
+  // The daily scheduled job goes red on its own when LI.FI drifts, entirely
+  // independently of anything pushed here, and has sat red for ten days before.
+  const sched = runs.filter((r) => r.event === 'schedule')[0]
+  if (!sched) {
+    ok('scheduled drift job', 'none in the last 20 runs')
+  } else if (sched.conclusion === 'success') {
+    ok('latest scheduled drift job green')
+  } else {
+    // A red scheduled run from before the newest commit may already be fixed
+    // and simply not re-run yet: the job is daily. That is worth distinguishing
+    // from one that ran after the fix and is still red.
+    const schedTime = new Date(sched.createdAt).getTime()
+    const headTime = new Date(
+      (await run('git', ['log', '-1', '--format=%cI'])).stdout.trim()
+    ).getTime()
+    if (schedTime < headTime) {
+      ok(
+        'scheduled drift job',
+        `last run red but predates HEAD; re-checked on the next daily run`
+      )
+    } else {
+      bad(
+        'latest scheduled drift job',
+        `${sched.conclusion} after HEAD; LI.FI has drifted`
+      )
+    }
+  }
+} catch (e) {
+  bad('git/CI', String(e.message).split('\n')[0].slice(0, 80))
+}
+
 // ── npm ──────────────────────────────────────────────────────────────
 section('npm: published version matches this tree')
 for (const p of PKGS) {
