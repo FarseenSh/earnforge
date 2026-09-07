@@ -159,7 +159,7 @@ describe('EarnForge MCP Server', () => {
      * for months because nothing contradicted them. Comparing the sorted set
      * fails on an unlisted addition too, which is the half that catches drift.
      */
-    it('registers exactly the 12 documented tools', async () => {
+    it('registers exactly the 13 documented tools', async () => {
       const { tools } = await client.listTools()
 
       expect(tools.map((t) => t.name).sort()).toEqual(
@@ -172,6 +172,7 @@ describe('EarnForge MCP Server', () => {
           'get-earn-vault',
           'get-earn-vaults',
           'get-vault-risk',
+          'probe-route-flag',
           'quote-vault-deposit',
           'quote-vault-redeem',
           'run-doctor',

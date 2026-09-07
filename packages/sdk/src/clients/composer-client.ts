@@ -26,6 +26,22 @@ export interface QuoteParams {
   fromAmount: string
   slippage?: number
   fromAmountForGas?: string
+  /**
+   * Request gasless execution. The response then carries signable typed data
+   * instead of a `transactionRequest`, plus a `LIFI Gasless Relay Fee` entry
+   * in `feeCosts`. Unserved pairs are excluded rather than refused, so this
+   * can turn a working quote into a 404: probe with `probeGasless()` before
+   * wiring it into a user flow. See PITFALLS.md #25.
+   */
+  gasless?: boolean
+  /**
+   * Request a destination-side deposit after the bridge leg (Smart Deposits).
+   * Cross-chain EVM routes only, and `toToken` must equal the vault's
+   * underlying asset. Both fields are sent together or not at all: the API
+   * returns 400 if only one is present. Unlisted vaults are excluded rather
+   * than refused, so probe with `probeSmartDeposit()`. See PITFALLS.md #25.
+   */
+  destinationAction?: { kind: 'erc4626_deposit'; vault: string }
 }
 
 export class ComposerClient {
@@ -67,6 +83,17 @@ export class ComposerClient {
       }
       if (params.fromAmountForGas) {
         searchParams.set('fromAmountForGas', params.fromAmountForGas)
+      }
+      if (params.gasless) {
+        searchParams.set('gasless', 'true')
+      }
+      // Sent as a pair or not at all: the API rejects a lone kind with a 400.
+      if (params.destinationAction) {
+        searchParams.set('destinationActionKind', params.destinationAction.kind)
+        searchParams.set(
+          'destinationActionVault',
+          params.destinationAction.vault
+        )
       }
 
       const url = `${this.baseUrl}/v1/quote?${searchParams.toString()}`

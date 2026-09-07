@@ -47,7 +47,7 @@ describe('MCP protocol surface', () => {
   })
 
   describe('tools', () => {
-    it('advertises all twelve tools', async () => {
+    it('advertises all thirteen tools', async () => {
       const { tools } = await client.listTools()
       expect(tools.map((t) => t.name).sort()).toEqual([
         'check-allowance',
@@ -58,6 +58,7 @@ describe('MCP protocol surface', () => {
         'get-earn-vault',
         'get-earn-vaults',
         'get-vault-risk',
+        'probe-route-flag',
         'quote-vault-deposit',
         'quote-vault-redeem',
         'run-doctor',

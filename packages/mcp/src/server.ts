@@ -7,6 +7,8 @@ import {
   isFlagged,
   parseTvl,
   positionBalanceUsd,
+  probeGasless,
+  probeSmartDeposit,
   type StrategyPreset,
   totalPortfolioUsd,
   type Vault,
@@ -23,6 +25,7 @@ import {
   ProtocolListOut,
   QuoteOut,
   RiskOut,
+  RouteFlagProbeOut,
   VaultListOut,
   VaultSummaryOut,
 } from './output-schemas.js'
@@ -104,14 +107,23 @@ export interface CreateServerOptions {
 /**
  * Build the EarnForge MCP server.
  *
- * Twelve tools, all read-only. Nothing here signs or broadcasts. Quote tools
+ * Thirteen tools, all read-only. Nothing here signs or broadcasts. Quote tools
  * return unsigned `transactionRequest` objects for the caller's wallet.
  *
- * Overlaps LI.FI's own hosted server on the five `get-earn-*` tools and adds
- * seven it does not offer: risk scoring, allocation, diagnostics, allowance
- * checking, redeem quoting, and API drift detection. It also differs on quality
- *: LI.FI's tool descriptions still advertise versioned protocol slugs that
- * match nothing, and their server does not expose `verificationStatus`.
+ * Names deliberately mirror LI.FI's own hosted server on the five `get-earn-*`
+ * tools, so an agent that knows one knows the other, and adds eight it does not
+ * offer: risk scoring, allocation, diagnostics, allowance checking, redeem
+ * quoting, API drift detection, and route-flag probing.
+ *
+ * The overlap is not competitive at the moment. Measured on 7 Sep 2026, all
+ * five of LI.FI's `get-earn-*` tools return 404: they request
+ * `li.quest/v1/earn/*`, the base path LI.FI's own changelog records as
+ * migrated to `earn.li.fi/v1/*` in Apr 2026. Their MCP server was never
+ * updated for their own migration. That is worth stating precisely rather than
+ * smugly: it is the same class of failure this SDK exists to catch, it will be
+ * fixed at some point, and the durable differences are elsewhere. LI.FI's tool
+ * descriptions still advertise versioned protocol slugs that match nothing, and
+ * their server does not expose `verificationStatus` even when it works.
  */
 export function createServer(options: CreateServerOptions = {}): McpServer {
   const server = new McpServer({
@@ -720,6 +732,109 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         })
       } catch (err) {
         return failure(`Failed to check drift: ${(err as Error).message}`)
+      }
+    }
+  )
+
+  // ── probe-route-flag ────────────────────────────────────────────────
+
+  server.registerTool(
+    'probe-route-flag',
+    {
+      title: 'Probe a LI.FI route flag',
+      description:
+        "Check whether one of LI.FI's newer route flags is actually served for " +
+        'a pair. `gasless` returns signable typed data instead of a ' +
+        'transaction; `smart-deposit` bridges and deposits into an ERC-4626 ' +
+        'vault in one route. Both are accepted by the API but excluded rather ' +
+        'than refused when unsupported, so an unserved flag returns the same ' +
+        '404 as a pair with no liquidity. This runs the request with and ' +
+        'without the flag and reports which of the two it is. Use before ' +
+        'telling a user a vault is unreachable, and before building a flow on ' +
+        'either flag.',
+      inputSchema: z.object({
+        flag: z
+          .enum(['gasless', 'smart-deposit'])
+          .describe('Which flag to probe.'),
+        fromChain: z.number(),
+        fromToken: z.string(),
+        wallet: z
+          .string()
+          .describe('Source address. Nothing is signed or sent.'),
+        slug: z
+          .string()
+          .optional()
+          .describe(`Vault slug. Required for smart-deposit. ${SLUG_DESC}`),
+        toChain: z
+          .number()
+          .optional()
+          .describe('Defaults to the vault chain for smart-deposit.'),
+        toToken: z
+          .string()
+          .optional()
+          .describe('Defaults to the vault underlying for smart-deposit.'),
+        fromAmount: z
+          .string()
+          .optional()
+          .describe('Amount in smallest units. Defaults to 10000000.'),
+      }),
+      outputSchema: RouteFlagProbeOut,
+      annotations: readOnly,
+    },
+    async (params) => {
+      const apiKey = options.apiKey ?? process.env.LIFI_API_KEY
+      if (!apiKey) {
+        return failure(
+          'No LI.FI API key. Both probe requests would fail with an auth error, which reads exactly like an unserved flag.'
+        )
+      }
+      const fromAmount = params.fromAmount ?? '10000000'
+      try {
+        if (params.flag === 'gasless') {
+          if (params.toChain === undefined || !params.toToken) {
+            return failure(
+              'gasless needs toChain and toToken: it is a property of the pair, not of a vault.'
+            )
+          }
+          const probe = await probeGasless(
+            {
+              fromChain: params.fromChain,
+              toChain: params.toChain,
+              fromToken: params.fromToken,
+              toToken: params.toToken,
+              fromAddress: params.wallet,
+              fromAmount,
+            },
+            { apiKey }
+          )
+          return result({
+            subject: `${params.fromChain} -> ${params.toChain}`,
+            ...probe,
+          })
+        }
+
+        if (!params.slug) {
+          return failure(
+            "smart-deposit needs a vault slug: the probe asks whether that specific vault is on LI.FI's allowlist."
+          )
+        }
+        const vault = await forge.vaults.get(params.slug)
+        const probe = await probeSmartDeposit(
+          vault,
+          {
+            fromChain: params.fromChain,
+            toChain: params.toChain ?? vault.chainId,
+            fromToken: params.fromToken,
+            toToken:
+              params.toToken ?? (vault.underlyingTokens[0]?.address as string),
+            fromAddress: params.wallet,
+            fromAmount,
+          },
+          { apiKey }
+        )
+        return result({ subject: vault.name, ...probe })
+      } catch (err) {
+        return failure(`Failed to probe route flag: ${(err as Error).message}`)
       }
     }
   )

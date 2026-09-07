@@ -270,11 +270,20 @@ export function parseVaultSlug(
 /**
  * Paginated vault list. `nextCursor` is ABSENT from the JSON on the last page
  * (not null, not empty) so it must be both nullable and optional.
+ *
+ * `normalizedAt` is when LI.FI last rebuilt the fleet snapshot this page was
+ * served from. It is undocumented, and it is a different clock from the
+ * per-vault `syncedAt` and `analytics.updatedAt`: those describe one vault,
+ * this one describes the whole index. A page can carry fresh per-vault
+ * timestamps while the index behind it is hours old, so staleness has to be
+ * judged on both. Optional because it post-dates the schema and nothing
+ * guarantees LI.FI keeps sending it.
  */
 export const VaultListResponseSchema = z.object({
   data: z.array(VaultSchema),
   nextCursor: z.string().nullable().optional(),
   total: z.number(),
+  normalizedAt: z.string().optional(),
 })
 
 export type VaultListResponse = z.infer<typeof VaultListResponseSchema>

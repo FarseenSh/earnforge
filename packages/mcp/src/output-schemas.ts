@@ -220,3 +220,27 @@ export const DriftOut = z.object({
     })
   ),
 })
+
+/**
+ * Verdict of a route-flag probe.
+ *
+ * `flagExcluded` and `routeUnavailable` are the two readings of an identical
+ * 404, so both fields that separate them are returned rather than just the
+ * verdict: an agent that only sees "no route" will otherwise tell the user the
+ * vault is unreachable when the pair is perfectly fine.
+ */
+export const RouteFlagProbeOut = z.object({
+  flag: z.string(),
+  subject: z.string(),
+  verdict: z.enum([
+    'supported',
+    'flag-excluded',
+    'route-unavailable',
+    'rejected',
+  ]),
+  baselineRoutes: z.boolean(),
+  flaggedRoutes: z.boolean(),
+  status: z.number(),
+  detail: z.string(),
+  checkedAt: z.string(),
+})

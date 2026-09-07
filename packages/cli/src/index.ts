@@ -10,6 +10,9 @@ import {
   fetchWalletBalances,
   MAX_UINT256,
   parseTvl,
+  probeGasless,
+  probeSmartDeposit,
+  type RouteFlagProbe,
   type StrategyPreset,
   type Vault,
 } from '@earnforge/sdk'
@@ -848,7 +851,7 @@ program
 
 program
   .command('doctor')
-  .description('Run 18-pitfall diagnostics on a vault or environment')
+  .description('Run 18 pitfall checks on a vault, or 4 environment checks')
   .option('--vault <slug>', 'Vault slug to check')
   .option('--env', 'Run environment checks only', false)
   .option('--json', 'Output as JSON', false)
@@ -1407,3 +1410,119 @@ program
       }
     }
   )
+
+// ── probe ──
+
+program
+  .command('probe')
+  .description(
+    'Check whether a LI.FI route flag is actually served for a pair (gasless, smart-deposit)'
+  )
+  .requiredOption('--flag <name>', 'gasless | smart-deposit')
+  .requiredOption('--from-chain <id>', 'Source chain ID', parseInt)
+  .requiredOption('--from-token <addr>', 'Source token address')
+  .requiredOption('--wallet <addr>', 'Wallet address')
+  .option('--vault <slug>', 'Vault slug (required for smart-deposit)')
+  .option(
+    '--to-chain <id>',
+    'Destination chain ID (defaults to the vault chain)',
+    parseInt
+  )
+  .option(
+    '--to-token <addr>',
+    'Destination token (defaults to the vault underlying)'
+  )
+  .option('--amount <raw>', 'Amount in smallest units', '10000000')
+  .option('--json', 'Output as JSON', false)
+  .action(async (opts) => {
+    const spinner = ora('Probing route flag...').start()
+    try {
+      const apiKey = process.env.LIFI_API_KEY
+      if (!apiKey) {
+        throw new Error(
+          'LIFI_API_KEY is not set. Both probe requests would fail with an auth error, which reads exactly like an unserved flag.'
+        )
+      }
+
+      let probe: RouteFlagProbe
+      let subject: string
+
+      if (opts.flag === 'gasless') {
+        if (!opts.toChain || !opts.toToken) {
+          throw new Error(
+            'gasless needs --to-chain and --to-token: it is a property of the pair, not of a vault.'
+          )
+        }
+        subject = `${opts.fromChain} -> ${opts.toChain}`
+        probe = await probeGasless(
+          {
+            fromChain: opts.fromChain,
+            toChain: opts.toChain,
+            fromToken: opts.fromToken,
+            toToken: opts.toToken,
+            fromAddress: opts.wallet,
+            fromAmount: opts.amount,
+          },
+          { apiKey }
+        )
+      } else if (opts.flag === 'smart-deposit') {
+        if (!opts.vault) {
+          throw new Error(
+            "smart-deposit needs --vault: the probe asks whether that specific vault is on LI.FI's allowlist."
+          )
+        }
+        const forge = getForge()
+        const vault = await forge.vaults.get(opts.vault)
+        subject = vault.name
+        probe = await probeSmartDeposit(
+          vault,
+          {
+            fromChain: opts.fromChain,
+            toChain: opts.toChain ?? vault.chainId,
+            fromToken: opts.fromToken,
+            toToken:
+              opts.toToken ?? (vault.underlyingTokens[0]?.address as string),
+            fromAddress: opts.wallet,
+            fromAmount: opts.amount,
+          },
+          { apiKey }
+        )
+      } else {
+        throw new Error(
+          `Unknown flag "${opts.flag}". Supported: gasless, smart-deposit.`
+        )
+      }
+
+      spinner.stop()
+
+      // A flag that is not served is a fact about LI.FI's rollout, not a
+      // failure of this command, so the exit code stays 0. Only `rejected`
+      // means the caller built a request the API refuses.
+      if (probe.verdict === 'rejected') {
+        process.exitCode = 1
+      }
+
+      outputResult({ subject, ...probe }, opts.json, () => {
+        const colour =
+          probe.verdict === 'supported'
+            ? chalk.green
+            : probe.verdict === 'rejected'
+              ? chalk.red
+              : chalk.yellow
+        return [
+          '',
+          chalk.bold(`  ${probe.flag}  ${subject}`),
+          '',
+          `  Verdict:   ${colour(probe.verdict)}`,
+          `  Baseline:  ${probe.baselineRoutes ? chalk.green('routes') : chalk.dim('no route')}`,
+          `  Flagged:   ${probe.flaggedRoutes ? chalk.green('routes') : chalk.dim('no route')}`,
+          `  Status:    ${probe.status}`,
+          '',
+          `  ${chalk.dim(probe.detail)}`,
+          '',
+        ].join('\n')
+      })
+    } catch (err) {
+      fail(spinner, 'Probe failed', err)
+    }
+  })

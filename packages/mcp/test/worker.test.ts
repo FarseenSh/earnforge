@@ -167,8 +167,8 @@ describe('MCP 2026-07-28 over the Worker', () => {
     return Array.isArray(value) ? value : []
   }
 
-  it('serves all twelve tools and the skill resources on the modern wire', async () => {
-    expect(listOf(await rpc('tools/list'), 'tools')).toHaveLength(12)
+  it('serves all thirteen tools and the skill resources on the modern wire', async () => {
+    expect(listOf(await rpc('tools/list'), 'tools')).toHaveLength(13)
 
     const resources = listOf(await rpc('resources/list'), 'resources')
     expect(resources.map((r) => (r as { uri: string }).uri)).toContain(
@@ -181,7 +181,7 @@ describe('MCP 2026-07-28 over the Worker', () => {
     // per-connection state survived, the second call would need the first.
     const a = listOf(await rpc('tools/list'), 'tools')
     const b = listOf(await rpc('tools/list'), 'tools')
-    expect(a).toHaveLength(12)
+    expect(a).toHaveLength(13)
     expect(b).toHaveLength(a.length)
   })
 })

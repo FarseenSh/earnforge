@@ -83,6 +83,19 @@ export {
   riskLabel,
   riskScore,
 } from './risk-scorer.js'
+export {
+  assertDestinationActionPreserved,
+  DESTINATION_ACTION_KINDS,
+  type DestinationAction,
+  type DestinationActionKind,
+  type ProbeParams,
+  probeGasless,
+  probeSmartDeposit,
+  type RouteFlag,
+  type RouteFlagProbe,
+  type RouteFlagProbeOptions,
+  type RouteFlagVerdict,
+} from './route-flags.js'
 // ── Re-exports ──
 export * from './schemas/index.js'
 export { getBestApy, parseTvl, type TvlParsed } from './schemas/vault.js'
