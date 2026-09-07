@@ -33,6 +33,7 @@ LI.FI's API.
 | 22 | **The docs contradict the API** in six places | 100x APY error if you follow the spec | Schemas generated from live responses |
 | 23 | **Slug format changed** to `protocol:chainId:_:address` | Mis-parsed slugs and cursors | `parseVaultSlug()` accepts both forms |
 | 24 | **`underlyingTokens` entries can be partial**: address only, no `symbol`/`decimals` | One vault aborts the whole fleet walk | Both fields optional on the token schema |
+| 25 | **New route flags fail by exclusion, not error** (`gasless`, Smart Deposits) | An unserved flag looks identical to a dead pair | `earnforge probe` runs the request both ways |
 
 ## The ones that will bite hardest
 
@@ -49,9 +50,28 @@ that genuinely has no vaults. Never hardcode a slug: resolve via
 `minTvlUsd` returned all 744 vaults instead of 48: a "$100M+ TVL" filter that
 silently returns sub-$20k dust.
 
-**`verificationStatus` is documented nowhere** and flags 71 of 744 vaults, mostly
-for `zero_apy` and twice for `apy_outlier`. Sort by APY without checking it and a
+**`verificationStatus` is documented nowhere** and flagged 71 of 744 vaults on
+7 Sep 2026, all for `zero_apy` (the `apy_outlier` reason has appeared and gone
+before, so do not assume the set is fixed). Sort by APY without checking it and a
 flagged vault lands at the top of the list.
+
+## A flag that is not served looks exactly like a dead route
+
+LI.FI added `gasless` and Smart Deposits (`destinationActionKind` +
+`destinationActionVault`, which bridge and then deposit into an ERC-4626 vault in
+one route) in Aug/Sep 2026. Both are accepted by the API. Neither errors when it
+cannot be honoured: the route is dropped instead.
+
+    GET  /v1/quote            -> 404 "No available quotes for the requested transfer"
+    POST /v1/advanced/routes  -> 200 with routes: []
+
+Identical to a pair with no liquidity. **Do not tell the user a vault is
+unreachable on the strength of that 404**, and do not quietly retry without the
+flag: that succeeds while abandoning what they asked for. Run
+`earnforge probe --flag gasless|smart-deposit` instead, which sends the request
+both ways and returns `supported`, `flag-excluded`, `route-unavailable`, or
+`rejected`. A `flag-excluded` verdict means *not yet*, not *broken*: on
+7 Sep 2026 both flags served zero routes everywhere tested.
 
 ## Cross-chain is not atomic
 

@@ -90,7 +90,7 @@ It is the same Worker, on your own account and quota.
 
 ## Tools
 
-12 tools, all read-only. Nothing signs or broadcasts. Quote tools return
+13 tools, all read-only. Nothing signs or broadcasts. Quote tools return
 unsigned `transactionRequest` objects for the caller's wallet.
 
 | Tool | LI.FI's hosted server | Here |

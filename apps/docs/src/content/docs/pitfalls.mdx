@@ -1,13 +1,13 @@
 ---
-title: 24 Pitfalls Guide
+title: 25 Pitfalls Guide
 description: Every production pitfall in the LI.FI Earn API, how the SDK defeats each one, and which test verifies it.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-The LI.FI Earn API has 24 known pitfalls that cause failures, data corruption, or silent
-bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pitfalls 15-24 were
-found by probing the live API: several of them only after they had already broken something
+The LI.FI Earn API has 25 known pitfalls that cause failures, data corruption, or silent
+bugs. Pitfalls 1-14 originate from LI.FI's official integration guide. Pitfalls 15-25 were
+found by probing the live API and by reading LI.FI's own git history: several of them only after they had already broken something
 in production.
 
 **EarnForge eliminates every single one at the SDK layer.** Downstream surfaces (CLI, React,
@@ -225,6 +225,21 @@ token -- **not** the underlying USDC/WETH address.
 | **SDK Mitigation** | `symbol` and `decimals` are optional on the token schema. Consumers that need them resolve on-chain or skip the vault, rather than the whole fleet iteration dying on one entry. |
 | **Test** | `pitfall-24-partial-underlying-tokens.test.ts` |
 
+### Pitfall 25 -- New route flags fail by exclusion, not by error
+
+| | |
+|---|---|
+| **Root Cause** | `@lifi/types` 18.4.0 added `gasless`, `amountFlexible`, and Smart Deposits (`destinationActionKind` + `destinationActionVault`, which bridge and then deposit into an ERC-4626 vault in one route). All three are accepted and validated by the live API. None errors when it cannot be honoured: the route is **excluded** instead. `GET /v1/quote` answers `404 No available quotes for the requested transfer` and `POST /v1/advanced/routes` answers `200` with `routes: []`, which is exactly what a pair with no liquidity looks like. A caller cannot tell "this flag is not served here" from "this pair is dead", and the instinctive responses all fail: retrying does nothing, widening slippage does nothing, and dropping the flag *succeeds* while silently abandoning the behaviour the user asked for. |
+| **SDK Mitigation** | `probeGasless()` and `probeSmartDeposit()` run the request with and without the flag and return a verdict of `supported`, `flag-excluded`, `route-unavailable`, or `rejected`. They deliberately never fall back. Two guards refuse to probe at all when the answer would be a false negative: a `toToken` that is not the vault's underlying, and a same-chain route, each return the same 404 as an unlisted vault. `assertDestinationActionPreserved()` covers the round-trip half, where a step posted back without its `destinationAction` delivers the raw token instead of vault shares. |
+| **Test** | `pitfall-25-route-flags-fail-by-exclusion.test.ts` |
+
+<Aside type="caution">
+Measured 7 Sep 2026: `gasless=true` turned a working `200` into a `404` on every pair tried,
+and Smart Deposits returned zero routes across 25 vaults on multiple chains. Smart Deposits is
+gated on a curated allowlist LI.FI has not published, so a probe is the only way to know. Treat
+a `flag-excluded` verdict as **not yet**, not as broken.
+</Aside>
+
 ---
 
 ## Summary Table
@@ -254,13 +269,14 @@ token -- **not** the underlying USDC/WETH address.
 | 21 | Undocumented `verificationStatus` | Weighted risk dimension; `suggest()` excludes flagged |
 | 22 | Docs contradict the API | `detectDrift()` diffs live vs spec vs schema, daily in CI |
 | 23 | Slug format changed | `parseVaultSlug()` accepts both forms |
-| 24 | Partial underlyingTokens | `symbol` and `decimals` optional; one vault cannot break the fleet |
+| 24 | Partial underlyingTokens | `symbol` and `decimals` optional; guard retained after LI.FI fixed it upstream |
+| 25 | Route flags fail by exclusion | `probeGasless()` / `probeSmartDeposit()` differential probe; never falls back |
 
 ---
 
 ## Running Pitfall Tests
 
-All 24 tests are individually named and live under `packages/sdk/test/pitfalls/`:
+All 25 tests are individually named and live under `packages/sdk/test/pitfalls/`:
 
 ```bash
 # Run all SDK tests (including pitfalls)

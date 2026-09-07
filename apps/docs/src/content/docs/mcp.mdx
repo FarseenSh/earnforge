@@ -1,11 +1,11 @@
 ---
 title: MCP Server
-description: 12 MCP tools for Claude Desktop, Cursor, Windsurf, and any MCP-capable client.
+description: 13 MCP tools for Claude Desktop, Cursor, Windsurf, and any MCP-capable client.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-`@earnforge/mcp` exposes 12 Earn-native MCP (Model Context Protocol) tools. Any LLM client
+`@earnforge/mcp` exposes 13 Earn-native MCP (Model Context Protocol) tools. Any LLM client
 that speaks MCP -- Claude Desktop, Cursor, Windsurf, Continue, and others -- can discover and
 call these tools to query vaults, compute risk, build deposit quotes, and more.
 
@@ -42,7 +42,7 @@ protocol revision. Point any MCP client at it:
 }
 ```
 
-All twelve tools, plus the Agent Skill served as resources under
+All thirteen tools, plus the Agent Skill served as resources under
 `skill://earnforge/*`, so one connection gives an agent the tools *and* the
 instructions for using them.
 
@@ -282,12 +282,42 @@ Run preflight/pitfall checks on a vault before depositing.
 
 ---
 
+### probe-route-flag
+
+Check whether one of LI.FI's newer route flags is actually served for a pair.
+
+`gasless` and `smart-deposit` are both accepted by the live API and both fail by **exclusion**
+rather than error: an unsupported flag drops the route and returns the same 404 as a pair with
+no liquidity. This tool runs the request with and without the flag and reports which it is.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `flag` | string | yes | `gasless` or `smart-deposit` |
+| `fromChain` | number | yes | Source chain ID |
+| `fromToken` | string | yes | Source token address |
+| `wallet` | string | yes | Source address. Nothing is signed or sent |
+| `slug` | string | no | Vault slug. Required for `smart-deposit` |
+| `toChain` | number | no | Defaults to the vault chain |
+| `toToken` | string | no | Defaults to the vault underlying |
+| `fromAmount` | string | no | Smallest units. Default `10000000` |
+
+Returns a verdict of `supported`, `flag-excluded`, `route-unavailable`, or `rejected`, plus the
+`baselineRoutes` / `flaggedRoutes` booleans that separate the middle two. An agent that sees
+only "no route" will otherwise tell the user a vault is unreachable when the pair is fine.
+
+**Example prompt:** "Can I bridge from Arbitrum straight into vault morpho:8453:_:0xbeef... in
+one transaction, or is that not supported yet?"
+
+---
+
 ## How It Works
 
 The MCP server uses the `@modelcontextprotocol/sdk` stdio transport. When started, it:
 
 1. Creates an `EarnForge` SDK instance (with caching: 60s TTL, 200 entries)
-2. Registers all 12 tools with Zod-validated parameter schemas
+2. Registers all 13 tools with Zod-validated parameter schemas
 3. Listens on stdin/stdout for MCP JSON-RPC messages
 
 The server name is `earnforge-mcp` and version `0.1.0`. Clients auto-discover the

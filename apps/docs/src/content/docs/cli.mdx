@@ -1,6 +1,6 @@
 ---
 title: CLI Reference
-description: Complete reference for @earnforge/cli -- 19 commands for the LI.FI Earn API.
+description: Complete reference for @earnforge/cli -- 20 commands for the LI.FI Earn API.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
@@ -555,6 +555,73 @@ earnforge apy-history morpho:8453:_:0xbeef0e0834849acc03f0089f01f4f1eeb06873c9
 
 The Earn API exposes only current and trailing APY, so history comes from DeFiLlama
 via a protocol-slug mapping.
+
+---
+
+### earnforge probe
+
+Check whether one of LI.FI's newer route flags is actually served for a given pair.
+
+`gasless` and Smart Deposits (`destinationAction`, which bridges and then deposits into an
+ERC-4626 vault in one route) are both accepted by the live API and both fail by **exclusion**
+rather than by error: when a flag cannot be honoured the route is dropped, and the response
+is indistinguishable from a pair with no liquidity. This command runs the request with and
+without the flag and tells you which of the two you are looking at.
+
+```bash
+# is gasless served for this pair?
+earnforge probe --flag gasless \
+  --from-chain 42161 --to-chain 8453 \
+  --from-token 0xaf88d065e77c8cC2239327C5EDb3A432268e5831 \
+  --to-token 0x833589fcd6edb6e08f4c7c32d4f71b54bda02913 \
+  --wallet 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+
+# is this vault on LI.FI's Smart Deposits allowlist?
+earnforge probe --flag smart-deposit --vault morpho:8453:_:0xbeef0e08... \
+  --from-chain 42161 --from-token 0xaf88d065e77c8cC2239327C5EDb3A432268e5831 \
+  --wallet 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+```
+
+```
+  gasless  42161 -> 8453
+
+  Verdict:   flag-excluded
+  Baseline:  routes
+  Flagged:   no route
+  Status:    404
+```
+
+| Option | Description |
+|--------|-------------|
+| `--flag <name>` | `gasless` or `smart-deposit` (required) |
+| `--from-chain <id>` | Source chain ID (required) |
+| `--from-token <addr>` | Source token address (required) |
+| `--wallet <addr>` | Source address. Nothing is signed or sent (required) |
+| `--vault <slug>` | Vault slug. Required for `smart-deposit` |
+| `--to-chain <id>` | Destination chain. Defaults to the vault chain |
+| `--to-token <addr>` | Destination token. Defaults to the vault underlying |
+| `--amount <raw>` | Amount in smallest units. Default `10000000` |
+| `--json` | Output as JSON |
+
+**Verdicts**
+
+| Verdict | Meaning |
+|---------|---------|
+| `supported` | The flag is served for this pair. |
+| `flag-excluded` | The pair routes fine without the flag, and not with it. The flag is the cause. Means *not yet*, not *broken*. |
+| `route-unavailable` | Neither request routes. The pair is dead and the flag is untested. |
+| `rejected` | The API refused the request on shape, before routing. That is a caller bug. |
+
+`flag-excluded` and `route-unavailable` are the same HTTP status and opposite conclusions,
+which is the entire reason this command exists. It reports rather than falling back: retrying
+without the flag succeeds while silently abandoning what you asked for. Exit code stays `0`
+for an unserved flag, and `1` only for `rejected`.
+
+The command refuses to probe two cases that would produce a false negative, because each
+returns the same 404 as an unlisted vault: a `--to-token` that is not the vault's underlying,
+and a same-chain route (destination actions are cross-chain EVM only).
+
+See [Pitfall 25](/pitfalls/#pitfall-25----new-route-flags-fail-by-exclusion-not-by-error).
 
 ---
 

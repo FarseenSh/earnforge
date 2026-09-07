@@ -152,8 +152,38 @@ things you may have already done correctly and must now undo:
 3. Vault slugs used to be `{chainId}-{address}`. They are now
    `{protocol}:{chainId}:_:{address}`.
 
-All 23 are documented at https://earnforge-docs.vercel.app/pitfalls/ with a
+All 25 are documented at https://earnforge-docs.vercel.app/pitfalls/ with a
 regression test each.
+
+## New LI.FI route flags fail by exclusion, not by error
+
+`@lifi/types` 18.4.0 added three optional request flags, all live and all
+accepted by the API:
+
+- `destinationActionKind=erc4626_deposit` + `destinationActionVault=0x...`
+  (Smart Deposits: bridge, then deposit into an ERC-4626 vault, in one route)
+- `gasless=true` (signable typed data instead of a transactionRequest)
+- `amountFlexible=true`
+
+None of them errors when it cannot be honoured. The route is **excluded**:
+
+    GET  /v1/quote            -> 404 "No available quotes for the requested transfer"
+    POST /v1/advanced/routes  -> 200 with routes: []
+
+That is byte-identical to a pair with no liquidity, so a caller cannot tell
+"this flag is not served here" from "this pair is dead". Measured 7 Sep 2026:
+`gasless=true` turned a working 200 into a 404 on every pair tested, and Smart
+Deposits returned zero routes across 25 vaults on multiple chains (it is gated on
+a curated allowlist LI.FI has not published).
+
+Constraints worth knowing before you blame the allowlist: Smart Deposits is
+cross-chain EVM only, `toToken` must equal the vault underlying, and sending
+`destinationActionKind` without `destinationActionVault` is a 400.
+
+If you are writing an agent: do not report a vault as unreachable on the strength
+of that 404, and do not retry without the flag to "make it work" - that succeeds
+while silently dropping what the user asked for. Send the request both ways and
+compare, which is what `earnforge probe` and the `probe-route-flag` MCP tool do.
 
 ## EarnForge SDK
 
@@ -225,6 +255,7 @@ earnforge watch --vault morpho:8453:_:0xbeef... --json
 earnforge chains --json
 earnforge protocols --json
 earnforge doctor --vault morpho:8453:_:0xbeef... --json
+earnforge probe --flag smart-deposit --vault morpho:8453:_:0xbeef... --from-chain 42161 --from-token 0xaf88... --wallet 0x... --json
 earnforge init my-yield-app
 ```
 
@@ -234,10 +265,11 @@ Hosted, zero install, MCP revision 2026-07-28:
 
   https://earnforge-mcp.papermind-ai.workers.dev/mcp
 
-12 tools, each with an outputSchema and validated structuredContent:
+13 tools, each with an outputSchema and validated structuredContent:
 get-earn-vaults, get-earn-vault, get-earn-chains, get-earn-protocols,
 get-earn-portfolio, get-vault-risk, quote-vault-deposit, quote-vault-redeem,
-check-allowance, suggest-allocation, run-doctor, check-api-drift.
+check-allowance, suggest-allocation, run-doctor, check-api-drift,
+probe-route-flag.
 
 Every tool is annotated readOnlyHint / destructiveHint:false: quote tools
 return unsigned transactions and nothing here signs or broadcasts. Pass your own

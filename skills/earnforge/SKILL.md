@@ -112,6 +112,16 @@ All commands accept `--json` for machine-readable output.
   first. Exits non-zero and returns revert diagnostics if it would fail. Report
   that to the user rather than presenting the transaction as ready.
 
+- `earnforge probe --flag gasless|smart-deposit --from-chain <id> --from-token 0x... --wallet 0x... [--vault <slug>] [--to-chain <id>] [--to-token 0x...] [--json]`
+  Check whether one of LI.FI's newer route flags is actually served for a pair.
+  `gasless` and Smart Deposits (bridge and deposit into a vault in one route) are
+  both accepted by the API and both fail by **exclusion**: an unsupported flag
+  drops the route and returns the same 404 as a pair with no liquidity. This runs
+  the request with and without the flag and returns `supported`,
+  `flag-excluded`, `route-unavailable`, or `rejected`. Use it before telling a
+  user a vault is unreachable. Never retry without the flag to "make it work":
+  that succeeds while silently dropping what they asked for.
+
 ### Reference Data
 
 - `earnforge chains [--json]`: chains with at least one indexed vault
