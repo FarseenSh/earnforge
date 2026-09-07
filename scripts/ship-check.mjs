@@ -99,6 +99,98 @@ for (const p of PKGS) {
 }
 ok('workspace protocol intact in every manifest')
 
+// ── published content, not just the published version ────────────────
+section('published content matches this tree')
+/**
+ * Matching version numbers do not mean matching content.
+ *
+ * `@earnforge/skill` copies `skills/earnforge/**` in at prepack, and
+ * `@earnforge/mcp` embeds the same files in its bundle at build time. Editing
+ * those files after a release leaves both packages published at the current
+ * version while shipping the previous content, and a version comparison reports
+ * that as fine. It already happened once: `earnforge compare` was added to
+ * SKILL.md after 1.2.0 went out, so both packages advertised a command their
+ * copy did not document.
+ */
+const SKILL_FILES = [
+  'SKILL.md',
+  'references/pitfalls.md',
+  'references/examples.md',
+  'references/strategies.md',
+  'references/chains.md',
+  'references/protocols.md',
+]
+const tmp = `${ROOT}node_modules/.cache/ship-check`
+try {
+  await run('rm', ['-rf', tmp])
+  await run('mkdir', ['-p', tmp])
+  await run('npm', ['pack', '@earnforge/skill@latest', '--silent'], {
+    cwd: tmp,
+  })
+  const [tgz] = (await run('sh', ['-c', `ls ${tmp}/*.tgz`])).stdout
+    .trim()
+    .split('\n')
+  await run('tar', ['xzf', tgz, '-C', tmp])
+
+  const drifted = []
+  for (const f of SKILL_FILES) {
+    const mine = read(`skills/earnforge/${f}`).trim()
+    let theirs = null
+    try {
+      theirs = readFileSync(`${tmp}/package/${f}`, 'utf8').trim()
+    } catch {
+      drifted.push(`${f} (absent)`)
+      continue
+    }
+    if (mine !== theirs) drifted.push(f)
+  }
+  if (drifted.length) {
+    bad(
+      '@earnforge/skill content',
+      `stale: ${drifted.join(', ')}; needs a republish`
+    )
+  } else {
+    ok(
+      '@earnforge/skill ships the current skill files',
+      `${SKILL_FILES.length}`
+    )
+  }
+
+  // The mcp bundle embeds the same content, so it goes stale for the same
+  // reason and independently of its own source changing.
+  await run('npm', ['pack', '@earnforge/mcp@latest', '--silent'], { cwd: tmp })
+  const [mtgz] = (
+    await run('sh', ['-c', `ls ${tmp}/earnforge-mcp-*.tgz`])
+  ).stdout
+    .trim()
+    .split('\n')
+  await run('tar', ['xzf', mtgz, '-C', tmp])
+  const bundle = (
+    await run('sh', ['-c', `cat ${tmp}/package/dist/esm/*.mjs`], {
+      maxBuffer: 64 * 1024 * 1024,
+    })
+  ).stdout
+  // Sample distinctive lines rather than diffing: the content is minified and
+  // string-escaped inside the bundle, so an exact compare is not meaningful.
+  const probes = read('skills/earnforge/SKILL.md')
+    .split('\n')
+    .filter(
+      (l) => l.trim().length > 40 && !l.includes('`') && !l.includes('\\')
+    )
+    .slice(-6)
+  const missing = probes.filter((l) => !bundle.includes(l.trim()))
+  if (missing.length) {
+    bad(
+      '@earnforge/mcp embedded skill',
+      `stale; run pnpm --filter @earnforge/mcp generate, rebuild, republish`
+    )
+  } else {
+    ok('@earnforge/mcp embeds the current skill content')
+  }
+} catch (e) {
+  bad('published content check', String(e.message).slice(0, 80))
+}
+
 // ── the built binary ─────────────────────────────────────────────────
 section('built CLI binary: every command emits parseable JSON')
 const BIN = `${ROOT}packages/cli/dist/esm/bin.mjs`
