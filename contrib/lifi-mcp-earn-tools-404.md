@@ -90,7 +90,7 @@ survive a base-URL fix.
    left in July and came back in September.
 
 2. **`verificationStatus` is not surfaced.** Every vault carries
-   `verificationStatus` and `verificationStatusBreakdown`, and 71 of 744 vaults
+   `verificationStatus` and `verificationStatusBreakdown`, and 72 of 744 vaults
    were `flagged` on 7 Sep 2026, all for `zero_apy`. Neither field appears in the
    OpenAPI spec or in the MCP output. An agent sorting by APY will rank flagged
    vaults and recommend depositing into them, which is the case the flag exists

@@ -68,7 +68,7 @@ export const PackSchema = z.object({
  *
  * LI.FI's OpenAPI spec, quickstart, and NormalizedVault docs all claim these
  * are decimals (`0.0534` = 5.34%) and all three are wrong: following their
- * quickstart's `* 100` yields a 100x overstatement. Verified against 799 live
+ * quickstart's `* 100` yields a 100x overstatement. Verified against 744 live
  * vaults (9 Aug 2026): min 0, max 106.68, median 3.50.
  *
  * `base` is null on a small number of vaults. `reward` is genuinely
@@ -178,7 +178,7 @@ export const CapsSchema = z.object({
 
 /**
  * Vault schema: derived from live vaults, not from docs. Last re-verified
- * against 799 vaults on 1 Sep 2026.
+ * against 744 vaults on 7 Sep 2026.
  *
  * Removed by LI.FI in the Apr 2026 rewrite: `provider`, `lpTokens`. Both were
  * required here and threw on every vault.

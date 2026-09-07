@@ -149,7 +149,7 @@ Every vault carries `verificationStatus` and `verificationStatusBreakdown`.
 Neither appears in the OpenAPI spec, the changelog, the quickstart, or the
 NormalizedVault reference, and LI.FI's hosted MCP server does not expose them.
 
-They are not cosmetic. **71 of 744 vaults (9.4%)** are `flagged`:
+They are not cosmetic. **72 of 744 vaults (9.7%)** are `flagged`:
 
 | Reason | Count |
 |---|---|

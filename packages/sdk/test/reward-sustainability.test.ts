@@ -141,7 +141,7 @@ describe('rewardSustainability', () => {
   })
 
   it('handles a zero-APY vault without dividing by zero', () => {
-    // 73 of 799 vaults are flagged specifically for zero_apy.
+    // 72 of 744 vaults are flagged, every one of them for zero_apy.
     const r = rewardSustainability(withApy({ base: 0, total: 0, reward: 0 }))
     expect(Number.isFinite(r.score)).toBe(true)
     expect(r.rewardShare).toBe(0)

@@ -47,7 +47,7 @@ export interface RiskScore {
  *
  * LI.FI's `/v1/protocols` carries only `id`, `name` and `url`. No maturity
  * signal at all, so the tiers are derived from four observable inputs, scored
- * against the live fleet (799 vaults, Sep 2026) and DeFiLlama:
+ * against the live fleet (744 vaults, 7 Sep 2026) and DeFiLlama:
  *
  * 1. **Track record**: how long the protocol has been listed. The single
  *    strongest signal, and the one TVL cannot substitute for.

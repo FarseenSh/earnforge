@@ -45,6 +45,42 @@ function readIfPresent(p: string): string {
   }
 }
 
+/**
+ * Every shipped `.ts` under each package's `src` and `test` directories.
+ *
+ * The documentation surfaces above were the whole list once, and a review found
+ * eight `799 vaults` claims living in code comments — including the published
+ * rationale for the protocol risk tiers in `risk-scorer.ts` — while every
+ * markdown surface said `744`. Both were dated "Sep 2026". The gate built to
+ * stop stale figures could not see the stale figures in the code it ships, so
+ * it now reads the code too. Comments are documentation that happens to
+ * compile.
+ */
+function codeSurfaces(): string[] {
+  const out: string[] = []
+  const walk = (rel: string) => {
+    let entries: ReturnType<typeof readdirSync>
+    try {
+      entries = readdirSync(join(ROOT, rel), { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const e of entries) {
+      const next = `${rel}/${e.name}`
+      if (e.isDirectory()) {
+        if (e.name !== 'node_modules' && e.name !== 'dist') walk(next)
+      } else if (e.name.endsWith('.ts') || e.name.endsWith('.tsx')) {
+        out.push(next)
+      }
+    }
+  }
+  for (const pkg of readdirSync(join(ROOT, 'packages'))) {
+    walk(`packages/${pkg}/src`)
+    walk(`packages/${pkg}/test`)
+  }
+  return out
+}
+
 /** Every surface that quotes a number, and therefore has to be kept honest. */
 const SURFACES = [
   'README.md',
@@ -278,9 +314,22 @@ describe('fleet figures are quoted consistently', () => {
    * one quotes the *same* one: a sweep that updates four of five places is the
    * failure mode, and it has happened repeatedly.
    */
-  const FIGURE_SURFACES = SURFACES.filter(
-    (f) => !f.endsWith('.mjs') && f !== 'CLAUDE.md'
-  )
+  const FIGURE_SURFACES = [
+    ...SURFACES.filter((f) => !f.endsWith('.mjs') && f !== 'CLAUDE.md'),
+    ...codeSurfaces(),
+  ]
+
+  /**
+   * Below this, a "<n> vaults" claim is a subset rather than the fleet.
+   *
+   * The repo legitimately quotes scoped counts — "Base is ~115 vaults",
+   * "160 of Morpho's 210", "the 510 vaults without rewards" — and comparing
+   * those against the fleet size is noise, not a finding. The fleet has run
+   * 700-800 all year and the live suite fails long before it could approach
+   * this floor, so the split is unambiguous today. If the fleet ever really
+   * falls under 600, this constant is the thing to revisit.
+   */
+  const FLEET_SCALE = 600
 
   it('all surfaces agree on the vault count', () => {
     const seen = new Map<number, string[]>()
@@ -293,6 +342,9 @@ describe('fleet figures are quoted consistently', () => {
         }
         for (const m of line.matchAll(/\b(\d{3,4}) (?:live )?vaults\b/g)) {
           const n = Number(m[1])
+          if (n < FLEET_SCALE) {
+            continue
+          }
           seen.set(n, [...(seen.get(n) ?? []), f])
         }
       }
@@ -316,13 +368,25 @@ describe('fleet figures are quoted consistently', () => {
   })
 
   it('all surfaces agree on the chain count', () => {
-    const seen = new Set<number>()
+    const seen = new Map<number, string[]>()
     for (const f of FIGURE_SURFACES) {
-      for (const m of readIfPresent(f).matchAll(/\b(\d{1,3}) chains\b/g)) {
-        seen.add(Number(m[1]))
+      for (const line of readIfPresent(f).split('\n')) {
+        for (const m of line.matchAll(/\b(\d{1,3}) chains\b/g)) {
+          const n = Number(m[1])
+          // Same split as the vault count: the protocol tier table describes
+          // individual protocols as spanning "3 chains" or "4 chains", which
+          // says nothing about how many chains the Earn API indexes.
+          if (n < 10) {
+            continue
+          }
+          seen.set(n, [...(seen.get(n) ?? []), f])
+        }
       }
     }
-    expect([...seen].length).toBeLessThanOrEqual(1)
+    const disagreement = [...seen.entries()].map(
+      ([n, files]) => `${n}: ${[...new Set(files)].join(', ')}`
+    )
+    expect(disagreement.length).toBeLessThanOrEqual(1)
   })
 })
 

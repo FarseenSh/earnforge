@@ -113,7 +113,7 @@ execution duration), and action details.
 - description: OPTIONAL, and usually absent: roughly three quarters of vaults omit it.
 - verificationStatus: "none" | "flagged". UNDOCUMENTED. It appears in no spec,
   changelog or quickstart, and LI.FI's own hosted MCP server does not expose it.
-  Roughly 10% of vaults are flagged (71 of 744 when this was written). Sort
+  Roughly 10% of vaults are flagged (72 of 744 when this was written). Sort
   by APY without checking it and a flagged vault lands at the top of your list.
 - verificationStatusBreakdown: array of { reason, result }. Reasons seen live:
   "zero_apy" (most), "apy_outlier".
@@ -197,7 +197,7 @@ const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY });
 
 // Auto-paginating vault iteration
 for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
-  if (isFlagged(vault)) continue;              // LI.FI flags ~9% as suspect
+  if (isFlagged(vault)) continue;              // LI.FI flags ~10% as suspect
   const risk = forge.riskScore(vault);
   console.log(vault.name, vault.analytics.apy.total, risk.label, risk.flags);
 }

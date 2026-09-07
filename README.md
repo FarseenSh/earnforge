@@ -37,7 +37,7 @@ import { createEarnForge, riskScore, isFlagged } from '@earnforge/sdk'
 const forge = createEarnForge({ apiKey: process.env.LIFI_API_KEY })
 
 for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
-  if (isFlagged(vault)) continue // LI.FI flags ~9% of vaults as suspect
+  if (isFlagged(vault)) continue // LI.FI flags ~10% of vaults as suspect
   const { score, label, flags } = riskScore(vault)
   console.log(vault.name, vault.analytics.apy.total, label, flags)
 }
