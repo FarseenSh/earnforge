@@ -1,6 +1,6 @@
 {
   "name": "@earnforge/sdk",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Farseen Shaikh",
@@ -55,8 +55,8 @@
     "generate:refs": "tsx scripts/generate-references.ts"
   },
   "dependencies": {
-    "@lifi/compose-spec": "0.4.1",
-    "@lifi/composer-sdk": "^0.4.1",
+    "@lifi/compose-spec": "0.5.1",
+    "@lifi/composer-sdk": "^0.5.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

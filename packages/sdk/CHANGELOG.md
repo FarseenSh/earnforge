@@ -1,5 +1,28 @@
 # @earnforge/sdk
 
+## 1.2.1
+
+### Patch Changes
+
+- **`@lifi/compose-spec` and `@lifi/composer-sdk` move 0.4.1 to 0.5.1.** The
+  Composer server began refusing 0.4.1 outright on 6 Sep, two days after
+  publishing 0.5.0:
+
+  ```
+  400 VALIDATION_ERROR, kind: sdk_outdated
+  "composer-sdk 0.4.1 is older than the minimum 0.5.0 accepted by this
+   server (0.5.1); upgrade @lifi/composer-sdk and @lifi/compose-spec"
+  ```
+
+  `buildDepositFlow()` and `earnforge simulate` failed for every input until
+  this bump. Nothing else is affected: the `/v1/quote` path used by `quote`,
+  `withdraw`, `preflight` and the MCP tools does not go through this SDK.
+
+  The daily live Composer suite added in 1.2.0 caught it within a day of the
+  server change. Before that suite existed, nothing in the repo contacted
+  `li.quest` at all, and the previous Composer break sat in a published release
+  undetected.
+
 ## 1.2.0
 
 ### Minor Changes

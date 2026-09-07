@@ -237,11 +237,11 @@ importers:
   packages/sdk:
     dependencies:
       '@lifi/compose-spec':
-        specifier: 0.4.1
-        version: 0.4.1
+        specifier: 0.5.1
+        version: 0.5.1
       '@lifi/composer-sdk':
-        specifier: ^0.4.1
-        version: 0.4.1(@lifi/compose-spec@0.4.1)(typescript@7.0.2)
+        specifier: ^0.5.1
+        version: 0.5.1(@lifi/compose-spec@0.5.1)(typescript@7.0.2)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -1406,15 +1406,15 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@lifi/compose-spec@0.4.1':
-    resolution: {integrity: sha512-dUeHLY+sVCJk1cLZSHECOzKhX6LUkfDUg9Mxot+XAHcvjIP5jbymopwhXslMYWJHmfaEah5DkFd4fR96ecNHbQ==}
+  '@lifi/compose-spec@0.5.1':
+    resolution: {integrity: sha512-vyIBCjoyQ54HYzukbSYtNleKQl/v9z3tLeQmi77DKqQpcc9zZMVjih3Rb1EqnQLj9jA5Az+qnsovm2/JL6JLtg==}
     engines: {node: '>=24'}
 
-  '@lifi/composer-sdk@0.4.1':
-    resolution: {integrity: sha512-2tm7hkWHpMGEzvDk7vgikL069AChHeXx9izMnobCI0F7x1U+yZxxV7MfOh07ZvtvXfQjMmEfc3426usR6FLlzA==}
+  '@lifi/composer-sdk@0.5.1':
+    resolution: {integrity: sha512-3+nzr3YVfuuN5FEA+M5QTRKJ6bdQnH7Z7JBBXxWOXbTVz/QDjOldJSYPNzOn0RBByQJG2FvPbMGqk7FCVZEJeA==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@lifi/compose-spec': 0.4.1
+      '@lifi/compose-spec': 0.5.1
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -8926,14 +8926,14 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@lifi/compose-spec@0.4.1':
+  '@lifi/compose-spec@0.5.1':
     dependencies:
       effect: 3.22.1
       zod: 4.4.3
 
-  '@lifi/composer-sdk@0.4.1(@lifi/compose-spec@0.4.1)(typescript@7.0.2)':
+  '@lifi/composer-sdk@0.5.1(@lifi/compose-spec@0.5.1)(typescript@7.0.2)':
     dependencies:
-      '@lifi/compose-spec': 0.4.1
+      '@lifi/compose-spec': 0.5.1
       abitype: 1.2.3(typescript@7.0.2)(zod@4.4.3)
       effect: 3.22.1
       zod: 4.4.3
