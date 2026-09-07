@@ -69,6 +69,12 @@ All commands accept `--json` for machine-readable output.
 - `earnforge apy-history <slug> [--json]`
   30-day APY history from DeFiLlama yields API.
 
+- `earnforge compare <slugA> <slugB> [...] [--json]`
+  Side-by-side APY, TVL, risk score and verification status for two or more
+  vaults. Prefer this over calling `vault` repeatedly when the user is choosing
+  between options: it puts the risk score next to the yield, which is the
+  comparison they actually need to make.
+
 ### Portfolio & Suggestions
 
 - `earnforge suggest --amount 10000 --asset USDC [--max-chains 3] [--strategy diversified] [--json]`
@@ -173,7 +179,7 @@ All commands accept `--json` for machine-readable output.
 
 ## References
 
-- [references/pitfalls.md](references/pitfalls.md). All 23 API pitfalls
+- [references/pitfalls.md](references/pitfalls.md). All 25 API pitfalls
 - [references/protocols.md](references/protocols.md): protocols with risk tiers
 - [references/chains.md](references/chains.md): chains with chainIds
 - [references/examples.md](references/examples.md): Worked examples

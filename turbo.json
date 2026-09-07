@@ -15,7 +15,8 @@
       "dependsOn": ["build"]
     },
     "test:live": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "cache": false
     },
     "circular": {},
     "check": {},
@@ -26,5 +27,6 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalPassThroughEnv": ["LIFI_API_KEY"]
 }

@@ -282,6 +282,71 @@ Run preflight/pitfall checks on a vault before depositing.
 
 ---
 
+### quote-vault-redeem
+
+Build an unsigned withdrawal quote: vault shares out, underlying (or any other
+token) back. The mirror of `quote-vault-deposit`, and the reason redeeming does
+not require the caller to work out the token direction themselves.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `slug` | string | yes | Vault slug |
+| `wallet` | string | yes | Wallet address |
+| `fromAmount` | string | yes | Human-readable amount of vault shares |
+| `toToken` | string | no | Token to receive. Defaults to the vault underlying |
+| `slippage` | number | no | Slippage tolerance (e.g. 0.03 for 3%) |
+
+Returns an unsigned `transactionRequest`. Nothing is signed or broadcast.
+
+**Example prompt:** "Build me a withdrawal of 50 shares from morpho:8453:_:0xbeef... back to USDC"
+
+---
+
+### check-allowance
+
+Read the current ERC-20 allowance for a spender, and report whether it covers a
+given amount.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `token` | string | yes | ERC-20 token address |
+| `owner` | string | yes | Token holder |
+| `spender` | string | yes | Contract that needs the allowance |
+| `chainId` | number | yes | EVM chain ID |
+| `amount` | string | no | Amount to check sufficiency against, in smallest units |
+
+An insufficient allowance is the most common reason a deposit that quoted fine
+then reverts on submission, so check it before presenting a transaction as ready
+rather than after it fails.
+
+**Example prompt:** "Does 0xabc... have enough USDC approved for the STEAKUSDC vault on Base?"
+
+---
+
+### check-api-drift
+
+Compare the live Earn API against LI.FI's published OpenAPI spec and against this
+SDK's schema, reporting which pair disagrees.
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `sampleSize` | number | no | Vaults to sample (default 100) |
+
+`live-vs-schema` findings mean this SDK is stale and calls may throw.
+`live-vs-spec` findings mean LI.FI's documentation is wrong and will mislead
+anyone reading it: those are informational here, not failures. Use it when a call
+behaves unexpectedly, before assuming the bug is local.
+
+**Example prompt:** "Has the LI.FI Earn API changed shape recently?"
+
+---
+
 ### probe-route-flag
 
 Check whether one of LI.FI's newer route flags is actually served for a pair.

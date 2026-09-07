@@ -1,6 +1,6 @@
 # EarnForge
 
-> Developer toolkit for the LI.FI Earn API. Handles 23 integration pitfalls
+> Developer toolkit for the LI.FI Earn API. Handles 25 integration pitfalls
 > so you can focus on building yield products.
 
 All figures below were verified against the live API on Sep 7, 2026:

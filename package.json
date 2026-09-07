@@ -9,7 +9,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "verify": "pnpm turbo build && pnpm turbo typecheck && pnpm check && pnpm turbo test",
+    "verify": "pnpm turbo build && pnpm turbo typecheck && pnpm check && pnpm turbo test && pnpm consistency",
     "verify:live": "pnpm --filter @earnforge/sdk test:live && pnpm --filter @earnforge/sdk drift",
     "build": "turbo run build",
     "check": "biome check .",
@@ -22,7 +22,9 @@
     "typecheck": "turbo run typecheck",
     "circular": "turbo run circular",
     "clean": "turbo run clean",
-    "prepare": "husky"
+    "prepare": "husky",
+    "consistency": "vitest run --config vitest.consistency.config.ts",
+    "ship-check": "node scripts/ship-check.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.11",
@@ -33,6 +35,7 @@
     "husky": "^9.1.7",
     "knip": "^6.34.0",
     "turbo": "^2.10.8",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

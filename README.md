@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/tests-600%2B%20passing-brightgreen)](#testing)
-[![Pitfalls](https://img.shields.io/badge/API%20pitfalls-24-red)](./PITFALLS.md)
+[![Pitfalls](https://img.shields.io/badge/API%20pitfalls-25-red)](./PITFALLS.md)
 
 > **The judgment layer for the LI.FI Earn API.**
 
