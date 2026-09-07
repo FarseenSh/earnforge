@@ -1,5 +1,13 @@
 # @earnforge/mcp
 
+## 1.3.0
+
+### Minor Changes
+
+- Inherits `@earnforge/sdk` 1.4.0: integrator attribution and rate limiting on
+  Composer quotes, a range-checked `buildApprovalTx`, and allowance reads that
+  distinguish an RPC failure from a zero allowance.
+
 ## 1.1.0
 
 ### Minor Changes

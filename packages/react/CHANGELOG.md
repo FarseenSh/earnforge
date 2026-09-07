@@ -1,5 +1,33 @@
 # @earnforge/react
 
+## 1.1.0
+
+### Minor Changes
+
+- **`useEarnDeposit` approved the wrong contract.** It checked the allowance
+  before quoting and hardcoded `vault.address` as the spender, approving
+  `MaxUint256` to it. That granted a standing unlimited allowance to a contract
+  that never needed one, and the deposit still failed because
+  `quote.estimate.approvalAddress` — the router that does need it — was never
+  approved.
+
+  The cause was ordering: the spender only exists once the quote does. The
+  phase sequence is now `preflight -> quoting -> checking-allowance ->
+  approving -> ready`. Code driving UI off `state.phase` should expect
+  `quoting` before `checking-allowance`.
+
+- **Approvals are exact by default.** An unlimited allowance outlives the
+  deposit and lets the spender move that token until it is revoked. Opt in with
+  `unlimitedApproval: true`.
+
+- **A failed allowance read is an error, not an approval.** The hook used to
+  approve on an unreadable allowance; it now surfaces the RPC failure instead
+  of signing against a spender it could not verify.
+
+- Reading `fromToken` and the raw amount back off the quote also fixes a
+  decimals bug in the same block: it used `underlyingTokens[0].decimals` even
+  when `fromToken` overrode to a different token.
+
 ## 1.0.2
 
 ### Patch Changes

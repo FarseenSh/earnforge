@@ -1,5 +1,16 @@
 # @earnforge/cli
 
+## 1.4.0
+
+### Minor Changes
+
+- **`approve --amount` rejects out-of-range values.** A negative amount used to
+  produce calldata containing a literal `-` and exit 0. Inherited from the SDK's
+  range check.
+
+- Composer commands now identify EarnForge to LI.FI as the integrator and are
+  rate limited, inherited from `@earnforge/sdk` 1.4.0.
+
 ## 1.2.0
 
 ### Minor Changes

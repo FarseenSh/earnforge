@@ -1,5 +1,12 @@
 # @earnforge/skill
 
+## 1.3.0
+
+### Minor Changes
+
+- Reference content regenerated against the 7 Sep 2026 fleet measurement:
+  744 vaults, 26 protocols, 17 chains, 72 flagged (9.7%), every flag `zero_apy`.
+
 ## 1.1.0
 
 ### Minor Changes

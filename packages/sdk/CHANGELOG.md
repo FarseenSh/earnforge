@@ -1,5 +1,42 @@
 # @earnforge/sdk
 
+## 1.4.0
+
+### Minor Changes
+
+- **`buildApprovalTx` now range-checks the amount.** `padStart` pads, it never
+  rejects, so a negative amount emitted a literal `-` inside the calldata
+  (`…00000-1`) and anything above `MaxUint256` emitted a 65-character word that
+  shifted every byte after it. Both produced signable calldata and were
+  reachable from `earnforge approve --amount`. Out-of-range amounts now throw
+  `INVALID_AMOUNT`.
+
+- **`checkAllowance` distinguishes a failed read from a zero allowance.** A dead
+  RPC returned `allowance: 0n, sufficient: false`, identical to a wallet that
+  has approved nothing, so callers behind a broken node prompted for approvals
+  they already had. The result carries an optional `error` describing why the
+  read failed; callers that ignore it still fail closed. `eth_call` against an
+  address with no code returns `0x`, which used to throw a bare `SyntaxError`
+  from `BigInt('0x')`; it is now reported as a bad token address.
+
+- **Composer quotes identify the integrator.** `integrator` is how LI.FI
+  attributes traffic, and the response schema has parsed it since day one while
+  the request never sent it, so every quote landed under LI.FI's generic
+  `lifi-api` default. Sent on every quote now, overridable with
+  `createEarnForge({ integrator })`.
+
+- **Composer requests are rate limited.** `ComposerClient` had retry but no
+  limiter while `EarnDataClient` has had a token bucket from the start, and
+  `optimizeGasRoutes` fanned out one quote per source chain through
+  `Promise.all`. Default 60/min, and the fan-out is bounded to 4 concurrent
+  quotes.
+
+- **`preflight` can check gas sufficiency, not just gas presence.** The old
+  check compared the balance against zero, so a wallet holding 1 wei passed a
+  check named "no gas". Pass `estimatedGasCost` to get `INSUFFICIENT_GAS` with
+  the shortfall; omit it and the report names `GAS_SUFFICIENCY` in `skipped`
+  rather than implying the wallet can afford the transaction.
+
 ## 1.2.1
 
 ### Patch Changes
