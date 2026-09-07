@@ -1,3 +1,30 @@
 packages:
   - "packages/*"
   - "apps/*"
+
+# pnpm 11 turns ignored build scripts from a warning into an error, so the
+# decision has to be recorded rather than left implicit. Every one of these
+# ships prebuilt platform binaries as optional dependencies and resolves them
+# without a postinstall. pnpm 10 skipped all five for months and the full gate,
+# both app builds and the msw-backed test suites, passed throughout. Approving a
+# build script hands a package arbitrary code execution at install time, so the
+# bar is "something breaks without it", and nothing does.
+allowBuilds:
+  esbuild: false
+  msw: false
+  protobufjs: false
+  sharp: false
+  unrs-resolver: false
+
+# pnpm 11 refuses any package published inside a 24 hour window by default. That
+# is a good default and it stays on. These two are the one place it cannot apply.
+#
+# The Composer server hard-rejects clients below a minimum it raises on its own
+# schedule: on 6 Sep 2026 it started refusing composer-sdk 0.4.1 outright and the
+# daily live job went red within a day. The fix is always "adopt the newest
+# release now", so the wait-and-see protection the policy buys is not available
+# for these two. `@lifi/composer-sdk` declares `@lifi/compose-spec` as an exact
+# peer, so they move as a matched pair and both need the exclusion.
+minimumReleaseAgeExclude:
+  - "@lifi/composer-sdk"
+  - "@lifi/compose-spec"
