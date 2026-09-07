@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { assertAddress, encodeAddressArg } from './address.js'
+import { EarnForgeError } from './errors.js'
 
 /**
  * ERC-20 allowance checking and approval transaction building.
@@ -14,6 +15,17 @@ export interface AllowanceResult {
   allowance: bigint
   sufficient: boolean
   requiredAmount: bigint
+  /**
+   * Why the allowance could not be read, when it could not be read.
+   *
+   * A failed read reports `allowance: 0n, sufficient: false`, which is the
+   * safe direction but the wrong fact: "the RPC is unreachable" and "this
+   * wallet has approved nothing" produced identical results, so a caller
+   * behind a dead node prompted for an approval it already had. Callers that
+   * ignore this field still fail closed; callers that check it can tell the
+   * difference and say so.
+   */
+  error?: string
 }
 
 export interface ApprovalTx {
@@ -44,6 +56,7 @@ export async function checkAllowance(
   requiredAmount: bigint
 ): Promise<AllowanceResult> {
   // Encode allowance(owner, spender) call
+  assertAddress(tokenAddress, 'token')
   const ownerPadded = encodeAddressArg(owner, 'owner')
   const spenderPadded = encodeAddressArg(spender, 'spender')
   const calldata = `${ALLOWANCE_SELECTOR}${ownerPadded}${spenderPadded}`
@@ -64,7 +77,26 @@ export async function checkAllowance(
     error?: { message: string }
   }
   if (json.error || !json.result) {
-    return { allowance: 0n, sufficient: false, requiredAmount }
+    return {
+      allowance: 0n,
+      sufficient: false,
+      requiredAmount,
+      error: json.error?.message ?? 'RPC returned no result',
+    }
+  }
+
+  // `eth_call` against an address with no code returns `0x` rather than an
+  // error, and `BigInt('0x')` throws a bare SyntaxError. A mistyped token
+  // address therefore crashed the caller instead of reporting a bad address.
+  if (!/^0x[0-9a-fA-F]+$/.test(json.result)) {
+    return {
+      allowance: 0n,
+      sufficient: false,
+      requiredAmount,
+      error:
+        `Expected a uint256 from allowance(), got "${json.result}". ` +
+        `Is ${tokenAddress} an ERC-20 contract on this chain?`,
+    }
   }
 
   const allowance = BigInt(json.result)
@@ -91,6 +123,28 @@ export function buildApprovalTx(
 ): ApprovalTx {
   assertAddress(tokenAddress, 'token')
   const spenderPadded = encodeAddressArg(spender, 'spender')
+
+  // Range-checked for the same reason addresses are: `padStart` pads, it never
+  // rejects. A negative amount produced a literal `-` inside the calldata
+  // (`…00000-1`), and anything above MaxUint256 produced a 65-character word
+  // that shifted every byte after it while still looking like a valid hex
+  // string. Both were reachable straight from `earnforge approve --amount`,
+  // and both exited 0.
+  if (amount < 0n) {
+    throw new EarnForgeError(
+      `Approval amount cannot be negative: ${amount}. ` +
+        'ERC-20 allowances are uint256. To remove an allowance, approve 0.',
+      'INVALID_AMOUNT'
+    )
+  }
+  if (amount > MAX_UINT256) {
+    throw new EarnForgeError(
+      `Approval amount ${amount} exceeds uint256. ` +
+        `The maximum is MAX_UINT256 (${MAX_UINT256}).`,
+      'INVALID_AMOUNT'
+    )
+  }
+
   const amountHex = amount.toString(16).padStart(64, '0')
   const data = `${APPROVE_SELECTOR}${spenderPadded}${amountHex}`
 

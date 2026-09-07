@@ -11,7 +11,6 @@ import {
   buildApprovalTx,
   checkAllowance,
   MAX_UINT256,
-  toSmallestUnit,
 } from '@earnforge/sdk'
 import { useCallback, useRef, useState } from 'react'
 import { useEarnForge } from '../context.js'
@@ -19,12 +18,14 @@ import { useEarnForge } from '../context.js'
 /**
  * Deposit state machine:
  *
- *   idle --> preflight --> checking-allowance --> approving --> quoting --> ready --> sending --> success
- *     \         |               |                   |            |          |          |
- *      \________|_______________|___________________|____________|__________|__________|-->  error
+ *   idle --> preflight --> quoting --> checking-allowance --> approving --> ready --> sending --> success
+ *     \         |             |              |                   |           |          |
+ *      \________|_____________|______________|___________________|___________|__________|-->  error
  *
- * The "checking-allowance" phase verifies the ERC-20 allowance for the fromToken.
- * If allowance is insufficient, "approving" sends an approval tx before quoting.
+ * Quoting precedes the allowance check because the spender to approve is
+ * `quote.estimate.approvalAddress`, which only exists once the quote does.
+ * "checking-allowance" reads the ERC-20 allowance for that spender; if it is
+ * insufficient, "approving" sends an approval tx before the deposit is ready.
  */
 export type DepositPhase =
   | 'idle'
@@ -56,6 +57,15 @@ export interface UseEarnDepositParams {
   slippage?: number
   /** JSON-RPC URL for the source chain: needed for allowance checking */
   rpcUrl?: string
+  /**
+   * Approve MaxUint256 instead of exactly what this deposit needs.
+   *
+   * Saves an approval on every later deposit of the same token, at the cost of
+   * leaving a standing allowance the spender can draw on until it is revoked.
+   * Off by default: the convenience is the caller's to opt into, not ours to
+   * assume on their behalf.
+   */
+  unlimitedApproval?: boolean
   /** wagmi's sendTransactionAsync function: pass from useSendTransaction() */
   sendTransactionAsync?: (params: {
     to: `0x${string}`
@@ -140,31 +150,81 @@ export function useEarnDeposit(
         return
       }
 
-      // Phase: checking-allowance (if rpcUrl and fromToken are provided)
-      const fromToken =
-        params.fromToken ?? params.vault.underlyingTokens[0]?.address
+      // Phase: quoting
+      //
+      // Quoting comes before the allowance check, and the order is the whole
+      // point. The spender for an ERC-20 approval is
+      // `quote.estimate.approvalAddress` — LI.FI's router — which does not
+      // exist until the quote does. This hook used to check and approve first
+      // and hardcode the vault address as the spender, which was wrong twice:
+      // it granted an allowance to a contract that never needed one, and the
+      // deposit then still failed because the router it does need was never
+      // approved. Every other surface (CLI, MCP, SKILL.md, the SDK's own
+      // JSDoc) already said to use `approvalAddress`; only this file didn't.
+      setState({
+        ...INITIAL_STATE,
+        phase: 'quoting',
+        preflightReport: report,
+      })
+
+      const quote = await sdk.buildDepositQuote(params.vault, {
+        fromAmount: params.amount,
+        wallet: params.wallet,
+        fromToken: params.fromToken,
+        fromChain: params.fromChain,
+        slippage: params.slippage,
+      })
+      if (abortRef.current) {
+        return
+      }
+
+      // Phase: checking-allowance (needs an rpcUrl to read the chain)
       let allowanceResult: AllowanceResult | null = null
       let approval: ApprovalTx | null = null
 
-      if (params.rpcUrl && fromToken) {
+      // Absent when the source asset is native: there is nothing to approve.
+      const spender = quote.quote.estimate.approvalAddress
+      // The token actually being spent, as resolved by the quote. Reading it
+      // back from the quote rather than re-deriving it is what keeps the
+      // decimals right: `rawAmount` is computed against the matching token,
+      // not blindly against `underlyingTokens[0]`.
+      const fromToken = quote.quote.action.fromToken.address
+
+      if (params.rpcUrl && spender && fromToken) {
         setState({
           ...INITIAL_STATE,
           phase: 'checking-allowance',
           preflightReport: report,
+          quote,
         })
 
-        const decimals = params.vault.underlyingTokens[0]?.decimals ?? 18
-        const requiredAmount = BigInt(toSmallestUnit(params.amount, decimals))
+        const requiredAmount = BigInt(quote.rawAmount)
 
-        // Spender = vault address (Composer routes through vault contract)
         allowanceResult = await checkAllowance(
           params.rpcUrl,
           fromToken,
           params.wallet,
-          params.vault.address,
+          spender,
           requiredAmount
         )
         if (abortRef.current) {
+          return
+        }
+
+        // A read that failed is not a read that returned zero. Approving on a
+        // failed read would send an approval the wallet may not need, to a
+        // spender we could not verify.
+        if (allowanceResult.error) {
+          setState({
+            ...INITIAL_STATE,
+            phase: 'error',
+            preflightReport: report,
+            quote,
+            allowance: allowanceResult,
+            error: new Error(
+              `Could not read the ERC-20 allowance: ${allowanceResult.error}`
+            ),
+          })
           return
         }
 
@@ -172,15 +232,19 @@ export function useEarnDeposit(
         if (!allowanceResult.sufficient) {
           approval = buildApprovalTx(
             fromToken,
-            params.vault.address,
-            MAX_UINT256,
-            params.vault.chainId
+            spender,
+            // Exact by default. An unlimited allowance outlives the deposit and
+            // lets the spender move that token until it is revoked, so it is
+            // opt-in rather than the silent default it used to be.
+            params.unlimitedApproval ? MAX_UINT256 : requiredAmount,
+            quote.quote.action.fromChainId
           )
 
           setState({
             ...INITIAL_STATE,
             phase: 'approving',
             preflightReport: report,
+            quote,
             allowance: allowanceResult,
             approvalTx: approval,
           })
@@ -203,26 +267,6 @@ export function useEarnDeposit(
             return
           }
         }
-      }
-
-      // Phase: quoting
-      setState({
-        ...INITIAL_STATE,
-        phase: 'quoting',
-        preflightReport: report,
-        allowance: allowanceResult,
-        approvalTx: approval,
-      })
-
-      const quote = await sdk.buildDepositQuote(params.vault, {
-        fromAmount: params.amount,
-        wallet: params.wallet,
-        fromToken: params.fromToken,
-        fromChain: params.fromChain,
-        slippage: params.slippage,
-      })
-      if (abortRef.current) {
-        return
       }
 
       // Phase: ready

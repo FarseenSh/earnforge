@@ -1104,3 +1104,176 @@ describe('useEarnRedeem', () => {
     expect(result.current.state.preflightReport).toBeNull()
   })
 })
+
+/**
+ * The approval spender.
+ *
+ * This hook used to check the allowance *before* quoting and hardcode
+ * `vault.address` as the spender, approving MaxUint256 to it. That was wrong
+ * in both directions: it granted a standing allowance to a contract that never
+ * needed one, and the deposit still failed because the router that does need
+ * one was never approved. The whole flow could be inverted without a single
+ * existing test noticing, so these pin the parts that matter.
+ */
+describe('useEarnDeposit: approval targets the quote router, not the vault', () => {
+  const USDC = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
+  const ROUTER = '0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE'
+  const VAULT_ADDR = '0xbeeF010f9cb27031ad51e3333f9aF9C6B1228183'
+  const WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+
+  function sdkWithApproval(approvalAddress?: string): EarnForge {
+    const sdk = createMockSdk()
+    ;(sdk.buildDepositQuote as ReturnType<typeof vi.fn>).mockResolvedValue({
+      quote: {
+        type: 'lifi',
+        id: 'q1',
+        tool: 'aave',
+        action: {
+          fromToken: { address: USDC, chainId: 8453, symbol: 'USDC', decimals: 6, name: 'USD Coin' },
+          fromAmount: '100000000',
+          toToken: { address: VAULT_ADDR, chainId: 8453, symbol: 'aUSDC', decimals: 6, name: 'Aave USDC' },
+          fromChainId: 8453,
+          toChainId: 8453,
+          slippage: 0.005,
+          fromAddress: WALLET,
+          toAddress: WALLET,
+        },
+        estimate: {
+          tool: 'aave',
+          approvalAddress,
+          toAmountMin: '99500000',
+          toAmount: '100000000',
+          fromAmount: '100000000',
+          executionDuration: 30,
+        },
+        transactionRequest: { to: ROUTER, data: '0xDATA', value: '0', chainId: 8453 },
+      },
+      vault: makeVault({ address: VAULT_ADDR }),
+      humanAmount: '100',
+      rawAmount: '100000000',
+      decimals: 6,
+    } as unknown as DepositQuoteResult)
+    return sdk
+  }
+
+  /** allowance() returns 0, so an approval is always required. */
+  function stubZeroAllowance() {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () =>
+          Promise.resolve({
+            result: `0x${'0'.repeat(64)}`,
+          }),
+      })
+    )
+  }
+
+  function run(sdk: EarnForge, extra: Record<string, unknown> = {}) {
+    const sent: Array<{ to: string; data: string }> = []
+    const hook = renderHook(
+      () =>
+        useEarnDeposit({
+          vault: makeVault({ address: VAULT_ADDR }),
+          amount: '100',
+          wallet: WALLET,
+          rpcUrl: 'https://rpc.example.com',
+          sendTransactionAsync: vi.fn(async (p: { to: string; data: string }) => {
+            sent.push({ to: p.to, data: p.data })
+            return '0xhash' as `0x${string}`
+          }),
+          ...extra,
+        }),
+      { wrapper: createWrapper(sdk) }
+    )
+    return { hook, sent }
+  }
+
+  it('approves estimate.approvalAddress, never vault.address', async () => {
+    stubZeroAllowance()
+    const { hook, sent } = run(sdkWithApproval(ROUTER))
+    await act(async () => {
+      await hook.result.current.prepare()
+    })
+
+    expect(sent).toHaveLength(1)
+    expect(sent[0]!.to).toBe(USDC) // approve() is sent to the token
+    // The spender is the second 32-byte word of the approve() calldata.
+    const spenderWord = sent[0]!.data.slice(10, 74)
+    expect(spenderWord).toBe(ROUTER.slice(2).toLowerCase().padStart(64, '0'))
+    expect(spenderWord).not.toContain(VAULT_ADDR.slice(2).toLowerCase())
+  })
+
+  it('approves the exact amount by default, not MaxUint256', async () => {
+    stubZeroAllowance()
+    const { hook, sent } = run(sdkWithApproval(ROUTER))
+    await act(async () => {
+      await hook.result.current.prepare()
+    })
+    const amountWord = sent[0]!.data.slice(74)
+    expect(BigInt(`0x${amountWord}`)).toBe(100000000n) // rawAmount
+  })
+
+  it('approves MaxUint256 only when explicitly opted into', async () => {
+    stubZeroAllowance()
+    const { hook, sent } = run(sdkWithApproval(ROUTER), { unlimitedApproval: true })
+    await act(async () => {
+      await hook.result.current.prepare()
+    })
+    const amountWord = sent[0]!.data.slice(74)
+    expect(BigInt(`0x${amountWord}`)).toBe(2n ** 256n - 1n)
+  })
+
+  it('quotes before it reads the allowance', async () => {
+    // Ordering is load-bearing, not incidental: the spender to approve lives in
+    // the quote, so a read that happens first can only be reading the wrong one.
+    const order: string[] = []
+    const sdk = sdkWithApproval(ROUTER)
+    const quoteFn = sdk.buildDepositQuote as ReturnType<typeof vi.fn>
+    const resolved = await quoteFn()
+    quoteFn.mockImplementation(async () => {
+      order.push('quote')
+      return resolved
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        order.push('allowance-read')
+        return { json: async () => ({ result: `0x${'0'.repeat(64)}` }) }
+      })
+    )
+
+    const { hook } = run(sdk)
+    await act(async () => {
+      await hook.result.current.prepare()
+    })
+
+    expect(order).toEqual(['quote', 'allowance-read'])
+  })
+
+  it('errors instead of approving when the allowance read fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () => Promise.resolve({ error: { message: 'node unreachable' } }),
+      })
+    )
+    const { hook, sent } = run(sdkWithApproval(ROUTER))
+    await act(async () => {
+      await hook.result.current.prepare()
+    })
+    expect(hook.result.current.state.phase).toBe('error')
+    expect(hook.result.current.state.error!.message).toMatch(/node unreachable/)
+    expect(sent).toHaveLength(0) // nothing signed on an unverifiable read
+  })
+
+  it('skips approval entirely when the quote needs none (native source asset)', async () => {
+    stubZeroAllowance()
+    const { hook, sent } = run(sdkWithApproval(undefined))
+    await act(async () => {
+      await hook.result.current.prepare()
+    })
+    expect(sent).toHaveLength(0)
+    expect(hook.result.current.state.phase).toBe('ready')
+  })
+})
