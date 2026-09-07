@@ -3,7 +3,7 @@
 Protocols with at least one indexed Earn vault. Generated from
 `GET https://earn.li.fi/v1/protocols`.
 
-27 protocols as of Sep 1, 2026.
+26 protocols as of Sep 7, 2026.
 
 **Read ids from the endpoint; never hardcode them.** Most are unversioned
 (`morpho`, not `morpho-v1`), but that is a convention rather than a rule:
@@ -34,7 +34,6 @@ not an error, so a stale id is indistinguishable from an empty protocol.
 | `midas` | 5 | https://midas.app |
 | `morpho` | 9 | https://morpho.org |
 | `neverland` | 4 | https://neverland.money |
-| `pendle` | 7 | https://pendle.finance |
 | `spark-v2` | 8 | https://spark.fi |
 | `upshift` | 5 | https://upshift.finance |
 | `usdai` | 4 | https://usdai.io |

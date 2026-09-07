@@ -2,12 +2,13 @@
 
 Every pitfall here has a dedicated regression test under
 `packages/sdk/test/pitfalls/`, and every claim was verified against the live API
-on **Sep 1, 2026** across 799 vaults. Where LI.FI's documentation says something
+on **Sep 7, 2026** across 744 vaults. Where LI.FI's documentation says something
 different, that difference is itself recorded: six of these exist *because* the
 docs and the API disagree.
 
-Two of the original eighteen have **inverted** since they were written, and one is
-**obsolete**. That is the point of this list: it tracks what the API does, not
+Two of the original eighteen have **inverted** since they were written, one is
+**obsolete**, and one has been **fixed upstream** by LI.FI without an
+announcement. That is the point of this list: it tracks what the API does, not
 what it did.
 
 ---
@@ -30,8 +31,8 @@ what it did.
 | 12 | Chain mismatch | current | `preflight()` chain comparison |
 | 13 | Non-transactional vault | current | `isTransactional` guard |
 | 14 | Rate limit | current | Token bucket, 100 req/min |
-| 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 799 vaults now hit it |
-| 16 | Optional `description` | current | `.optional()`: present on 34% of vaults |
+| 15 | Empty `underlyingTokens` | **obsolete** | Guard retained; 0 of 744 vaults now hit it |
+| 16 | Optional `description` | current | `.optional()`: present on 28% of vaults |
 | 17 | **`apy.reward` is three-valued** | revised | null preserved, not coerced to 0 |
 | 18 | `apy1d` null | current | Extended fallback chain |
 | 19 | **Stale protocol slugs return zero results** | new | Unversioned ids + upstream existence test |
@@ -39,7 +40,8 @@ what it did.
 | 21 | **`verificationStatus` is undocumented** | new | First-class risk dimension |
 | 22 | **The docs contradict the API** | new | Schemas generated from live responses |
 | 23 | **Slug format changed** | new | `parseVaultSlug()` accepts both forms |
-| 24 | **Partial `underlyingTokens` entries** | new | `symbol`/`decimals` optional; one vault cannot break the fleet |
+| 24 | **Partial `underlyingTokens` entries** | **fixed upstream** | `symbol`/`decimals` optional; guard retained, 0 of 744 now hit it |
+| 25 | **New route flags fail by exclusion** | new | `probeGasless()` / `probeSmartDeposit()` differential probe |
 
 ---
 
@@ -84,7 +86,7 @@ is what breaks on the next flip, and it has already flipped once.
 ### #17: Reward semantics revised
 
 The original rule was *"Morpho returns 0, Euler and Aave return null, so
-normalise null to 0."* Across 799 vaults that is too simple in two ways: all three
+normalise null to 0."* Across 744 vaults that is too simple in two ways: all three
 states occur, and the split varies **within** a protocol rather than between
 protocols.
 
@@ -132,7 +134,7 @@ The TVL filter is `minTvlUsd`. We sent `minTvl`. The API returned the entire
 unfiltered fleet with `200`. No rejection, no warning.
 
 ```
-minTvl=100000000     -> 799 results   (silently unfiltered)
+minTvl=100000000     -> 744 results   (silently unfiltered)
 minTvlUsd=100000000  ->  39 results
 ```
 
@@ -147,7 +149,7 @@ Every vault carries `verificationStatus` and `verificationStatusBreakdown`.
 Neither appears in the OpenAPI spec, the changelog, the quickstart, or the
 NormalizedVault reference, and LI.FI's hosted MCP server does not expose them.
 
-They are not cosmetic. **75 of 799 vaults (9.4%)** are `flagged`:
+They are not cosmetic. **71 of 744 vaults (9.4%)** are `flagged`:
 
 | Reason | Count |
 |---|---|
@@ -173,7 +175,7 @@ responses rather than from the specification.
 |---|---|
 | APY is "expressed as a decimal (`0.0534` = 5.34%)" | already a percentage |
 | `tvl.usd` is a string | a number |
-| `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 799 vaults send any |
+| `caps`, `timeLock`, `kyc`, `lpTokens` exist | 0 of 744 vaults send any |
 
 The APY one costs money. The quickstart compounds it by multiplying by 100, so
 **following LI.FI's official example overstates every yield 100×**: a 29% vault
@@ -206,7 +208,7 @@ stopped producing them.
 ## #15 is obsolete, and stays anyway
 
 Pitfall #15 was found via a UNIBTC vault reporting no underlying tokens. Zero of
-799 live vaults now have an empty array, so the case cannot be driven from a
+744 live vaults now have an empty array, so the case cannot be driven from a
 fixture.
 
 The guard remains, tested against a synthesised vault. The shape is still legal,
@@ -222,7 +224,7 @@ empty again. What the API actually started sending was stranger: a *populated*
 `underlyingTokens` whose entries carry only an `address`. No `symbol`, no
 `decimals`.
 
-`morpho:1:_:0xb5ce3ca2c774b72955c25875022fdd91f7a7b938` (KPK-WARS-YIELD) is the
+`morpho:1:_:0xb5ce3ca2c774b72955c25875022fdd91f7a7b938` (KPK-WARS-YIELD) was the
 live example. Because the schema required both fields, `listAll()` threw a
 ZodError partway through the fleet, and everything iterating every vault died with
 it: the Studio's vault list read **zero** in production, and `earnforge list`
@@ -235,7 +237,97 @@ shape on a handful. The bad vault sat around index 300.
 `symbol` and `decimals` are now optional. The lesson is narrower than "validate
 less": a field being present on every vault you sampled is not the same as it
 being required, and the distance between those two claims is one vault in the
-fleet. It is still exactly one today.
+fleet.
+
+**As of 7 Sep 2026 that distance is zero.** LI.FI has filled the gap upstream:
+KPK-WARS-YIELD still exists and now reports `wARS`, 18 decimals and a price,
+and all 796 token entries across the fleet are complete. The guard stays for the
+same reason #15's does. The shape is legal, LI.FI never announced either the
+break or the fix, and a schema that only tolerates today's fleet is a schema
+that breaks on tomorrow's.
+
+---
+
+## #25: the new route flags fail by exclusion, not by error
+
+The four before this one were found by reading responses LI.FI already served.
+This one was found by reading LI.FI's git history, which turns out to be the
+better source: it tells you what is coming before it reaches anyone's response.
+
+`@lifi/types` 18.4.0 (Aug and Sep 2026) added three optional request flags:
+
+| Flag | What it does |
+|---|---|
+| `destinationActionKind` + `destinationActionVault` | **Smart Deposits**: bridge, then deposit into an ERC-4626 vault, in one route |
+| `gasless` | returns signable typed data instead of a `transactionRequest`, with a `LIFI Gasless Relay Fee` deducted from the input |
+| `amountFlexible` | any amount at or above a minimum executes at the live price |
+
+Smart Deposits matters most here: it is the first time LI.FI's routing layer has
+reached into the vault itself, which is the thing this SDK is about.
+
+All three are live and validated today. None of them errors when it cannot be
+honoured. **The route is excluded instead**, and what comes back is
+indistinguishable from a pair with no liquidity:
+
+```
+GET  /v1/quote            -> 404  "No available quotes for the requested transfer"
+POST /v1/advanced/routes  -> 200  { "routes": [] }
+```
+
+Measured 7 Sep 2026. `gasless=true` turned a working 200 into a 404 on every
+pair tried, same-chain and cross-chain, on Arbitrum and Ethereum. Smart Deposits
+returned zero routes across 25 vaults on multiple chains, because the Intent
+Factory allowlist gating it is not published and currently matches nothing
+reachable from outside.
+
+Exclusion is the right behaviour on LI.FI's side, and they say so: serving a
+Smart Deposits route with the deposit leg quietly removed would hand the user
+raw tokens while they believed they held vault shares. The pitfall is what it
+does to the caller. A 404 reads as "this vault is unreachable", and all three
+instinctive responses are wrong: retrying does nothing, widening slippage does
+nothing, and dropping the flag *succeeds* while silently abandoning the thing
+the user asked for. The last is the dangerous one, because it looks like it
+worked.
+
+From outside there is exactly one way to tell the two apart: run the request
+both ways and compare.
+
+```bash
+earnforge probe --flag smart-deposit --vault morpho:8453:_:0xbeef… \
+  --from-chain 42161 --from-token 0xaf88…5831 --wallet 0xd8dA…6045
+```
+```
+  Verdict:   flag-excluded
+  Baseline:  routes
+  Flagged:   no route
+  Status:    404
+```
+
+`flag-excluded` and `route-unavailable` are the same HTTP status and opposite
+conclusions. The probe reports; it deliberately does not fall back, because a
+silent fallback is the failure it exists to prevent. A `flag-excluded` verdict
+means *not yet*, not *broken*.
+
+Two guards sit around the probe, both against false negatives that would write a
+wrong fact about LI.FI's allowlist into a caller's cache. A `toToken` that is not
+the vault's underlying, and a same-chain route, each return the identical 404 as
+an unlisted vault. Both are refused before the request is sent.
+
+**The second half of the trap is worse, and is not yet observable.** A step
+returned for a Smart Deposits route carries its `destinationAction`, and LI.FI's
+type documentation states that posting it back to `/v1/advanced/stepTransaction`
+without that field "prepares a plain bundle that delivers the raw token instead
+of the action's output". Any code that reserialises a step, strips unknown keys,
+or narrows it through a stricter type will drop it, and the flow then succeeds
+while depositing nothing.
+
+That one is sourced from LI.FI's types, not from observation, and is labelled as
+such in the code: with no route served, no step carrying a real
+`destinationAction` could be obtained to test against.
+`assertDestinationActionPreserved()` is written to be right when routes appear
+rather than to encode behaviour anyone has watched. The distinction is the same
+one the drift detector draws, and it is worth keeping honest: this list is only
+useful if "verified" and "documented" never quietly become the same word.
 
 ---
 
@@ -293,7 +385,7 @@ No breaking drift. Our schema still matches the live API.
 ## Running the suite
 
 ```bash
-pnpm --filter @earnforge/sdk test            # mocked, includes all 24 pitfalls
+pnpm --filter @earnforge/sdk test            # mocked, includes all 25 pitfalls
 LIFI_API_KEY=... pnpm --filter @earnforge/sdk test:live
 LIFI_API_KEY=... pnpm --filter @earnforge/sdk drift
 ```

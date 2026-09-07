@@ -3,7 +3,7 @@
  *
  * Derived from the live API rather than from `earn-openapi.yaml`, which
  * disagrees with the service in several places, each noted inline. Verified
- * against 799 vaults across 17 chains and 27 protocols (1 Sep 2026).
+ * against 744 vaults across 17 chains and 26 protocols (7 Sep 2026).
  */
 
 /**

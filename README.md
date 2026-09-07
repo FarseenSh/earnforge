@@ -43,7 +43,7 @@ for await (const vault of forge.vaults.listAll({ chainId: 8453 })) {
 }
 ```
 
-Auto-pagination, mandatory auth, rate limiting, retry, caching and all 24
+Auto-pagination, mandatory auth, rate limiting, retry, caching and all 25
 documented API quirks are handled for you.
 
 ---
@@ -51,7 +51,7 @@ documented API quirks are handled for you.
 ## Why this exists
 
 The Earn API is easy to get wrong, and several of its behaviours contradict
-LI.FI's own documentation. Verified against 799 live vaults (Sep 2026):
+LI.FI's own documentation. Verified against 744 live vaults (Sep 2026):
 
 | What LI.FI documents | What the API does |
 |---|---|

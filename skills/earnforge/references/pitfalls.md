@@ -1,6 +1,6 @@
 # LI.FI Earn API Pitfalls
 
-24 pitfalls, all verified against the live API on Sep 1, 2026 across 799 vaults.
+25 pitfalls, all verified against the live API on Sep 7, 2026 across 744 vaults.
 The SDK handles every one by default.
 
 **Two have inverted since they were first written** and one is obsolete. The API
@@ -23,7 +23,7 @@ LI.FI's API.
 | 12 | Wallet on the wrong chain | Transaction fails | `preflight()` chain comparison |
 | 13 | Vault is not transactional | Quote fails | `isTransactional` guard |
 | 14 | Rate limit is 100 req/min | 429 | Token bucket with async backpressure |
-| 15 | Empty `underlyingTokens`: **obsolete**, 0 of 799 vaults | Crash on `[0]` | Guard retained against a synthesised case |
+| 15 | Empty `underlyingTokens`: **obsolete**, 0 of 744 vaults | Crash on `[0]` | Guard retained against a synthesised case |
 | 16 | `description` is optional (~23% of vaults have it) | undefined access | `.optional()` |
 | 17 | **`apy.reward` is three-valued**: null, 0, or positive | Lost signal if collapsed | null preserved; `getRewardApy()` coerces on request |
 | 18 | `apy.base` can also be null | Type error | Nullable |
@@ -46,10 +46,10 @@ that genuinely has no vaults. Never hardcode a slug: resolve via
 `earnforge protocols`.
 
 **An unknown query param is dropped, not rejected.** Sending `minTvl` instead of
-`minTvlUsd` returned all 799 vaults instead of 49: a "$100M+ TVL" filter that
+`minTvlUsd` returned all 744 vaults instead of 48: a "$100M+ TVL" filter that
 silently returns sub-$20k dust.
 
-**`verificationStatus` is documented nowhere** and flags 75 of 799 vaults, mostly
+**`verificationStatus` is documented nowhere** and flags 71 of 744 vaults, mostly
 for `zero_apy` and twice for `apy_outlier`. Sort by APY without checking it and a
 flagged vault lands at the top of the list.
 

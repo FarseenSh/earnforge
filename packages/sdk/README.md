@@ -30,7 +30,7 @@ handled for you.
 ## Why this exists
 
 The Earn API has a number of behaviours that are easy to get wrong, several of
-which contradict LI.FI's own documentation. Verified against 799 live vaults (1 Sep 2026):
+which contradict LI.FI's own documentation. Verified against 744 live vaults (7 Sep 2026):
 
 | Behaviour | What bites you |
 |---|---|

@@ -3,7 +3,7 @@
 Chains with at least one indexed Earn vault. Generated from
 `GET https://earn.li.fi/v1/chains`never hardcode this list, it changes.
 
-17 chains as of Sep 1, 2026.
+17 chains as of Sep 7, 2026.
 
 Chain ids are numbers. The single-vault endpoint is
 `/v1/vaults/:chainId/:address` and a chain *name* there returns 400.
