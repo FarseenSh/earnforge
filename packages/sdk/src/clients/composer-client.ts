@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ComposerError } from '../errors.js'
+import { TokenBucketRateLimiter } from '../rate-limiter.js'
 import { type RetryOptions, withRetry } from '../retry.js'
 import { type QuoteResponse, QuoteResponseSchema } from '../schemas/index.js'
 
@@ -10,10 +11,34 @@ import { type QuoteResponse, QuoteResponseSchema } from '../schemas/index.js'
  */
 const DEFAULT_BASE_URL = 'https://li.quest'
 
+/**
+ * Identifies the caller to LI.FI on every quote.
+ *
+ * `integrator` is how LI.FI attributes traffic, and the Composer response
+ * echoes it back — the schema has parsed it since day one while the request
+ * never sent it, so every EarnForge quote arrived anonymous. Downstream
+ * projects should pass their own name rather than shipping under this one.
+ */
+export const DEFAULT_INTEGRATOR = 'earnforge'
+
+/** Composer requests permitted per minute when the caller sets no ceiling. */
+export const DEFAULT_COMPOSER_MAX_PER_MINUTE = 60
+
 export interface ComposerClientOptions {
   apiKey: string
   baseUrl?: string
   retry?: RetryOptions
+  /** Integrator string sent on every quote. Defaults to `earnforge`. */
+  integrator?: string
+  /**
+   * Composer request ceiling, per minute.
+   *
+   * The Earn Data client has had a token bucket since the beginning; this one
+   * had none, while `optimizeGasRoutes` fans out one quote per source chain
+   * through `Promise.all`. Across a 17-chain fleet that is 17 simultaneous
+   * requests to LI.FI's most expensive endpoint from a single user action.
+   */
+  maxPerMinute?: number
 }
 
 export interface QuoteParams {
@@ -48,6 +73,8 @@ export class ComposerClient {
   private readonly baseUrl: string
   private readonly apiKey: string
   private readonly retryOpts: RetryOptions
+  private readonly integrator: string
+  private readonly rateLimiter: TokenBucketRateLimiter
 
   constructor(options: ComposerClientOptions) {
     if (!options.apiKey) {
@@ -59,6 +86,10 @@ export class ComposerClient {
     this.apiKey = options.apiKey
     this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
     this.retryOpts = options.retry ?? {}
+    this.integrator = options.integrator ?? DEFAULT_INTEGRATOR
+    this.rateLimiter = new TokenBucketRateLimiter(
+      options.maxPerMinute ?? DEFAULT_COMPOSER_MAX_PER_MINUTE
+    )
   }
 
   /**
@@ -68,7 +99,12 @@ export class ComposerClient {
    */
   async getQuote(params: QuoteParams): Promise<QuoteResponse> {
     return withRetry(async () => {
+      // Acquired inside the retry so a retried request spends a token too:
+      // a burst that is being retried is exactly the burst worth throttling.
+      this.rateLimiter.acquire()
+
       const searchParams = new URLSearchParams({
+        integrator: this.integrator,
         fromChain: String(params.fromChain),
         toChain: String(params.toChain),
         fromToken: params.fromToken,

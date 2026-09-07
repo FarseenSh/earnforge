@@ -7,11 +7,7 @@ import type {
   PreflightReport,
   Vault,
 } from '@earnforge/sdk'
-import {
-  buildApprovalTx,
-  checkAllowance,
-  MAX_UINT256,
-} from '@earnforge/sdk'
+import { buildApprovalTx, checkAllowance, MAX_UINT256 } from '@earnforge/sdk'
 import { useCallback, useRef, useState } from 'react'
 import { useEarnForge } from '../context.js'
 

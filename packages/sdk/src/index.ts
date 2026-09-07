@@ -176,6 +176,11 @@ export interface EarnForgeOptions {
   composerApiKey?: string
   earnData?: EarnDataClientOptions
   composerBaseUrl?: string
+  /**
+   * Integrator string LI.FI attributes Composer quotes to. Defaults to
+   * `earnforge`; pass your own project name when shipping on top of this.
+   */
+  integrator?: string
   cache?: { ttl?: number; maxSize?: number }
 }
 
@@ -271,6 +276,7 @@ export function createEarnForge(options: EarnForgeOptions = {}): EarnForge {
     ? new ComposerClient({
         apiKey: composerKey,
         baseUrl: options.composerBaseUrl,
+        integrator: options.integrator,
       })
     : null
 

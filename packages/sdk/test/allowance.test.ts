@@ -199,7 +199,13 @@ describe('checkAllowance: a failed read is distinguishable from zero', () => {
         json: () => Promise.resolve({ error: { message: 'node unreachable' } }),
       })
     )
-    const r = await checkAllowance('https://rpc.example.com', TOKEN, OWNER, SPENDER, 1n)
+    const r = await checkAllowance(
+      'https://rpc.example.com',
+      TOKEN,
+      OWNER,
+      SPENDER,
+      1n
+    )
     expect(r.sufficient).toBe(false) // still fails closed
     expect(r.error).toMatch(/node unreachable/)
   })
@@ -207,11 +213,19 @@ describe('checkAllowance: a failed read is distinguishable from zero', () => {
   it('does not throw when the address has no code (eth_call returns "0x")', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ json: () => Promise.resolve({ result: '0x' }) })
+      vi
+        .fn()
+        .mockResolvedValue({ json: () => Promise.resolve({ result: '0x' }) })
     )
     // BigInt('0x') throws a bare SyntaxError; a mistyped token address used to
     // crash the caller instead of reporting a bad address.
-    const r = await checkAllowance('https://rpc.example.com', TOKEN, OWNER, SPENDER, 1n)
+    const r = await checkAllowance(
+      'https://rpc.example.com',
+      TOKEN,
+      OWNER,
+      SPENDER,
+      1n
+    )
     expect(r.sufficient).toBe(false)
     expect(r.error).toMatch(/ERC-20 contract/i)
   })
@@ -227,7 +241,13 @@ describe('checkAllowance: a failed read is distinguishable from zero', () => {
           }),
       })
     )
-    const r = await checkAllowance('https://rpc.example.com', TOKEN, OWNER, SPENDER, 1n)
+    const r = await checkAllowance(
+      'https://rpc.example.com',
+      TOKEN,
+      OWNER,
+      SPENDER,
+      1n
+    )
     expect(r.error).toBeUndefined()
     expect(r.allowance).toBe(1000000n)
   })

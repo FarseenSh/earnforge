@@ -1129,9 +1129,21 @@ describe('useEarnDeposit: approval targets the quote router, not the vault', () 
         id: 'q1',
         tool: 'aave',
         action: {
-          fromToken: { address: USDC, chainId: 8453, symbol: 'USDC', decimals: 6, name: 'USD Coin' },
+          fromToken: {
+            address: USDC,
+            chainId: 8453,
+            symbol: 'USDC',
+            decimals: 6,
+            name: 'USD Coin',
+          },
           fromAmount: '100000000',
-          toToken: { address: VAULT_ADDR, chainId: 8453, symbol: 'aUSDC', decimals: 6, name: 'Aave USDC' },
+          toToken: {
+            address: VAULT_ADDR,
+            chainId: 8453,
+            symbol: 'aUSDC',
+            decimals: 6,
+            name: 'Aave USDC',
+          },
           fromChainId: 8453,
           toChainId: 8453,
           slippage: 0.005,
@@ -1146,7 +1158,12 @@ describe('useEarnDeposit: approval targets the quote router, not the vault', () 
           fromAmount: '100000000',
           executionDuration: 30,
         },
-        transactionRequest: { to: ROUTER, data: '0xDATA', value: '0', chainId: 8453 },
+        transactionRequest: {
+          to: ROUTER,
+          data: '0xDATA',
+          value: '0',
+          chainId: 8453,
+        },
       },
       vault: makeVault({ address: VAULT_ADDR }),
       humanAmount: '100',
@@ -1178,10 +1195,12 @@ describe('useEarnDeposit: approval targets the quote router, not the vault', () 
           amount: '100',
           wallet: WALLET,
           rpcUrl: 'https://rpc.example.com',
-          sendTransactionAsync: vi.fn(async (p: { to: string; data: string }) => {
-            sent.push({ to: p.to, data: p.data })
-            return '0xhash' as `0x${string}`
-          }),
+          sendTransactionAsync: vi.fn(
+            async (p: { to: string; data: string }) => {
+              sent.push({ to: p.to, data: p.data })
+              return '0xhash' as `0x${string}`
+            }
+          ),
           ...extra,
         }),
       { wrapper: createWrapper(sdk) }
@@ -1216,7 +1235,9 @@ describe('useEarnDeposit: approval targets the quote router, not the vault', () 
 
   it('approves MaxUint256 only when explicitly opted into', async () => {
     stubZeroAllowance()
-    const { hook, sent } = run(sdkWithApproval(ROUTER), { unlimitedApproval: true })
+    const { hook, sent } = run(sdkWithApproval(ROUTER), {
+      unlimitedApproval: true,
+    })
     await act(async () => {
       await hook.result.current.prepare()
     })
