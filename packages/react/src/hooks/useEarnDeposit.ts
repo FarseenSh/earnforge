@@ -294,6 +294,7 @@ export function useEarnDeposit(
     params.slippage,
     params.rpcUrl,
     params.sendTransactionAsync,
+    params.unlimitedApproval,
   ])
 
   const execute = useCallback(async () => {

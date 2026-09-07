@@ -31,6 +31,9 @@ describe('preflight: what did not get checked', () => {
     const report = preflight(vault, wallet, {
       walletChainId: vault.chainId,
       nativeBalance: 10n ** 17n,
+      // Supplying a balance alone only rules out an empty wallet; the gas
+      // check is not complete until it knows what the transaction costs.
+      estimatedGasCost: 10n ** 15n,
       tokenBalance: 10n ** 12n,
       depositAmount: '1',
     })
@@ -125,5 +128,57 @@ describe('preflight', () => {
     const report = preflight(vault, wallet)
     expect(report.vault).toBe(vault)
     expect(report.wallet).toBe(wallet)
+  })
+})
+
+describe('preflight: gas sufficiency, not just gas presence', () => {
+  /**
+   * The gas check only ever compared against zero, so a wallet holding 1 wei
+   * passed a check named "no gas" and then reverted anyway. Zero is the one
+   * state a user is least likely to be in; being short is the common one.
+   */
+  it('catches a balance that is non-zero but short of the estimate', () => {
+    const report = preflight(vault, wallet, {
+      nativeBalance: 1n,
+      estimatedGasCost: 2_000_000_000_000_000n,
+    })
+    expect(report.ok).toBe(false)
+    const issue = report.issues.find((i) => i.code === 'INSUFFICIENT_GAS')
+    expect(issue?.severity).toBe('error')
+    expect(issue?.message).toMatch(/Short by 1999999999999999 wei/)
+  })
+
+  it('passes when the balance covers the estimate', () => {
+    const report = preflight(vault, wallet, {
+      nativeBalance: 5_000_000_000_000_000n,
+      estimatedGasCost: 2_000_000_000_000_000n,
+    })
+    expect(report.issues.some((i) => i.code === 'INSUFFICIENT_GAS')).toBe(false)
+  })
+
+  it('still reports an outright empty wallet as NO_GAS, not a shortfall', () => {
+    const report = preflight(vault, wallet, {
+      nativeBalance: 0n,
+      estimatedGasCost: 2_000_000_000_000_000n,
+    })
+    expect(report.issues.some((i) => i.code === 'NO_GAS')).toBe(true)
+    expect(report.issues.some((i) => i.code === 'INSUFFICIENT_GAS')).toBe(false)
+  })
+
+  it('admits the check was shallow when no estimate was supplied', () => {
+    // `ok: true` here means "the wallet is not empty", which is a much weaker
+    // claim than "the wallet can afford this", and must not read as the latter.
+    const report = preflight(vault, wallet, { nativeBalance: 1n })
+    expect(report.ok).toBe(true)
+    expect(report.skipped).toContainEqual({
+      code: 'GAS_SUFFICIENCY',
+      needs: 'estimatedGasCost',
+    })
+  })
+
+  it('does not claim a sufficiency gap when the balance itself is unknown', () => {
+    const report = preflight(vault, wallet, {})
+    expect(report.skipped.map((s) => s.code)).toContain('GAS_BALANCE')
+    expect(report.skipped.map((s) => s.code)).not.toContain('GAS_SUFFICIENCY')
   })
 })

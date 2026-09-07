@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@earnforge/cli?label=%40earnforge%2Fcli&color=f97316)](https://www.npmjs.com/package/@earnforge/cli)
 [![npm](https://img.shields.io/npm/v/@earnforge/react?label=%40earnforge%2Freact&color=f97316)](https://www.npmjs.com/package/@earnforge/react)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-600%2B%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](#testing)
 [![Pitfalls](https://img.shields.io/badge/API%20pitfalls-25-red)](./PITFALLS.md)
 
 > **The judgment layer for the LI.FI Earn API.**
@@ -178,10 +178,11 @@ coverage, ERC-20 allowance handling, preflight validation, and `earnforge doctor
 
 ## Testing
 
-**600+ mocked tests across five suites, plus 34 live integration tests.** Exact
-counts are deliberately not quoted here. They moved on almost every commit and
-went stale three times before this note replaced them. `pnpm turbo test` prints
-the current numbers.
+**Mocked suites across sdk, cli, mcp, react and studio, plus a live
+integration suite run daily against the real API.** Exact counts are
+deliberately not quoted here: they moved on almost every commit and went stale
+three times before this note replaced them, twice in the same sentence that
+promised not to quote them. `pnpm turbo test` prints the current numbers.
 
 | Suite | Covers |
 |---|---|

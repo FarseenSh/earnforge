@@ -26,6 +26,25 @@ const ALLOWED_PATHS = [
   /^v1\/portfolio\/0x[0-9a-fA-F]{40}\/positions$/,
 ]
 
+/**
+ * Query parameters forwarded upstream. Everything else is dropped.
+ *
+ * Kept in step with `VaultListParams` in the SDK: these are the filters the
+ * vault list and portfolio endpoints actually honour.
+ */
+const ALLOWED_PARAMS = [
+  'chainId',
+  'asset',
+  'protocol',
+  'minTvlUsd',
+  'sortBy',
+  'cursor',
+  'limit',
+  'isTransactional',
+  'isRedeemable',
+  'isComposerSupported',
+] as const
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ path: string[] }> }
@@ -54,8 +73,25 @@ export async function GET(
     )
   }
 
-  const query = new URL(request.url).search
-  const upstream = `${EARN_BASE_URL}/${joined}${query}`
+  // Only forward parameters the Earn API actually reads.
+  //
+  // The whole query string used to pass through untouched, which mattered more
+  // than it looks: `next.revalidate` caches per resolved URL, so any unknown
+  // parameter produced a distinct cache key and a fresh upstream call. A loop
+  // over `?_=1`, `?_=2` therefore bypassed the cache entirely and spent this
+  // deployment's LI.FI quota, on a public page holding a credential. Unknown
+  // parameters are dropped rather than rejected, because the Earn API ignores
+  // them too (pitfall #20) and a 400 here would be stricter than upstream.
+  const incoming = new URL(request.url).searchParams
+  const forwarded = new URLSearchParams()
+  for (const key of ALLOWED_PARAMS) {
+    const value = incoming.get(key)
+    if (value !== null) {
+      forwarded.set(key, value)
+    }
+  }
+  const query = forwarded.toString()
+  const upstream = `${EARN_BASE_URL}/${joined}${query ? `?${query}` : ''}`
 
   try {
     const res = await fetch(upstream, {

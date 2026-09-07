@@ -1250,7 +1250,9 @@ describe('useEarnDeposit: approval targets the quote router, not the vault', () 
     // the quote, so a read that happens first can only be reading the wrong one.
     const order: string[] = []
     const sdk = sdkWithApproval(ROUTER)
-    const quoteFn = sdk.buildDepositQuote as ReturnType<typeof vi.fn>
+    const quoteFn = sdk.buildDepositQuote as unknown as ReturnType<
+      typeof vi.fn<() => Promise<DepositQuoteResult>>
+    >
     const resolved = await quoteFn()
     quoteFn.mockImplementation(async () => {
       order.push('quote')

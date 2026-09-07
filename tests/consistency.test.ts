@@ -390,6 +390,45 @@ describe('fleet figures are quoted consistently', () => {
   })
 })
 
+describe('no published surface quotes a test count', () => {
+  /**
+   * A test count moves on nearly every commit, and this one went stale in
+   * public three times before the rule was written down. The README badge
+   * still read "600+ passing" while CLAUDE.md, two lines under the rule
+   * forbidding it, quoted an exact figure of its own.
+   *
+   * Scoped to surfaces that actually ship. The April-era planning documents
+   * (UPDATES.md, SUBMISSION.md, the tweet threads) are dated artifacts whose
+   * numbers were true when written, and rewriting history is not the goal.
+   */
+  const PUBLISHED = SURFACES.filter((f) => !f.endsWith('.mjs'))
+
+  it('quotes no test total anywhere it would go stale', () => {
+    const offenders: string[] = []
+    for (const f of PUBLISHED) {
+      const text = readIfPresent(f).replace(/%20/g, ' ')
+      for (const line of text.split('\n')) {
+        // "22 checks" and "18 pitfall guards" are derived and asserted above;
+        // this is about counting the test suite itself. A pitfall test count
+        // is pinned to the pitfall count by the invariants at the top of this
+        // file, so it cannot drift independently and is not a stale-count risk.
+        if (/pitfall/i.test(line)) {
+          continue
+        }
+        for (const m of line.matchAll(
+          /\b(\d{2,4})\s*\+?\s*(?:mocked |live |unit |passing )*tests?\b/gi
+        )) {
+          offenders.push(`${f}: ${m[0].trim()}`)
+        }
+        for (const m of line.matchAll(/\btests?-(\d{2,4})/gi)) {
+          offenders.push(`${f}: badge ${m[0]}`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+})
+
 describe('published package versions are coherent', () => {
   const pkgs = ['sdk', 'cli', 'mcp', 'react', 'skill']
 

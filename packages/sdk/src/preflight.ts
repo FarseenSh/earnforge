@@ -26,13 +26,21 @@ export interface PreflightReport {
 
 /** A check that was not performed, and the input that would enable it. */
 export interface PreflightSkippedCheck {
-  code: 'GAS_BALANCE' | 'TOKEN_BALANCE' | 'CHAIN_MATCH'
+  code: 'GAS_BALANCE' | 'GAS_SUFFICIENCY' | 'TOKEN_BALANCE' | 'CHAIN_MATCH'
   needs: string
 }
 
 export interface PreflightOptions {
   walletChainId?: number
   nativeBalance?: bigint
+  /**
+   * What the transaction is estimated to cost in native token, smallest unit.
+   *
+   * Without it the gas check can only catch a balance of exactly zero, which
+   * is the one case a user is least likely to be in. Sum
+   * `quote.estimate.gasCosts[].amount` to supply it.
+   */
+  estimatedGasCost?: bigint
   tokenBalance?: bigint
   tokenDecimals?: number
   depositAmount?: string
@@ -44,7 +52,8 @@ export interface PreflightOptions {
  * Run preflight checks before a deposit:
  * - isTransactional check (Pitfall #13)
  * - Chain mismatch check (Pitfall #12): warning for cross-chain, error for same-chain
- * - Gas token balance check (Pitfall #11)
+ * - Gas token balance check (Pitfall #11), and gas sufficiency when an
+ *   estimated cost is supplied
  * - Token balance check (uses string-based toSmallestUnit to avoid float precision loss)
  * - underlyingTokens existence (Pitfall #15)
  * - isRedeemable warning
@@ -82,6 +91,23 @@ export function preflight(
     issues.push({
       code: 'NO_GAS',
       message: 'Wallet has 0 native gas token. Transaction will fail.',
+      severity: 'error',
+    })
+  } else if (
+    options.nativeBalance !== undefined &&
+    options.estimatedGasCost !== undefined &&
+    options.nativeBalance < options.estimatedGasCost
+  ) {
+    // A balance of exactly zero was the only gas failure this caught, so a
+    // wallet holding 1 wei passed a check named "no gas" and then reverted
+    // anyway. Given what the transaction is actually estimated to cost, the
+    // shortfall is knowable, and `quote.estimate.gasCosts` already carries it.
+    issues.push({
+      code: 'INSUFFICIENT_GAS',
+      message:
+        `Wallet holds ${options.nativeBalance} wei of the native gas token but ` +
+        `the transaction is estimated to cost ${options.estimatedGasCost}. ` +
+        `Short by ${options.estimatedGasCost - options.nativeBalance} wei.`,
       severity: 'error',
     })
   }
@@ -125,6 +151,10 @@ export function preflight(
   const skipped: PreflightSkippedCheck[] = []
   if (options.nativeBalance === undefined) {
     skipped.push({ code: 'GAS_BALANCE', needs: 'nativeBalance' })
+  } else if (options.estimatedGasCost === undefined) {
+    // The balance was checked against zero and nothing more. Saying so keeps
+    // `ok: true` from reading as "this wallet can afford the transaction".
+    skipped.push({ code: 'GAS_SUFFICIENCY', needs: 'estimatedGasCost' })
   }
   if (
     options.tokenBalance === undefined ||
